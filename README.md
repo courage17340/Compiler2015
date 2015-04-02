@@ -13,6 +13,6 @@ Chu Wei's compiler project
 >**v1**
 >>**v1.0**
 
-**2015.4.2**
+>>**2015.4.2**
 
-Begin writing lexer in C
+>>Begin writing lexer in C
