@@ -6,8 +6,11 @@ Chu Wei's compiler project
 
 ##Some details
 
-*	language:C
+>Language:**C**
 
 ##Version details
 
-*	v0.0	20150402	Begin writing lexer in C
+>**v1**
+>>**v1.0**
+**2015.4.2**
+Begin writing lexer in C
