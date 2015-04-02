@@ -12,3 +12,4 @@ Chu Wei's compiler project
 | Version | Date | Description |
 |:-------:|:----:|:-----------:|
 | **0.0** | 2015.4.2 | Begin to write in C |
+| **0.1** | 2015.4.2 | removeComments.c is done|
