@@ -1,26 +1,16 @@
 //This program removes all comments from the raw input.
 //Note that 'in/**/t' doesn't equal to 'int' but 'in t'.
 //Lines started with # will also be removed, which may be changed in the future.
-#include <stdio.h>
-#include <string.h>
-#define MAX 1000010
-//MAX denotes the maximum size of the raw input
-char in[MAX],out[MAX];
-int p;
+#include "removeComments.h"
 //flag1 - '
 //flag2 - "
-void readString(void){
-	int c;
-	p = -1;
-	c = getchar();
-	while (c != EOF){
-		in[++p] = c;
-		c = getchar();
-	}
-	in[++p] = 0;
+static void warn(char *s,const char* t){
+	strcpy(s,t);
 }
-void writeString(void){
-	int i,cur,q,flag0,flag1;
+
+static void deal(char *in,char *out){
+	int i,cur,q,flag0,flag1,p;
+	p = strlen(in);
 	q = -1;
 	flag0 = flag1 = 0;
 	for (i = 0;i < p;++i){
@@ -31,6 +21,9 @@ void writeString(void){
 			else if (cur == '\\'){
 				out[++q] = cur;
 				cur = in[++i];
+			}else if (cur == '\n'){
+				warn(out,"CompileError");
+				return;
 			}
 		}else if (flag1){
 			if (cur == '"')
@@ -38,6 +31,9 @@ void writeString(void){
 			else if (cur == '\\'){
 				out[++q] = cur;
 				cur = in[++i];
+			}else if (cur == '\n'){
+				warn(out,"CompileError");
+				return;
 			}
 		}else{
 			if (cur == '\'')
@@ -56,20 +52,22 @@ void writeString(void){
 					i += 2;
 					while (i < p && (in[i] != '*' || in[i + 1] != '/')) ++i;
 					++i;
-					if (in[i] != '/'){//In this case, ' .' is added to return a CE code
-						out[++q] = ' ';
-						cur = '.';
+					if (in[i] != '/'){
+						warn(out,"CompileError");
+						return;
 					}
 				}
-			
 		}
 		out[++q] = cur;
 	}
 	out[++q] = 0;
 }
-int main(){
-	readString();
-	writeString();
-	puts(out);
-	return 0;
+
+void removeComments(char *in){
+	int L = strlen(in);
+	char *out = (char *)malloc(L + 100);
+	deal(in,out);
+	strcpy(in,out);
+	free(out);
 }
+
