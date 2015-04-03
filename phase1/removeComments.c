@@ -43,7 +43,7 @@ static void deal(char *in,char *out){
 			else if (cur == '#'){//Ignore # now. Maybe I won't ignore it in the future.
 				cur = '\n';
 				while (i < p && in[i] != '\n') ++i;
-			}else if (cur == '/')
+			}else if (cur == '/'){
 				if (in[i + 1] == '/'){
 					cur = '\n';
 					while (i < p && in[i] != '\n') ++i;
@@ -57,6 +57,7 @@ static void deal(char *in,char *out){
 						return;
 					}
 				}
+			}
 		}
 		out[++q] = cur;
 	}
@@ -65,9 +66,8 @@ static void deal(char *in,char *out){
 
 void removeComments(char *in){
 	int L = strlen(in);
-	char *out = (char *)malloc(L + 100);
+	static char out[1000010];
 	deal(in,out);
 	strcpy(in,out);
-	free(out);
 }
 

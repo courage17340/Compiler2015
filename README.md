@@ -14,3 +14,4 @@ Chu Wei's compiler project
 | **0.0** | 2015.4.2 | Begin to write in C |
 | **0.1** | 2015.4.2 | removeComments.c is done|
 | **0.1a** | 2015.4.3 | some bugs fixed in removeComments.c|
+| **0.2** | 2015.4.3 | some bugs fixed && split.c is done|
