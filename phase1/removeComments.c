@@ -4,7 +4,7 @@
 #include "removeComments.h"
 //flag1 - '
 //flag2 - "
-static void warn(char *s,const char* t){
+static void warn(char *s,const char *t){
 	strcpy(s,t);
 }
 
