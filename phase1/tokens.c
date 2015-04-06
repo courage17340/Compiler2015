@@ -33,7 +33,7 @@ void getTokenType(struct token *t){
 			t->tokenDetail = IDENTIFIER;
 		}else{
 			t->tokenType = KEY;
-			t->tokenDetail = k;
+			t->tokenDetail = k + VOID;
 		}
 		return;
 	}

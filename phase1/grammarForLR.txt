@@ -1,0 +1,274 @@
+program
+dec_or_func
+program dec_or_func
+\\
+dec_or_func
+declaration \
+function_definition
+\\
+declaration
+type_specifier ';' \
+type_specifier init_declarators ';'
+\\
+function_definition
+type_specifier plain_declarator '(' ')' compound_statement \
+type_specifier plain_declarator '(' parameters ')' compound_statement
+\\
+parameters
+plain_declaration \
+parameters ',' plain_declaration
+\\
+declarators
+declarator \
+declarators ',' declarator
+\\
+init_declarators
+init_declarator \
+init_declarators ',' init_declarator
+\\
+init_declarator
+declarator \
+declarator '=' initializer
+\\
+initializer
+assignment_expression \
+'{' initializers '}'
+\\
+initializers
+initializer \
+initializers ',' initializer
+\\
+type_specifier
+'void' \
+'char' \
+'int' \
+struct_or_union identifier \
+struct_or_union '{' type_specifiers '}' \
+struct_or_union identifier '{' type_specifiers '}'
+\\
+type_specifiers
+type_specifier declarators ';' \
+type_specifiers type_specifier declarators ';'
+\\
+struct_or_union
+'struct' \
+'union'
+\\
+plain_declaration
+type_specifier declarator
+\\
+declarator
+plain_declarator '(' ')' \
+plain_declarator '(' parameters ')' \
+plain_declarator \
+plain_declarator array_sizes
+\\
+array_sizes
+'[' constant_expression ']' \
+array_sizes '[' constant_expression ']'
+\\
+plain_declarator
+identifier \
+'*' plain_declarator
+\\
+statement
+matched_statement \
+open_statement
+\\
+matched_statement
+'if' '(' expression ')' matched_statement 'else' matched_statement \
+expression_statement \
+compound_statement \
+iteration_statement \
+jump_statement
+\\
+open_statement
+'if' '(' expression ')' statement \
+'if' '(' expression ')' matched_statement 'else' open_statement
+\\
+expression_statement
+';' \
+expression ';'
+\\
+compound_statement
+'{' declarations statements '}'
+\\
+declarations
+'' \
+declarations declaration
+\\
+statements
+'' \
+statements statement
+\\
+iteration_statement
+'while' '(' expression ')' statement \
+'for' '(' ';' ';' ')' statement \
+'for' '(' ';' ';' statement ')' statement \
+'for' '(' ';' statement ';' ')' statement \
+'for' '(' ';' statement ';' statement ')' statement \
+'for' '(' statement ';' ';' ')' statement \
+'for' '(' statement ';' ';' statement ')' statement \
+'for' '(' statement ';' statement ';' ')' statement \
+'for' '(' statement ';' statement ';' statement ')' statement
+\\
+jump_statement
+'continue' ';' \
+'break' ';' \
+'return' ';' \
+'return' expression ';'
+\\
+expression
+assignment_expression
+expression ',' assignment_expression
+\\
+assignment_expression
+logical_or_expression \
+unary_expression assignment_operator assignment_expression
+\\
+assignment_operator
+'=' \
+'*=' \
+'/=' \
+'%=' \
+'+=' \
+'-=' \
+'<<=' \
+'>>=' \
+'&=' \
+'^=' \
+'|='
+\\
+constant_expression
+logical_or_expression
+\\
+logical_or_expression
+logical_and_expression \
+logical_or_expression '||' logical_and_expression
+\\
+logical_and_expression
+inclusive_or_expression \
+logical_and_expression '&&' inclusive_or_expression
+\\
+inclusive_or_expression
+exclusive_or_expression \
+inclusive_or_expression '|' exclusive_or_expression
+\\
+exclusive_or_expression
+and_expression \
+exclusive_or_expression '^' and_expression
+\\
+and_expression
+equality_expression \
+and_expression '&' equality_expression
+\\
+equality_expression
+relational_expression \
+equality_expression equality_operator relational_expression
+\\
+equality_operator
+'==' \
+'!='
+\\
+relational_expression
+shift_expression \
+relational_expression relational_operator shift_expression
+\\
+relational_operator
+'<' \
+'>' \
+'<=' \
+'>='
+\\
+shift_expression
+additive_expression \
+shift_expression shift_operator additive_expression
+\\
+shift_operator
+'<<' \
+'>>'
+\\
+additive_expression
+multiplicative_expression \
+additive_expression additive_operator multiplicative_expression
+\\
+additive_operator
+'+' \
+'-'
+\\
+multiplicative_expression
+cast_expression \
+multiplicative_expression multiplicative_operator cast_expression
+\\
+multiplicative_operator
+'*' \
+'/' \
+'%'
+\\
+cast_expression
+unary_expression \
+'(' type_name ')' cast_expression
+\\
+type_name
+type_specifier pointers
+\\
+pointers
+'' \
+'*' pointers
+\\
+unary_expression
+postfix_expression \
+'++' unary_expression \
+'--' unary_expression \
+unary_operator cast_expression \
+'sizeof' unary_expression \
+'sizeof' '(' type_name ')'
+\\
+unary_operator
+'&' \
+'*' \
+'+' \
+'-' \
+'~' \
+'!'
+\\
+postfix_expression
+primary_expression postfixes
+\\
+postfixes
+'' \
+postfixes postfix
+\\
+postfix
+'[' expression ']' \
+'(' ')' \
+'(' arguments ')' \
+'.' identifier \
+'->' identifier \
+'++' \
+'--'
+\\
+arguments
+expression
+\\
+primary_expression
+identifier \
+constant \
+string \
+'(' expression ')'
+\\
+constant
+integer_constant \
+character_constant
+\\
+identifier
+'identifier'
+\\
+integer_constant
+'integer_constant'
+\\
+character_constant
+'character_constant'
+\\
+string
+'string'

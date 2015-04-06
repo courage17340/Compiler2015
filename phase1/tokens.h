@@ -4,17 +4,12 @@
 enum TokenType{
 	ID,CON,KEY,SYM
 };
-enum IdentifierType{
-	IDENTIFIER
-};
-enum ConstantType{
-	CON_NUM,CON_CHAR,CON_STR
-};
-enum KeywordType{
-	VOID,CHAR,INT,STRUCT,UNION,IF,ELSE,WHILE,FOR,CONTINUE,BREAK,RETURN,SIZEOF
-};
-enum SymbolType{
-	SYMBOL
+enum TokenDetail{
+	IDENTIFIER,
+	CON_NUM,CON_CHAR,CON_STR,
+	VOID,CHAR,INT,STRUCT,UNION,IF,ELSE,WHILE,FOR,CONTINUE,BREAK,RETURN,SIZEOF,
+	SYMBOL,
+	END
 };
 struct token{
 	int tokenType,tokenDetail;
