@@ -1,0 +1,123 @@
+program
+dec_or_func program \
+dec_or_func
+\\
+dec_or_func
+declaration \
+function_definition
+\\
+declaration
+type_specifier ';' \
+type_specifier init_declarators ';'
+\\
+function-definition
+type_specifier plain_declarator '(' ')' compound_statement \
+type_specifier plain_declarator '(' parameters ')' compound_statements
+\\
+parameters
+plain_declaration \
+plain_declaration ',' parameters
+\\
+declarators
+declarator \
+declarator ',' declarators
+\\
+init_declarators
+init_declarator \
+init_declarator ',' init_declarators
+\\
+init_declarator
+declarator \
+declarator '=' initializer
+\\
+initializer
+assignment_expression \
+'{' initializers '}'
+\\
+initializers
+initializer \
+initializer ',' initializers
+\\
+type_specifier
+'void' \
+'char' \
+'int' \
+struct_or_union identifier \
+struct_or_union '{' type_specifiers '}' \
+struct_or_union identifier '{' type_specifiers '}'
+\\
+type_specifiers
+type_specifier declarators ';' \
+type_specifier declarators ';' type_specifiers
+\\
+struct_or_union
+'struct' \
+'union'
+\\
+plain_declaration
+type_specifier declarator
+\\
+declarator
+plain_declarator '(' ')' \
+plain_declarator '(' parameters ')' \
+plain_declarator \
+plain_declarator array_sizes
+\\
+array_sizes
+'[' constant_expression ']' \
+'[' constant_expression ']' array_sizes
+\\
+plain_declarator
+identifier \
+'*' plain_declarator
+\\
+statement
+matched_statement \
+open_statement
+\\
+matched_statement
+'if' '(' expression ')' matched_statement 'else' matched_statement \
+expression_statement \
+compound_statement \
+iteration_statement \
+jump_statement
+\\
+open_statement
+'if' '(' expression ')' statement \
+'if' '(' expression ')' matched_statement 'else' open_statement
+\\
+expression_statement
+';' \
+expression ';'
+\\
+compound_statement
+'{' '}' \
+'{' statements '}' \
+'{' declarations '}' \
+'{' declarations statements'}'
+\\
+statements
+statement \
+statement statements
+\\
+declarations
+declaration \
+declaration declarations
+\\
+iteration_statement
+'while' '(' expression ')' statement \
+'for' '(' ';' ';' ')' statement \
+'for' '(' ';' ';' statement ')' statement \
+'for' '(' ';' statement ';' ')' statement \
+'for' '(' ';' statement ';' statement ')' statement \
+'for' '(' statement ';' ';' ')' statement \
+'for' '(' statement ';' ';' statement ')' statement \
+'for' '(' statement ';' statement ';' ')' statement \
+'for' '(' statement ';' statement ';' statement ')' statement
+\\
+jump_statement
+'continue' ';' \
+'break' ';' \
+'return' ';' \
+'return' expression ';'
+\\
