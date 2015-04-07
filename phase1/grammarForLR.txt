@@ -1,5 +1,5 @@
 program
-dec_or_func
+dec_or_func \
 program dec_or_func
 \\
 dec_or_func
@@ -119,7 +119,7 @@ jump_statement
 'return' expression ';'
 \\
 expression
-assignment_expression
+assignment_expression \
 expression ',' assignment_expression
 \\
 assignment_expression
@@ -272,3 +272,4 @@ character_constant
 \\
 string
 'string'
+\\
