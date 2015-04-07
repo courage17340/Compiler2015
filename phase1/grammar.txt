@@ -319,3 +319,4 @@ character_constant
 \\
 string
 'string'
+\\
