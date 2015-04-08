@@ -12,7 +12,7 @@ enum TokenDetail{
 	END
 };
 struct token{
-	int tokenType,tokenDetail;
+	int tokenType,tokenDetail,type;
 	char *ptr;
 };
 static char keywordDic[20][10] = {"void","char","int","struct","union","if","else","while","for","continue","break","return","sizeof"};

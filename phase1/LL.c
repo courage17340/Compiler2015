@@ -15,7 +15,7 @@ static void init(void){
 	nonNum = 0;
 	terNum = 2;
 	strcpy(terminals[1],"''"); //epsilon
-	strcpy(terminals[2],".."); //EOF
+	strcpy(terminals[2],"'..'"); //EOF
 	curLine = 0;
 	while (scanf("%s",s) != EOF){
 		non = findNon(s);
@@ -163,9 +163,19 @@ static void makeTable(void){
 	//write file
 	freopen("grammar.out","w",stdout);
 	printf("%d\n",terNum);
-	for (i = 1;i <= terNum;++i) printf("%s\n",terminals[i]);
+	for (i = 1;i <= terNum;++i){
+		int l = strlen(terminals[i]);
+		terminals[i][l - 1] = 0;
+		printf("%s\n",terminals[i] + 1);
+	}
 	printf("%d\n",nonNum);
 	for (i = 1;i <= nonNum;++i) printf("%s\n",nonterminals[i]);
+	printf("%d\n",curLine);
+	for (i = 1;i <= curLine;++i){
+		printf("%d %d",rules[i].non,rules[i].num);
+		for (j = 1;j <= rules[i].num;++j) printf(" %d %d",rules[i].items[j][0],rules[i].items[j][1]);
+		printf("\n");
+	}
 	for (i = 1;i <= nonNum;++i){
 		for (j = 1;j <= terNum;++j) printf("%d ",M[i][j]);
 		printf("\n");
