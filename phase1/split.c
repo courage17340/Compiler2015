@@ -165,7 +165,7 @@ void split(char *s){
 				t[++q] = cur;
 				cur = '\n';
 			}else{
-				strcpy(s,"Invalid Symbol");
+				strcpy(s,"CompileError");
 				return;
 			}
 		}

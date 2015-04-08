@@ -2,7 +2,7 @@ program
 dec_or_func dec_or_funcs
 \\
 dec_or_funcs
-'' \
+'__' \
 dec_or_func dec_or_funcs
 \\
 dec_or_func
@@ -42,28 +42,28 @@ parameters
 plain_declaration comma_plain_declarations
 \\
 comma_plain_declarations
-'' \
+'__' \
 ',' plain_declaration comma_plain_declarations
 \\
 declarators
 declarator comma_declarators
 \\
 comma_declarators
-'' \
+'__' \
 ',' declarator comma_declarators
 \\
 init_declarators
 init_declarator comma_init_declarators
 \\
 comma_init_declarators
-'' \
+'__' \
 ',' init_declarator comma_init_declarators
 \\
 init_declarator
 declarator init_declarator1
 \\
 init_declarator1
-'' \
+'__' \
 '=' initializer
 \\
 initializer
@@ -71,7 +71,7 @@ assignment_expression \
 '{' initializer comma_initializers '}'
 \\
 comma_initializers
-'' \
+'__' \
 ',' initializer comma_initializers
 \\
 type_specifier
@@ -85,14 +85,14 @@ identifier type_specifier2 \
 '{' type_specifiers '}'
 \\
 type_specifier2
-'' \
+'__' \
 '{' type_specifiers '}'
 \\
 type_specifiers
 type_specifier declarators comma_type_specifiers
 \\
 comma_type_specifiers
-'' \
+'__' \
 ';' type_specifier declarators comma_type_specifiers
 \\
 struct_or_union
@@ -114,7 +114,7 @@ declarator2
 parameters ')'
 \\
 comma_array_sizes
-'' \
+'__' \
 '[' constant_expression ']' comma_array_sizes
 \\
 plain_declarator
@@ -132,7 +132,7 @@ selection_statement
 'if' '(' expression ')' statement selection_statement1
 \\
 selection_statement1
-'' \
+'__' \
 'else' statement
 \\
 expression_statement
@@ -143,11 +143,11 @@ compound_statement
 '{' comma_declarations comma_statements '}'
 \\
 comma_declarations
-'' \
+'__' \
 declaration comma_declarations
 \\
 comma_statements
-'' \
+'__' \
 statement comma_statements
 \\
 iteration_statement
@@ -177,7 +177,7 @@ expression
 assignment_expression comma_assignment_expressions
 \\
 comma_assignment_expressions
-'' \
+'__' \
 ',' assignment_expression comma_assignment_expressions
 \\
 assignment_expression
@@ -204,42 +204,42 @@ logical_or_expression
 logical_and_expression comma_logical_and_expressions
 \\
 comma_logical_and_expressions
-'' \
+'__' \
 '||' logical_and_expression comma_logical_and_expressions
 \\
 logical_and_expression
 inclusive_or_expression comma_inclusive_or_expressions
 \\
 comma_inclusive_or_expressions
-'' \
+'__' \
 '&&' inclusive_or_expression comma_inclusive_or_expressions
 \\
 inclusive_or_expression
 exclusive_or_expression comma_exclusive_or_expressions
 \\
 comma_exclusive_or_expressions
-'' \
+'__' \
 '|' exclusive_or_expression comma_exclusive_or_expressions
 \\
 exclusive_or_expression
 and_expression comma_and_expressions
 \\
 comma_and_expressions
-'' \
+'__' \
 '^' and_expression comma_and_expressions
 \\
 and_expression
 equality_expression comma_equality_expressions
 \\
 comma_equality_expressions
-'' \
+'__' \
 '&' equality_expression comma_equality_expressions
 \\
 equality_expression
 relational_expression comma_relational_expressions
 \\
 comma_relational_expressions
-'' \
+'__' \
 equality_operator relational_expression comma_relational_expressions
 \\
 equality_operator
@@ -250,7 +250,7 @@ relational_expression
 shift_expression comma_shift_expressions
 \\
 comma_shift_expressions
-'' \
+'__' \
 relational_operator shift_expression comma_shift_expressions
 \\
 relational_operator
@@ -263,7 +263,7 @@ shift_expression
 additive_expression comma_additive_expressions
 \\
 comma_additive_expressions
-'' \
+'__' \
 shift_operator additive_expression comma_additive_expressions
 \\
 shift_operator
@@ -274,7 +274,7 @@ additive_expression
 multiplicative_expression comma_multiplicative_expressions
 \\
 comma_multiplicative_expressions
-'' \
+'__' \
 additive_operator multiplicative_expression comma_multiplicative_expressions
 \\
 additive_operator
@@ -285,7 +285,7 @@ multiplicative_expression
 cast_expression comma_cast_expressions
 \\
 comma_cast_expressions
-'' \
+'__' \
 multiplicative_operator cast_expression comma_cast_expressions
 \\
 multiplicative_operator
@@ -311,7 +311,7 @@ type_name
 type_specifier pointers
 \\
 pointers
-'' \
+'__' \
 '*' pointers
 \\
 unary_expression
@@ -347,7 +347,7 @@ postfix_expression
 primary_expression postfixes
 \\
 postfixes
-'' \
+'__' \
 postfix postfixes
 \\
 postfix

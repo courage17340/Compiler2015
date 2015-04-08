@@ -14,7 +14,7 @@ static void init(void){
 	freopen("grammar1.txt","r",stdin);
 	nonNum = 0;
 	terNum = 2;
-	strcpy(terminals[1],"''"); //epsilon
+	strcpy(terminals[1],"'__'"); //epsilon
 	strcpy(terminals[2],"'..'"); //EOF
 	curLine = 0;
 	while (scanf("%s",s) != EOF){
@@ -84,7 +84,7 @@ static struct setType first(int k,int x){//first(X)
 			for (i = 2;i <= terNum;++i) ret.have[i] |= tmp.have[i];//note epsilon
 			if (!tmp.have[1]) break;
 			if (j == n){//epsilon \in all of first(X_i) 
-				tmp.have[1] = 1;
+				ret.have[1] = 1;
 			}
 		}
 		++p;
@@ -97,7 +97,8 @@ static void getFollow(void){
 	struct setType tmp;
 	followSet[1].have[2] = 1;//FOLLOW(S) = {EOF}
 	while (1){
-		int flag = 0,i,j,k;
+		int flag,i,j,k;
+		flag = 0;
 		for (i = 1;i <= curLine;++i){
 			int n = rules[i].num;
 			for (j = 1;j < n;++j) if (rules[i].items[j][0]){

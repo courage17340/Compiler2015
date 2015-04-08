@@ -19,6 +19,7 @@ static struct token *makeList(char *s){	//Remember to free the memory!!!
 		list[i].ptr = s + l;
 		getTokenType(&(list[i]));
 		l = r + 1;
+		++i;
 	}
 	list[m].ptr = s + r;//add END
 	list[m].tokenType = SYM;
@@ -74,6 +75,9 @@ static void build(struct node *root,int *next,int k,int x){
 	t = list[*next];
 	if (error) return;
 	if (k == 0){
+		if (x == 1){
+			return;
+		}
 		if (!equal(t,terminals[x])) error = *next + 1;
 		root->data = t.ptr;
 		++*next;
@@ -92,7 +96,7 @@ static void build(struct node *root,int *next,int k,int x){
 		root->c[i].flag = NULL;
 		root->c[i].c = NULL;
 		root->c[i].num = 0;
-		build(&root->c[i],next,rules[r].items[i][0],rules[r].items[i][1]);
+		build(&root->c[i],next,rules[r].items[i + 1][0],rules[r].items[i + 1][1]);
 	}
 	root->data = nonterminals[x];
 }
@@ -125,6 +129,7 @@ static int getType(struct token t){
 
 static void print(struct node *root,int col){
 	int i;
+	if (root->data == NULL) return;
 	for (i = 1;i <= col;++i) printf("\t");
 	printf("%s\n",root->data);
 	for (i = 0;i < root->num;++i) print(&root->c[i],col + 1);
@@ -148,11 +153,23 @@ int main(void){
 		c = getchar();
 	}
 	removeComments(s);
+	if (strcmp(s,"CompileError") == 0){
+		puts(s);
+		free(list);
+		return 0;
+	}
 	split(s);
 	root = parse(s);
+	if (error){
+		del(root);
+		printf("Compile Error at token \"%s\"\n",list[error - 1].ptr);
+		free(list);
+		return 0;
+	}
 	print(root,0);
 	del(root);
 	free(root);
+	free(list);
 	return 0;
 }
 
