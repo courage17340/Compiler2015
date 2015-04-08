@@ -4,7 +4,7 @@
 //#include "tokens.h"
 char s[1000010];
 int p,c;
-int main(){
+int main(void){
 	p = -1;
 	c = getchar();
 	while (c != EOF){
@@ -14,4 +14,5 @@ int main(){
 	removeComments(s);
 	split(s);
 	puts(s);
+	return 0;
 }

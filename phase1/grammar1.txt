@@ -1,0 +1,389 @@
+program
+dec_or_func dec_or_funcs
+\\
+dec_or_funcs
+'' \
+dec_or_func dec_or_funcs
+\\
+dec_or_func
+type_specifier dec_or_func1
+\\
+dec_or_func1
+';' \
+plain_declarator dec_or_func2
+\\
+dec_or_func2
+'(' dec_or_func4 \
+comma_array_sizes init_declarator1 comma_init_declarators ';'
+\\
+dec_or_func3
+init_declarator1 comma_init_declarators ';' \
+compound_statement
+\\
+dec_or_func4
+')' dec_or_func3 \
+parameters ')' dec_or_func3
+\\
+declaration
+type_specifier declaration1
+\\
+declaration1
+';' \
+init_declarators ';'
+\\
+function_definition
+type_specifier plain_declarator '(' function_definition1
+\\
+function_definition1
+')' compound_statement \
+parameters ')' compound_statement
+\\
+parameters
+plain_declaration comma_plain_declarations
+\\
+comma_plain_declarations
+'' \
+',' plain_declaration comma_plain_declarations
+\\
+declarators
+declarator comma_declarators
+\\
+comma_declarators
+'' \
+',' declarator comma_declarators
+\\
+init_declarators
+init_declarator comma_init_declarators
+\\
+comma_init_declarators
+'' \
+',' init_declarator comma_init_declarators
+\\
+init_declarator
+declarator init_declarator1
+\\
+init_declarator1
+'' \
+'=' initializer
+\\
+initializer
+assignment_expression \
+'{' initializer comma_initializers '}'
+\\
+comma_initializers
+'' \
+',' initializer comma_initializers
+\\
+type_specifier
+'void' \
+'char' \
+'int' \
+struct_or_union type_specifier1
+\\
+type_specifier1
+identifier type_specifier2 \
+'{' type_specifiers '}'
+\\
+type_specifier2
+'' \
+'{' type_specifiers '}'
+\\
+type_specifiers
+type_specifier declarators comma_type_specifiers
+\\
+comma_type_specifiers
+'' \
+';' type_specifier declarators comma_type_specifiers
+\\
+struct_or_union
+'struct' \
+'union'
+\\
+plain_declaration
+type_specifier declarator
+\\
+declarator
+plain_declarator declarator1
+\\
+declarator1
+'(' declarator2 \
+comma_array_sizes
+\\
+declarator2
+')' \
+parameters ')'
+\\
+comma_array_sizes
+'' \
+'[' constant_expression ']' comma_array_sizes
+\\
+plain_declarator
+identifier \
+'*' plain_declarator
+\\
+statement
+expression_statement \
+compound_statement \
+selection_statement \
+iteration_statement \
+jump_statement
+\\
+selection_statement
+'if' '(' expression ')' statement selection_statement1
+\\
+selection_statement1
+'' \
+'else' statement
+\\
+expression_statement
+';' \
+expression ';'
+\\
+compound_statement
+'{' comma_declarations comma_statements '}'
+\\
+comma_declarations
+'' \
+declaration comma_declarations
+\\
+comma_statements
+'' \
+statement comma_statements
+\\
+iteration_statement
+'while' '(' expression ')' statement \
+'for' '(' iteration_statement1
+\\
+iteration_statement1
+expression_statement iteration_statement2
+\\
+iteration_statement2
+expression_statement iteration_statement3
+\\
+iteration_statement3
+')' statement \
+expression ')' statement
+\\
+jump_statement
+'continue' ';' \
+'break' ';' \
+'return' jump_statement1
+\\
+jump_statement1
+';' \
+expression ';'
+\\
+expression
+assignment_expression comma_assignment_expressions
+\\
+comma_assignment_expressions
+'' \
+',' assignment_expression comma_assignment_expressions
+\\
+assignment_expression
+logical_or_expression \
+unary_expression assignment_operator assignment_expression
+\\
+assignment_operator
+'=' \
+'*=' \
+'/=' \
+'%=' \
+'+=' \
+'-=' \
+'<<=' \
+'>>=' \
+'&=' \
+'^=' \
+'|='
+\\
+constant_expression
+logical_or_expression
+\\
+logical_or_expression
+logical_and_expression comma_logical_and_expressions
+\\
+comma_logical_and_expressions
+'' \
+'||' logical_and_expression comma_logical_and_expressions
+\\
+logical_and_expression
+inclusive_or_expression comma_inclusive_or_expressions
+\\
+comma_inclusive_or_expressions
+'' \
+'&&' inclusive_or_expression comma_inclusive_or_expressions
+\\
+inclusive_or_expression
+exclusive_or_expression comma_exclusive_or_expressions
+\\
+comma_exclusive_or_expressions
+'' \
+'|' exclusive_or_expression comma_exclusive_or_expressions
+\\
+exclusive_or_expression
+and_expression comma_and_expressions
+\\
+comma_and_expressions
+'' \
+'^' and_expression comma_and_expressions
+\\
+and_expression
+equality_expression comma_equality_expressions
+\\
+comma_equality_expressions
+'' \
+'&' equality_expression comma_equality_expressions
+\\
+equality_expression
+relational_expression comma_relational_expressions
+\\
+comma_relational_expressions
+'' \
+equality_operator relational_expression comma_relational_expressions
+\\
+equality_operator
+'==' \
+'!='
+\\
+relational_expression
+shift_expression comma_shift_expressions
+\\
+comma_shift_expressions
+'' \
+relational_operator shift_expression comma_shift_expressions
+\\
+relational_operator
+'<' \
+'>' \
+'<=' \
+'>='
+\\
+shift_expression
+additive_expression comma_additive_expressions
+\\
+comma_additive_expressions
+'' \
+shift_operator additive_expression comma_additive_expressions
+\\
+shift_operator
+'<<' \
+'>>'
+\\
+additive_expression
+multiplicative_expression comma_multiplicative_expressions
+\\
+comma_multiplicative_expressions
+'' \
+additive_operator multiplicative_expression comma_multiplicative_expressions
+\\
+additive_operator
+'+' \
+'-'
+\\
+multiplicative_expression
+cast_expression comma_cast_expressions
+\\
+comma_cast_expressions
+'' \
+multiplicative_operator cast_expression comma_cast_expressions
+\\
+multiplicative_operator
+'*' \
+'/' \
+'%'
+\\
+cast_expression
+identifier postfixes \
+constant postfixes \
+string postfixes \
+'(' cast_expression1 \
+'++' unary_expression \
+'--' unary_expression \
+unary_operator cast_expression \
+'sizeof' unary_expression1
+\\
+cast_expression1
+expression ')' postfixes \
+type_name ')' cast_expression
+\\
+type_name
+type_specifier pointers
+\\
+pointers
+'' \
+'*' pointers
+\\
+unary_expression
+postfix_expression \
+'++' unary_expression \
+'--' unary_expression \
+unary_operator cast_expression \
+'sizeof' unary_expression1
+\\
+unary_expression1
+identifier postfixes\
+constant postfixes\
+string postfixes \
+'(' unary_expression2 \
+'++' unary_expression \
+'--' unary_expression \
+unary_operator cast_expression \
+'sizeof' unary_expression1
+\\
+unary_expression2
+expression ')' postfixes \
+type_name ')'
+\\
+unary_operator
+'&' \
+'*' \
+'+' \
+'-' \
+'~' \
+'!'
+\\
+postfix_expression
+primary_expression postfixes
+\\
+postfixes
+'' \
+postfix postfixes
+\\
+postfix
+'[' expression ']' \
+'(' postfix1 \
+'.' identifier \
+'->' identifier \
+'++' \
+'--'
+\\
+postfix1
+')' \
+arguments ')'
+\\
+arguments
+expression
+\\
+primary_expression
+identifier \
+constant \
+string \
+'(' expression ')'
+\\
+constant
+integer_constant \
+character_constant
+\\
+identifier
+'identifier'
+\\
+integer_constant
+'integer_constant'
+\\
+character_constant
+'character_constant'
+\\
+string
+'string'
+\\

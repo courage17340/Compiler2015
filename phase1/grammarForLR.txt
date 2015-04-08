@@ -91,26 +91,29 @@ expression_statement
 expression ';'
 \\
 compound_statement
+'{' '}' \
+'{' declarations '}' \
+'{' statements '}' \
 '{' declarations statements '}'
 \\
 declarations
-'' \
+declaration \
 declarations declaration
 \\
 statements
-'' \
+statement \
 statements statement
 \\
 iteration_statement
 'while' '(' expression ')' statement \
 'for' '(' ';' ';' ')' statement \
-'for' '(' ';' ';' statement ')' statement \
-'for' '(' ';' statement ';' ')' statement \
-'for' '(' ';' statement ';' statement ')' statement \
-'for' '(' statement ';' ';' ')' statement \
-'for' '(' statement ';' ';' statement ')' statement \
-'for' '(' statement ';' statement ';' ')' statement \
-'for' '(' statement ';' statement ';' statement ')' statement
+'for' '(' ';' ';' expression ')' statement \
+'for' '(' ';' expression ';' ')' statement \
+'for' '(' ';' expression ';' expression ')' statement \
+'for' '(' expression ';' ';' ')' statement \
+'for' '(' expression ';' ';' expression ')' statement \
+'for' '(' expression ';' expression ';' ')' statement \
+'for' '(' expression ';' expression ';' expression ')' statement
 \\
 jump_statement
 'continue' ';' \
@@ -210,11 +213,8 @@ unary_expression \
 '(' type_name ')' cast_expression
 \\
 type_name
-type_specifier pointers
-\\
-pointers
-'' \
-'*' pointers
+type_specifier \
+type_name '*'
 \\
 unary_expression
 postfix_expression \
@@ -233,11 +233,8 @@ unary_operator
 '!'
 \\
 postfix_expression
-primary_expression postfixes
-\\
-postfixes
-'' \
-postfixes postfix
+primary_expression \
+postfix_expression postfix
 \\
 postfix
 '[' expression ']' \
