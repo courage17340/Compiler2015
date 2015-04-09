@@ -181,22 +181,8 @@ comma_assignment_expressions
 ',' assignment_expression comma_assignment_expressions
 \\
 assignment_expression
-'(' assignment_expression2 \
-identifier postfixes assignment_expression1 \
-constant postfixes assignment_expression1 \
-string postfixes assignment_expression1 \
-'++' unary_expression assignment_expression1 \
-'--' unary_expression assignment_expression1 \
-unary_operator cast_expression assignment_expression1 \
-'sizeof' unary_expression1 assignment_expression1
-\\
-assignment_expression1
-comma_cast_expressions comma_multiplicative_expressions comma_additive_expressions comma_shift_expressions comma_relational_expressions comma_equality_expressions comma_and_expressions comma_exclusive_or_expressions comma_inclusive_or_expressions comma_logical_and_expressions \
-assignment_operator assignment_expression
-\\
-assignment_expression2
-type_name ')' cast_expression comma_cast_expressions comma_multiplicative_expressions comma_additive_expressions comma_shift_expressions comma_relational_expressions comma_equality_expressions comma_and_expressions comma_exclusive_or_expressions comma_inclusive_or_expressions comma_logical_and_expressions \
-expression ')' postfixes assignment_expression1
+logical_or_expression \
+unary_expression assignment_operator assignment_expression
 \\
 assignment_operator
 '=' \
