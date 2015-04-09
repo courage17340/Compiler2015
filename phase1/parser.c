@@ -14,11 +14,12 @@ static struct token *makeList(char *s){	//Remember to free the memory!!!
 	i = 0;
 	l = 0;
 	while (i < m){
+		while (s[l] == 0) ++l;
 		r = l;
 		while (s[r] != 0) ++r;
 		list[i].ptr = s + l;
 		getTokenType(&(list[i]));
-		l = r + 1;
+		l = r;
 		++i;
 	}
 	list[m].ptr = s + r;//add END
@@ -71,7 +72,7 @@ static int findNon(char *s){
 
 static void build(struct node *root,int *next,int k,int x){
 	struct token t;
-	int r,i,n;
+	int r,i,n,m;
 	t = list[*next];
 	if (error) return;
 	if (k == 0){
@@ -99,6 +100,36 @@ static void build(struct node *root,int *next,int k,int x){
 		build(&root->c[i],next,rules[r].items[i + 1][0],rules[r].items[i + 1][1]);
 	}
 	root->data = nonterminals[x];
+	m = 0;
+	for (i = 0;i < n;++i) if (root->c[i].data != NULL) ++m;
+	if (m < n && m){
+		struct node *tmp = (struct node *)malloc(m * sizeof(struct node));
+		int p = -1;
+		for (i = 0;i < n;++i) if (root->c[i].data != NULL){
+			++p;
+			tmp[p].data = root->c[i].data;
+			tmp[p].flag = root->c[i].flag;
+			tmp[p].c = root->c[i].c;
+			tmp[p].num = root->c[i].num;
+		}
+		free(root->c);
+		root->c = tmp;
+	}
+	root->num = m;
+	if (m == 1){
+		struct node *tmp = root->c;
+		root->data = tmp->data;
+		root->flag = tmp->flag;
+		root->c = tmp->c;
+		root->num = tmp->num;
+		free(tmp);
+	}
+	if (m == 0){
+		free(root->c);
+		root->c = NULL;
+		root->num = 0;
+		root->data = NULL;
+	}
 }
 
 static int equal(struct token t,char *s){
@@ -130,6 +161,10 @@ static int getType(struct token t){
 static void print(struct node *root,int col){
 	int i;
 	if (root->data == NULL) return;
+	if (root->num == 1){
+		print(&root->c[0],col);
+		return;
+	}
 	for (i = 1;i <= col;++i) printf("\t");
 	printf("%s\n",root->data);
 	for (i = 0;i < root->num;++i) print(&root->c[i],col + 1);

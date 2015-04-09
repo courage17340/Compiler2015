@@ -5,19 +5,19 @@ void getTokenType(struct token *t){
 	char *s = t->ptr;
 //---constants: char, string, or number---
 	if (s[0] == '\''){
-		int n = strlen(s);
+//		int n = strlen(s);
 		t->tokenType = CON;
 		t->tokenDetail = CON_CHAR;
-		t->ptr = s + 1;
-		t->ptr[n - 1] = 0;			//remove ''
+		t->ptr = s;
+//		t->ptr[n - 1] = 0;			//remove ''
 		return;
 	}
 	if (s[0] == '"'){
-		int n = strlen(s);
+//		int n = strlen(s);
 		t->tokenType = CON;
 		t->tokenDetail = CON_STR;
-		t->ptr = s + 1;
-		t->ptr[n - 1] = 0;			//remove ""
+		t->ptr = s;
+//		t->ptr[n - 1] = 0;			//remove ""
 		return;
 	}
 	if ('0' <= s[0] && s[0] <= '9'){
