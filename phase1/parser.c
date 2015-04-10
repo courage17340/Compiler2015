@@ -81,6 +81,7 @@ static void build(struct node *root,int *next,int k,int x){
 		}
 		if (!equal(t,terminals[x])) error = *next + 1;
 		root->data = t.ptr;
+		root->flag = t.tokenDetail;
 		++*next;
 		return;
 	}
@@ -94,12 +95,13 @@ static void build(struct node *root,int *next,int k,int x){
 	root->c = (struct node *)malloc(n * sizeof(struct node));
 	for (i = 0;i < n;++i){
 		root->c[i].data = NULL;
-		root->c[i].flag = NULL;
+		root->c[i].flag = 0;
 		root->c[i].c = NULL;
 		root->c[i].num = 0;
 		build(&root->c[i],next,rules[r].items[i + 1][0],rules[r].items[i + 1][1]);
 	}
 	root->data = nonterminals[x];
+//	simplify
 	m = 0;
 	for (i = 0;i < n;++i) if (root->c[i].data != NULL) ++m;
 	if (m < n && m){
@@ -116,20 +118,22 @@ static void build(struct node *root,int *next,int k,int x){
 		root->c = tmp;
 	}
 	root->num = m;
-	if (m == 1){
+/*	if (m == 1 && strcmp(root->data,"program")){
 		struct node *tmp = root->c;
 		root->data = tmp->data;
 		root->flag = tmp->flag;
 		root->c = tmp->c;
 		root->num = tmp->num;
 		free(tmp);
-	}
+	}*/
 	if (m == 0){
 		free(root->c);
 		root->c = NULL;
 		root->num = 0;
 		root->data = NULL;
+		return;
 	}
+	
 }
 
 static int equal(struct token t,char *s){
@@ -144,8 +148,8 @@ static int equal(struct token t,char *s){
 static struct node *getNode(void){
 	struct node *ret = (struct node *)malloc(sizeof(struct node));
 	ret->c = NULL;
-	ret->num = 0;
-	ret->data = ret->flag = NULL;
+	ret->num = ret->flag = 0;
+	ret->data = NULL;
 	return ret;
 }
 
@@ -161,10 +165,11 @@ static int getType(struct token t){
 static void print(struct node *root,int col){
 	int i;
 	if (root->data == NULL) return;
-	if (root->num == 1){
-		print(&root->c[0],col);
-		return;
-	}
+//	if (root->num == 1){
+//		print(&root->c[0],col);
+//		return;
+//	}
+//	if (root->data[0] == ',' || root->data[0] == ';') return;
 	for (i = 1;i <= col;++i) printf("\t");
 	printf("%s\n",root->data);
 	for (i = 0;i < root->num;++i) print(&root->c[i],col + 1);
@@ -176,6 +181,10 @@ static void del(struct node *s){
 	for (i = 0;i < n;++i) del(&s->c[i]);
 	free(s->c);
 }
+
+//------for------ast------
+
+
 
 int main(void){
 	static char s[1000010];
@@ -201,6 +210,7 @@ int main(void){
 		free(list);
 		return 0;
 	}
+//	root = makeAST(root);
 	print(root,0);
 	del(root);
 	free(root);

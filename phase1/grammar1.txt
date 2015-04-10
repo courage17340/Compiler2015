@@ -89,11 +89,11 @@ type_specifier2
 '{' type_specifiers '}'
 \\
 type_specifiers
-type_specifier declarators comma_type_specifiers
+type_specifier declarators ';' comma_type_specifiers
 \\
 comma_type_specifiers
 '__' \
-';' type_specifier declarators comma_type_specifiers
+type_specifier declarators ';' comma_type_specifiers
 \\
 struct_or_union
 'struct' \
