@@ -204,7 +204,7 @@ static void makeTable(void){
 	}
 //	error test
 	for (i = 1;i <= error;++i)
-		printf("Error list #%d: M[%d][%d]: %d -> %d",i,coru[i].i,coru[i].j,coru[i].k1,coru[i].k2);
+		printf("Error list #%d: M[%d][%d]: %d -> %d\n",i,coru[i].i,coru[i].j,coru[i].k1,coru[i].k2);
 }
 
 int main(void){
