@@ -31,7 +31,7 @@ static void del(struct node *);
 
 
 //------struct------definitions------
-
+/*
 struct Iden{
 	char *iden;
 };
@@ -157,7 +157,10 @@ struct Stmt{
 		struct Expr *expr;
 	};
 };
-
-
+struct AST{
+	int num;
+	struct Decl **decl;
+};
+*/
 
 #endif

@@ -144,6 +144,9 @@ static struct setType first1(int r,int s){//first(X_s...X_n) from rule r
 static void makeTable(void){
 	int i,j,k;
 	struct setType tmp;
+	static struct{int i,j,k1,k2;} coru[10];
+	static int error;
+	error = 0;
 	memset(M,0,sizeof M);
 	init();
 	getFirst();
@@ -151,10 +154,28 @@ static void makeTable(void){
 	for (i = 1;i <= curLine;++i){
 		int A = rules[i].non;
 		tmp = first1(i,1);
-		for (j = 1;j <= terNum;++j) if (tmp.have[j]) M[A][j] = i;
+		for (j = 1;j <= terNum;++j) if (tmp.have[j]){
+			if (M[A][j]){
+				++error;
+				coru[error].i = A;
+				coru[error].j = j;
+				coru[error].k1 = M[A][j];
+				coru[error].k2 = i;
+			}
+			M[A][j] = i;
+		}
 		if (tmp.have[1]){
 			int b;
-			for (b = 1;b <= terNum;++b) if (followSet[A].have[b]) M[A][b] = i;
+			for (b = 1;b <= terNum;++b) if (followSet[A].have[b]){
+				if (M[A][b]){
+					++error;
+					coru[error].i = A;
+					coru[error].j = b;
+					coru[error].k1 = M[A][b];
+					coru[error].k2 = i;
+				}
+				M[A][b] = i;
+			}
 		}
 	}
 	//deal with if statement
@@ -181,6 +202,9 @@ static void makeTable(void){
 		for (j = 1;j <= terNum;++j) printf("%d ",M[i][j]);
 		printf("\n");
 	}
+//	error test
+	for (i = 1;i <= error;++i)
+		printf("Error list #%d: M[%d][%d]: %d -> %d",i,coru[i].i,coru[i].j,coru[i].k1,coru[i].k2);
 }
 
 int main(void){
