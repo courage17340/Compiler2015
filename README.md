@@ -21,3 +21,4 @@ Chu Wei's compiler project
 | **0.6** | 2015.4.8 | parser done && many bugs to be fixed |
 | **0.6a** | 2015.4.9 | some bugs fixed && can analyse simple programs now |
 | **0.6b** | 2015.4.9 | some bugs fixed |
+| **0.6c** | 2015.4.12 | some bugs fixed |

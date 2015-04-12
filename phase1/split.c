@@ -128,7 +128,7 @@ void split(char *s){
 				cur = '\n';
 			}else if (cur == '-'){
 				t[++q] = cur;
-				if (s[i + 1] == '=' || s[i + 1] == '-'){
+				if (s[i + 1] == '=' || s[i + 1] == '-' || s[i + 1] == '>'){
 					++i;
 					t[++q] = s[i];
 				}
