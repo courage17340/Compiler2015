@@ -185,28 +185,121 @@ static void del(struct node *s){
 //------for------ast------
 
 enum ASTType{
-	ROOT,DECL,FUNCDECL,STRUDECL,UNIODECL,VARIDECL,BASITYPE,
+	ROOT,DECL,FUNCDECL,STRUDECL,UNIODECL,VARIDECL,TYPE,BASITYPE,
 	INTETYPE,CHARTYPE,VOIDTYPE,STRUTYPE,UNIOTYPE,PTERTYPE,
-	ARRATYPE,STMT,BREASTMT,CONTSTMT,IFTESTMT,FORRLOOP,WHILSTMT,
+	ARRATYPE,STMT,BREASTMT,CONTSTMT,IFTESTMT,FORRLOOP,WHILLOOP,
 	RETNSTMT,COMPSTMT,EXPR,EMPTSTMT,BINAEXPR,UNARSTMT,SZOFSTMT,
 	CASTEXPR,PTERACSS,RECOACSS,SELFINCR,SELFDECR,ARRAACSS,
-	FUNCCALL,IDEN,INTECONS,CHARCONS,STRICONS
+	FUNCCALL,IDEN,INTECONS,CHARCONS,STRICONS,
+	PARA,VARILIST
+};
+
+static char ASTflags[50][30] = {
+	"Root","Decl","FunctionDecl","StructDecl","UnionDecl","VarDecl","Type","BasicType",
+	"IntType","CharType","VoidType","StructType","UnionType","PointerType",
+	"ArrayType","Stmt","BreakStmt","ContinueStmt","IfStmt","ForLoop","WhileLoop",
+	"ReturnStmt","CompoundStmt","Expr","EmptyExpr","BinaryExpr","UnaryExpr","SizeofExpr",
+	"CastExpr","PointerAccess","RecordAccess","SelfIncrement","SelfDecrement","ArrayAccess",
+	"FunctionCall","Identifier","IntConst","CharConst","StringConst",
+	"Parameters","VariableList"
 };
 
 struct ASTNode{
 	enum ASTType type;
 	char *data;
-	int num;
-	struct ASTnode *c;
+	int num,cap;
+	struct ASTNode *c;
 };
 
-static void AST(struct node *root){
-	
+static void doubleSpace(struct ASTNode *a){
+	struct ASTNode *tmp = (struct ASTNode *)malloc(sizeof(struct ASTNode) * a->cap * 2);
+	int i;
+	for (i = 0;i < a->cap;++i)
+		tmp[i] = a->c[i];
+	a->cap *= 2;
+	free(a->c);
+	a->c = tmp;
+}
+
+static struct ASTNode *getAst(int n){
+	return (struct ASTNode *)malloc(sizeof(struct ASTNode) * n);
+}
+
+static void AST(struct node *root,struct ASTNode *ast){
+	ast->data = ASTflags[ast->type];
+	ast->c = NULL;
+	ast->num = ast->cap = 0;
+	if (ast->type == ROOT){
+		while (root->data != NULL){
+			if (ast->cap == 0){
+				ast->c = getAst(1);
+				ast->num = 0;
+				ast->cap = 1;
+			}
+			if (ast->cap == ast->num) doubleSpace(ast);
+			++ast->num;
+			ast->c[ast->num - 1].type = DECL;
+			AST(&root->c[0],&ast->c[ast->num - 1]);
+			if (root->num > 1) root = &root->c[1];else return;
+		}
+	}else if (ast->type == DECL){//dec_or_func
+		ast->c = getAst(1);
+		ast->num = 1;
+		ast->cap = 1;
+		ast->c[0].type = TYPE;
+		AST(&root->c[0],&ast->c[0]);
+		root = &root->c[1];//dec_or_func1
+		if (strcmp(root->c[0].data,";") == 0){
+			
+		}
+		if (ast->cap == ast->num) doubleSpace(ast);
+		++ast->num;
+		ast->c[ast->num - 1].type = IDEN;
+		AST(&root->c[0],&ast->c[ast->num - 1]);
+		root = &root->c[1];//dec_or_func2
+		if (strcmp(root->c[0].data,"(") == 0){//'(' function_definition1
+			ast->type = FUNCDECL;
+			root = &root->c[1];//function_definition1
+			if (strcmp(root->c[0].data,")") == 0){//')' compound_statement
+				if (ast->num == ast->cap) doubleSpace(ast);
+				++ast->num;
+				ast->c[ast->num - 1].type = PARA;
+				ast->c[ast->num - 1].data = NULL;
+				ast->c[ast->num - 1].num = 0;
+				ast->c[ast->num - 1].cap = 0;
+				root = &root->c[1];
+			}else{//parameters ')' compound_statement
+				if (ast->num == ast->cap) doubleSpace(ast);
+				++ast->num;
+				ast->c[ast->num - 1].type = PARA;
+				AST(&root->c[0],&ast->c[ast->num - 1]);
+				root = &root->c[2];
+			}
+			//compound_statement
+			//func dec not supported
+			if (ast->num == ast->cap) doubleSpace(ast);
+			++ast->num;
+			ast->c[ast->num - 1].type = COMPSTMT;
+			AST(&root->c[0],&ast->c[ast->num - 1]);
+		}else{//comma_array_sizes init_declarator1 comma_init_declarators ';'
+			
+		}
+	}else if (ast->type == FUNCDECL){
+		//never
+	}else if (ast->type == STRUDECL){
+		//never
+	}else if (ast->type == UNIODECL){
+		//never
+	}else if (ast->type == VARIDECL){
+		//init_declarator
+		
+	}else{}
 }
 
 int main(void){
 	static char s[1000010];
 	struct node *root;
+	struct ASTNode *ast;
 	int c,p;
 	p = -1;
 	c = getchar();
@@ -228,8 +321,12 @@ int main(void){
 		free(list);
 		return 0;
 	}
-//	root = makeAST(root);
-	print(root,0);
+	ast = malloc(sizeof (struct ASTNode));
+	ast->type = ROOT;
+	AST(root,ast);
+//	del(ast);
+//	free(ast);
+//	print(root,0);
 	del(root);
 	free(root);
 	free(list);

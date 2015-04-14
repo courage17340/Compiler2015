@@ -13,16 +13,8 @@ dec_or_func1
 plain_declarator dec_or_func2
 \\
 dec_or_func2
-'(' dec_or_func4 \
-comma_array_sizes init_declarator1 comma_init_declarators ';'
-\\
-dec_or_func3
-init_declarator1 comma_init_declarators ';' \
-compound_statement
-\\
-dec_or_func4
-')' dec_or_func3 \
-parameters ')' dec_or_func3
+comma_array_sizes init_declarator1 comma_init_declarators ';' \
+'(' function_definition1
 \\
 declaration
 type_specifier declaration1
@@ -30,9 +22,6 @@ type_specifier declaration1
 declaration1
 ';' \
 init_declarators ';'
-\\
-function_definition
-type_specifier plain_declarator '(' function_definition1
 \\
 function_definition1
 ')' compound_statement \
@@ -103,15 +92,7 @@ plain_declaration
 type_specifier declarator
 \\
 declarator
-plain_declarator declarator1
-\\
-declarator1
-'(' declarator2 \
-comma_array_sizes
-\\
-declarator2
-')' \
-parameters ')'
+plain_declarator comma_array_sizes
 \\
 comma_array_sizes
 '__' \
