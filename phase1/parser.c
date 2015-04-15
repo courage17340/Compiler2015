@@ -1,7 +1,7 @@
 #include "parser.h"
 #include "removeComments.h"
 #include "split.h"
-static struct token *makeList(char *s){	//Remember to free the memory!!!
+static struct token *makeList(char *s){	//Remember to free the memory!!
 	int n,m,l,r,i;
 	struct token *list;
 	n = strlen(s);
@@ -188,20 +188,20 @@ enum ASTType{
 	ROOT,DECL,FUNCDECL,STRUDECL,UNIODECL,VARIDECL,TYPE,BASITYPE,
 	INTETYPE,CHARTYPE,VOIDTYPE,STRUTYPE,UNIOTYPE,PTERTYPE,
 	ARRATYPE,STMT,BREASTMT,CONTSTMT,IFTESTMT,FORRLOOP,WHILLOOP,
-	RETNSTMT,COMPSTMT,EXPR,EMPTSTMT,BINAEXPR,UNARSTMT,SZOFSTMT,
+	RETNSTMT,COMPSTMT,EXPR,EMPTEXPR,BINAEXPR,UNARSTMT,SZOFSTMT,
 	CASTEXPR,PTERACSS,RECOACSS,SELFINCR,SELFDECR,ARRAACSS,
 	FUNCCALL,IDEN,INTECONS,CHARCONS,STRICONS,
-	PARA,VARILIST
+	PARA,TYPESPEC,INIT
 };
 
-static char ASTflags[50][30] = {
+static char ASTFlags[50][30] = {
 	"Root","Decl","FunctionDecl","StructDecl","UnionDecl","VarDecl","Type","BasicType",
 	"IntType","CharType","VoidType","StructType","UnionType","PointerType",
 	"ArrayType","Stmt","BreakStmt","ContinueStmt","IfStmt","ForLoop","WhileLoop",
 	"ReturnStmt","CompoundStmt","Expr","EmptyExpr","BinaryExpr","UnaryExpr","SizeofExpr",
 	"CastExpr","PointerAccess","RecordAccess","SelfIncrement","SelfDecrement","ArrayAccess",
 	"FunctionCall","Identifier","IntConst","CharConst","StringConst",
-	"Parameters","VariableList"
+	"Parameters","TypeSpecifiers","Initializer"
 };
 
 struct ASTNode{
@@ -226,7 +226,7 @@ static struct ASTNode *getAst(int n){
 }
 
 static void AST(struct node *root,struct ASTNode *ast){
-	ast->data = ASTflags[ast->type];
+	ast->data = ASTFlags[ast->type];
 	ast->c = NULL;
 	ast->num = ast->cap = 0;
 	if (ast->type == ROOT){
@@ -243,6 +243,9 @@ static void AST(struct node *root,struct ASTNode *ast){
 			if (root->num > 1) root = &root->c[1];else return;
 		}
 	}else if (ast->type == DECL){//dec_or_func
+		struct ASTNode *atmp;
+		struct node *ctmp;
+		int numOfPtrs = 0;
 		ast->c = getAst(1);
 		ast->num = 1;
 		ast->cap = 1;
@@ -250,21 +253,36 @@ static void AST(struct node *root,struct ASTNode *ast){
 		AST(&root->c[0],&ast->c[0]);
 		root = &root->c[1];//dec_or_func1
 		if (strcmp(root->c[0].data,";") == 0){
-			
+			return;
 		}
+		ctmp = &root->c[0];//plain_declarator
+		while (ctmp->num > 1){
+			ctmp = &ctmp->c[1];
+			++numOfPtrs;
+		}
+		ctmp = &ctmp->c[0];//identifier
 		if (ast->cap == ast->num) doubleSpace(ast);
 		++ast->num;
 		ast->c[ast->num - 1].type = IDEN;
-		AST(&root->c[0],&ast->c[ast->num - 1]);
+		AST(&ctmp->c[0],&ast->c[ast->num - 1]);
 		root = &root->c[1];//dec_or_func2
 		if (strcmp(root->c[0].data,"(") == 0){//'(' function_definition1
+			while (numOfPtrs--){
+				atmp = getAst(1);
+				*atmp = ast->c[ast->num - 2];
+				ast->c[ast->num - 2].type = PTERTYPE;
+				ast->c[ast->num - 2].data = ASTFlags[PTERTYPE];
+				ast->c[ast->num - 2].c = atmp;
+				ast->c[ast->num - 2].num = 1;
+				ast->c[ast->num - 2].cap = 1;
+			}
 			ast->type = FUNCDECL;
 			root = &root->c[1];//function_definition1
 			if (strcmp(root->c[0].data,")") == 0){//')' compound_statement
 				if (ast->num == ast->cap) doubleSpace(ast);
 				++ast->num;
 				ast->c[ast->num - 1].type = PARA;
-				ast->c[ast->num - 1].data = NULL;
+				ast->c[ast->num - 1].data = ASTFlags[PARA];
 				ast->c[ast->num - 1].num = 0;
 				ast->c[ast->num - 1].cap = 0;
 				root = &root->c[1];
@@ -282,7 +300,111 @@ static void AST(struct node *root,struct ASTNode *ast){
 			ast->c[ast->num - 1].type = COMPSTMT;
 			AST(&root->c[0],&ast->c[ast->num - 1]);
 		}else{//comma_array_sizes init_declarator1 comma_init_declarators ';'
-			
+			int cptr;
+			ast->type = VARIDECL;
+			ast->data = ASTFlags[VARIDECL];
+			if (ast->num == ast->cap) doubleSpace(ast);
+			++ast->num;
+			ast->c[ast->num - 1] = ast->c[ast->num - 2];
+			ast->c[ast->num - 2] = ast->c[0];
+			if (ast->c[0].type == STRUTYPE || ast->c[0].type == UNIOTYPE){
+				ast->c[ast->num - 2].c = getAst(1);
+				ast->c[ast->num - 2].c[0].type = IDEN;
+				ast->c[ast->num - 2].c[0].data = ast->c[0].c[0].data;
+				ast->c[ast->num - 2].num = 1;
+				ast->c[ast->num - 2].cap = 1;
+			}
+			while (numOfPtrs--){
+				atmp = getAst(1);
+				*atmp = ast->c[ast->num - 2];
+				ast->c[ast->num - 2].type = PTERTYPE;
+				ast->c[ast->num - 2].data = ASTFlags[PTERTYPE];
+				ast->c[ast->num - 2].c = atmp;
+				ast->c[ast->num - 2].num = 1;
+				ast->c[ast->num - 2].cap = 1;
+			}
+			cptr = 0;
+			if (strcmp(root->c[cptr].data,"comma_array_sizes") == 0){
+				ctmp = &root->c[cptr];
+				++cptr;
+				while (1){
+					atmp = getAst(2);
+					atmp[0] = ast->c[ast->num - 2];
+					atmp[1].type = EXPR;
+					AST(&ctmp->c[1],&atmp[1]);
+					ast->c[ast->num - 2].type = ARRATYPE;
+					ast->c[ast->num - 2].data = ASTFlags[ARRATYPE];
+					ast->c[ast->num - 2].c = atmp;
+					ast->c[ast->num - 2].num = 2;
+					ast->c[ast->num - 2].cap = 2;
+					if (ctmp->num >= 4) ctmp = &ctmp->c[3];else break;
+				}
+			}
+			if (strcmp(root->c[cptr].data,"init_declarator1") == 0){
+				ctmp = &root->c[cptr];
+				++cptr;
+				if (ast->num == ast->cap) doubleSpace(ast);
+				++ast->num;
+				ast->c[ast->num - 1].type = INIT;
+				AST(&ctmp->c[1],&ast->c[ast->num - 1]);
+			}
+			if (strcmp(root->c[cptr].data,"comma_init_declarators") == 0){
+				struct node *ttmp;
+				root = &root->c[cptr];
+				while (1){
+					if (ast->num == ast->cap) doubleSpace(ast);
+					++ast->num;
+					ast->c[ast->num - 1] = ast->c[0];
+					if (ast->c[0].type == STRUTYPE || ast->c[0].type == UNIOTYPE){
+						ast->c[ast->num - 1].c = getAst(1);
+						ast->c[ast->num - 1].c[0].type = IDEN;
+						ast->c[ast->num - 1].c[0].data = ast->c[0].c[0].data;
+						ast->c[ast->num - 1].num = 1;
+						ast->c[ast->num - 1].cap = 1;
+					}
+					ctmp = &root->c[1];//init_declarator
+					ctmp = &root->c[0];//declarator
+					ttmp = &ctmp->c[0];//plain_declarator
+					while (ttmp->num > 1){
+						ttmp = &ttmp->c[1];
+						atmp = getAst(1);
+						*atmp = ast->c[ast->num - 1];
+						ast->c[ast->num - 1].type = PTERTYPE;
+						ast->c[ast->num - 1].data = ASTFlags[PTERTYPE];
+						ast->c[ast->num - 1].c = atmp;
+						ast->c[ast->num - 1].num = 1;
+						ast->c[ast->num - 1].cap = 1;
+					}
+					if (ast->num == ast->cap) doubleSpace(ast);
+					++ast->num;
+					ast->c[ast->num - 1].type = IDEN;
+					AST(&ttmp->c[0],&ast->c[ast->num - 1]);
+					if (ctmp->num > 1){
+						ctmp = &ctmp->c[1];//comma_array_sizes
+						while (1){
+							atmp = getAst(2);
+							atmp[0] = ast->c[ast->num - 2];
+							atmp[1].type = EXPR;
+							AST(&ctmp->c[1],&atmp[1]);
+							ast->c[ast->num - 2].type = ARRATYPE;
+							ast->c[ast->num - 2].data = ASTFlags[ARRATYPE];
+							ast->c[ast->num - 2].c = atmp;
+							ast->c[ast->num - 2].num = 2;
+							ast->c[ast->num - 2].cap = 2;
+							if (ctmp->num >= 4) ctmp = &ctmp->c[3];else break;
+						}
+					}
+					ctmp = &root->c[1];//init_decrator
+					if (ctmp->num > 1){
+						ctmp = &ctmp->c[1];//init_declarator1
+						if (ast->num == ast->cap) doubleSpace(ast);
+						++ast->num;
+						ast->c[ast->num - 1].type = INIT;
+						AST(&ctmp->c[1],&ast->c[ast->num - 1]);
+					}
+					if (root->num >= 3) root = &root->c[2];else break;
+				}
+			}
 		}
 	}else if (ast->type == FUNCDECL){
 		//never
@@ -291,11 +413,138 @@ static void AST(struct node *root,struct ASTNode *ast){
 	}else if (ast->type == UNIODECL){
 		//never
 	}else if (ast->type == VARIDECL){
-		//init_declarator
-		
+		//never
+	}else if (ast->type == TYPE){//type_specifier
+		if (strcmp(root->c[0].data,"void") == 0){
+			ast->type = VOIDTYPE;
+			ast->data = ASTFlags[VOIDTYPE];
+		}else if (strcmp(root->c[0].data,"char") == 0){
+			ast->type = CHARTYPE;
+			ast->data = ASTFlags[CHARTYPE];
+		}else if (strcmp(root->c[0].data,"int") == 0){
+			ast->type = INTETYPE;
+			ast->data = ASTFlags[INTETYPE];
+		}else{//struct_or_union type_specifier1
+			if (strcmp(root->c[0].c[0].data,"struct") == 0)
+				ast->type = STRUTYPE;
+			else
+				ast->type = UNIOTYPE;
+			root = &root->c[1];//type_specifier1
+			ast->data = ASTFlags[ast->type];
+			ast->c = getAst(1);
+			ast->num = ast->cap = 1;
+			ast->c[0].type = IDEN;
+			if (strcmp(root->c[0].data,"identifier") == 0){
+				AST(&root->c[0],&ast->c[0]);
+				if (root->num > 1){
+					root = &root->c[1];//type_specifier2
+				}else return;
+			}else{
+				ast->c[0].data = "";
+				ast->c[0].num = 0;
+				ast->c[0].cap = 0;
+			}
+			root = &root->c[1];//type_specifiers
+			if (ast->num == ast->cap) doubleSpace(ast);
+			++ast->num;
+			ast->c[ast->num - 1].type = TYPESPEC;
+			AST(root,&ast->c[ast->num - 1]);
+		}
+	}else if (ast->type == BASITYPE){
+		//never
+	}else if (ast->type == INTETYPE){
+		//never
+	}else if (ast->type == CHARTYPE){
+		//never
+	}else if (ast->type == VOIDTYPE){
+		//never
+	}else if (ast->type == STRUTYPE){
+		//never
+	}else if (ast->type == UNIOTYPE){
+		//never
+	}else if (ast->type == PTERTYPE){
+		//never
+	}else if (ast->type == ARRATYPE){
+		//never
+	}else if (ast->type == STMT){
+		if (strcmp(root->c[0].data,"expression_statement") == 0){
+			root = &root->c[0];
+			if (root->num == 1){
+				ast->c = getAst(1);
+				ast->num = ast->cap = 1;
+				ast->c[0].type = EMPTEXPR;
+				ast->c[0].data = ASTFlags[EMPTEXPR];
+				ast->c[0].num = 0;
+				ast->c[0].cap = 0;
+				ast->c[0].c = NULL;
+			}else{
+				ast->c = getAst(1);
+				ast->num = ast->cap = 1;
+				ast->c[0].type = EXPR;
+				AST(&root->c[0],&ast->c[0]);
+			}
+		}else if (strcmp(root->c[0].data,"compound_statement") == 0){
+			root = &root->c[0];
+			ast->type = COMPSTMT;
+			AST(root,ast);
+		}else if (strcmp(root->c[0].data,"selection_statement") == 0){
+			root = &root->c[0];
+			ast->type = IFTESTMT;
+			ast->c = getAst(2);
+			ast->num = ast->cap = 2;
+			ast->c[0].type = EXPR;
+			AST(&root->c[2],&ast->c[0]);
+			ast->c[1].type = STMT;
+			AST(&root->c[4],&ast->c[1]);
+			if (root->num > 5){
+				root = &root->c[5];//selection_statement1
+				if (ast->num == ast->cap) doubleSpace(ast);
+				++ast->num;
+				ast->c[ast->num - 1].type = STMT;
+				AST(&root->c[1],&ast->c[ast->num - 1]);
+			}
+		}else if (strcmp(root->c[0].data,"iteration_statement") == 0){
+			root = &root->c[0];
+			if (strcmp(root->c[0].data,"while") == 0){
+				ast->type = WHILLOOP;
+				AST(root,ast);
+			}else{
+				ast->type = FORRLOOP;
+				AST(root,ast);
+			}
+		}else if (strcmp(root->c[0].data,"jump_statement") == 0){
+			root = &root->c[0];
+			if (strcmp(root->c[0].data,"continue") == 0){
+				ast->type = CONTSTMT;
+				ast->data = ASTFlags[ast->type];
+			}else if (strcmp(root->c[0].data,"break") == 0){
+				ast->type = BREASTMT;
+				ast->data = ASTFlags[ast->type];
+			}else if (strcmp(root->c[0].data,"return") == 0){
+				ast->type = RETNSTMT;
+				ast->data = ASTFlags[ast->type];
+				root = &root->c[1];//jump_statement1
+				ast->c = getAst(1);
+				ast->num = ast->cap = 1;
+				if (root->num > 1){
+					ast->c[0].type = EXPR;
+					AST(&root->c[0],&ast->c[0]);
+				}else{
+					ast->c[0].type = EMPTEXPR;
+					ast->c[0].data = ASTFlags[ast->c[0].type];
+					ast->c[0].num = 0;
+					ast->c[0].cap = 0;
+					ast->c[0].c = NULL;
+				}
+			}
+		}
 	}else{}
 }
-
+/*
+check points:
+getAst(...) **ast->cap = ast->num = ...**
+getAst(...) **ast->c[...].**
+*/
 int main(void){
 	static char s[1000010];
 	struct node *root;
