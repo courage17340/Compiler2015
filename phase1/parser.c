@@ -538,12 +538,160 @@ static void AST(struct node *root,struct ASTNode *ast){
 				}
 			}
 		}
+	}else if (ast->type == BREASTMT){
+		//never
+	}else if (ast->type == CONTSTMT){
+		//never
+	}else if (ast->type == IFTESTMT){
+		//never
+	}else if (ast->type == FORRLOOP){
+		struct node *tmp;
+		root = &root->c[2];//iteration_statement1
+		ast->c = getAst(4);
+		ast->num = 0;
+		ast->cap = 4;
+		tmp = &root->c[0];//expression_statement
+		if (tmp->num == 1){
+			ast->c[0].type = EMPTEXPR;
+			ast->c[0].data = ASTFlags[EMPTEXPR];
+		}else{
+			ast->c[0].type = EXPR;
+			AST(&tmp->c[0],&ast->c[0]);
+		}
+		root = &root->c[1];//iteration_statement2
+		tmp = &root->c[0];//expression_statement
+		if (tmp->num == 1){
+			ast->c[1].type = EMPTEXPR;
+			ast->c[1].data = ASTFlags[EMPTEXPR];
+		}else{
+			ast->c[1].type = EXPR;
+			AST(&tmp->c[0],&ast->c[1]);
+		}
+		root = &root->c[2];//iteration_statement3
+		if (strcmp(root->c[0].data,")") == 0){
+			ast->c[2].type = EMPTEXPR;
+			ast->c[2].data = ASTFlags[EMPTEXPR];
+			root = &root->c[1];
+		}else{
+			ast->c[2].type = EXPR;
+			AST(&root->c[0],&ast->c[2]);
+			root = &root->c[2];
+		}
+		ast->c[3].type = STMT;
+		AST(root,&ast->c[3]);
+	}else if (ast->type == WHILLOOP){
+		ast->c = getAst(2);
+		ast->num = ast->cap = 2;
+		ast->c[0].type = EXPR;
+		AST(&root->c[2],&ast->c[0]);
+		ast->c[1].type = STMT;
+		AST(&root->c[4],&ast->c[1]);
+	}else if (ast->type == RETNSTMT){
+		//never
+	}else if (ast->type == COMPSTMT){
+		struct node *bk;
+		int ptr = 1;
+		ast->c = getAst(1);
+		ast->num = 0;
+		ast->cap = 1;
+		bk = root;
+		if (strcmp(root->c[ptr].data,"comma_declarations") == 0){
+			struct node *ctmp,*ctmp1,*ctmp2;
+			struct ASTNode *atmp,*atmp1;
+			int numOfPtrs;
+			root = &root->c[ptr];//comma_declarations
+			while (1){
+				ctmp = &root->c[0];//declaration
+				if (ast->num == ast->cap) doubleSpace(ast);
+				++ast->num;
+				ast->c[ast->num - 1].type = DECL;
+				atmp = &ast->c[ast->num - 1];
+				atmp->c = getAst(1);
+				atmp->num = atmp->cap = 1;
+				atmp->c[0].type = TYPE;
+				AST(&ctmp->c[0],&atmp->c[0]);
+				ctmp = &ctmp->c[1];//declaration1
+				while (ctmp->num > 1){
+					char *name;
+					ctmp = &ctmp->c[0];//init_declarators or comma_init_declarators
+					ctmp1 = &ctmp->c[0];//init_declarator
+					if (ctmp->c[0].data[0] == 'c') ctmp1 = &ctmp->c[1];
+					if (atmp->num == atmp->cap) doubleSpace(atmp);
+					atmp->c[atmp->num - 1] = atmp->c[0];
+					if (atmp->c[0].type == STRUTYPE || atmp->c[0].type == UNIOTYPE){
+						atmp->c[atmp->num - 1].c = getAst(1);
+						atmp->c[atmp->num - 1].c[0].type = IDEN;
+						atmp->c[atmp->num - 1].c[0].data = atmp->c[0].c[0].data;
+						atmp->c[atmp->num - 1].num = 1;
+						atmp->c[atmp->num - 1].cap = 1;
+					}
+					ctmp2 = &ctmp1->c[0];//declarator
+					ctmp2 = &ctmp2->c[0];//plain_declarator
+					while (ctmp2->num > 1){
+						ctmp2 = &ctmp2->c[1];
+						atmp1 = getAst(1);
+						*atmp1 = atmp->c[atmp->num - 1];
+						atmp->c[atmp->num - 1].type = PTERTYPE;
+						atmp->c[atmp->num - 1].data = ASTFlags[PTERTYPE];
+						atmp->c[atmp->num - 1].num = 1;
+						atmp->c[atmp->num - 1].cap = 1;
+						atmp->c[atmp->num - 1].c = atmp1;
+					}
+					ctmp2 = &ctmp2->c[0];//identifier
+					if (atmp->num == atmp->cap) doubleSpace(atmp);
+					++atmp->num;
+					atmp->c[atmp->num - 1].type = IDEN;
+					AST(ctmp2,&atmp->c[atmp->num - 1]);
+					ctmp2 = &ctmp1->c[0];//declarator
+					if (ctmp2->num > 1){
+						ctmp2 = &ctmp2->c[1];//comma_array_sizes
+						while (1){
+							atmp1 = getAst(2);
+							atmp1[0] = atmp->c[atmp->num - 2];
+							atmp1[1].type = EXPR;
+							AST(&ctmp2->c[1],&atmp1[1]);
+							atmp->c[atmp->num - 2].type = ARRATYPE;
+							atmp->c[atmp->num - 2].data = ASTFlags[ARRATYPE];
+							atmp->c[atmp->num - 2].num = 2;
+							atmp->c[atmp->num - 2].cap = 2;
+							atmp->c[atmp->num - 2].c = atmp1;
+							if (ctmp2->num > 3) ctmp2 = &ctmp2->c[3];else break;
+						}
+					}
+					if (ctmp1->num > 1){
+						ctmp2 = &ctmp1->c[1];//init_declarator1
+						if (atmp->num == atmp->cap) doubleSpace(atmp);
+						++atmp->num;
+						atmp->c[atmp->num - 1].type = INIT;
+						AST(&ctmp2->c[1],&atmp->c[atmp->num - 1]);
+					}
+					if (strcmp(ctmp->c[ctmp->num - 1].data,"comma_init_declarators") == 0)
+						ctmp = &ctmp->c[ctmp->num - 1];
+					else
+						break;
+				}
+				if (root->num > 1) root = &root->c[1];else break;
+			}
+			++ptr;
+		}
+		root = bk;
+		if (strcmp(root->c[ptr].data,"comma_statements") == 0){
+			root = &root->c[ptr];//comma_statements
+			while (1){
+				if (ast->num == ast->cap) doubleSpace(ast);
+				++ast->num;
+				ast->c[ast->num - 1].type = STMT;
+				AST(&root->c[0],&ast->c[ast->num - 1]);
+				if (root->num > 1) root = &root->c[1];else break;
+			}
+		}
 	}else{}
 }
 /*
 check points:
 getAst(...) **ast->cap = ast->num = ...**
 getAst(...) **ast->c[...].**
+if (...) doubleSpace(ast); ++ast->num;
 */
 int main(void){
 	static char s[1000010];
