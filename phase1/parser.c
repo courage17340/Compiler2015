@@ -188,7 +188,7 @@ enum ASTType{
 	ROOT,DECL,FUNCDECL,STRUDECL,UNIODECL,VARIDECL,TYPE,BASITYPE,
 	INTETYPE,CHARTYPE,VOIDTYPE,STRUTYPE,UNIOTYPE,PTERTYPE,
 	ARRATYPE,STMT,BREASTMT,CONTSTMT,IFTESTMT,FORRLOOP,WHILLOOP,
-	RETNSTMT,COMPSTMT,EXPR,EMPTEXPR,BINAEXPR,UNARSTMT,SZOFSTMT,
+	RETNSTMT,COMPSTMT,EXPR,EMPTEXPR,BINAEXPR,UNAREXPR,SZOFEXPR,
 	CASTEXPR,PTERACSS,RECOACSS,SELFINCR,SELFDECR,ARRAACSS,
 	FUNCCALL,IDEN,INTECONS,CHARCONS,STRICONS,
 	PARA,TYPESPEC,INIT
@@ -205,7 +205,7 @@ static char ASTFlags[50][30] = {
 };
 
 struct ASTNode{
-	enum ASTType type;
+	int type;
 	char *data;
 	int num,cap;
 	struct ASTNode *c;
@@ -685,6 +685,283 @@ static void AST(struct node *root,struct ASTNode *ast){
 				if (root->num > 1) root = &root->c[1];else break;
 			}
 		}
+	}else if (EXPR <= ast->type && ast->type <= STRICONS){
+		int i;
+		struct node *ctmp;
+		struct ASTNode *atmp,*atmp1;
+		if (strcmp(root->data,"expression") == 0){
+			AST(&root->c[0],ast);
+			if (root->num > 1){
+				root = &root->c[1];
+				AST(root,ast);
+			}
+		}else if (strcmp(root->data,"comma_assignment_expressions") == 0){
+			atmp = getAst(2);
+			atmp[0] = *ast;
+			atmp[1].type = EXPR;
+			AST(&root->c[1],&atmp[1]);
+			ast->type = BINAEXPR;
+			ast->data = root->c[0].data;
+			ast->num = ast->cap = 2;
+			ast->c = atmp;
+			if (root->num > 2) AST(&root->c[2],ast);
+		}else if (strcmp(root->data,"assignment_expression") == 0){
+			if (strcmp(root->c[0].data,"(") == 0){
+				root = &root->c[1];//assignment_expression2
+				if (strcmp(root->c[0].data,"type_name") == 0){
+					atmp = getAst(2);
+					atmp[0].type = EXPR;
+					AST(&root->c[0],&atmp[0]);
+					atmp[1].type = EXPR;
+					for (i = 2;i < root->num;++i) AST(&root->c[i],&atmp[1]);
+					ast->type = CASTEXPR;
+					ast->data = ASTFlags[CASTEXPR];
+					ast->c = atmp;
+					ast->num = ast->cap = 2;
+				}else{
+					AST(&root->c[0],ast);
+					for (i = 2;i < root->num;++i) AST(&root->c[i],ast);
+				}
+			}else if (strcmp(root->c[0].data,"identifier") == 0){
+				for (i = 0;i < root->num;++i) AST(&root->c[i],ast);
+			}else if (strcmp(root->c[0].data,"constant") == 0){
+				for (i = 0;i < root->num;++i) AST(&root->c[i],ast);
+			}else if (strcmp(root->c[0].data,"string") == 0){
+				for (i = 0;i < root->num;++i) AST(&root->c[i],ast);
+			}else if (strcmp(root->c[0].data,"++") == 0){
+				AST(&root->c[1],ast);
+				atmp = getAst(1);
+				*atmp = *ast;
+				ast->type = UNAREXPR;
+				ast->data = root->c[0].data;
+				ast->num = ast->cap = 1;
+				ast->c = atmp;
+				AST(&root->c[2],ast);
+			}else if (strcmp(root->c[0].data,"--") == 0){
+				AST(&root->c[1],ast);
+				atmp = getAst(1);
+				*atmp = *ast;
+				ast->type = UNAREXPR;
+				ast->data = root->c[0].data;
+				ast->num = ast->cap = 1;
+				ast->c = atmp;
+				AST(&root->c[2],ast);
+			}else if (strcmp(root->c[0].data,"unary_operator") == 0){
+				AST(&root->c[1],ast);
+				atmp = getAst(1);
+				*atmp = *ast;
+				ast->type = UNAREXPR;
+				ast->data = root->c[0].c[0].data;
+				ast->num = ast->cap = 1;
+				ast->c = atmp;
+				AST(&root->c[2],ast);
+			}else{
+				AST(&root->c[1],ast);
+				atmp = getAst(1);
+				*atmp = *ast;
+				ast->type = SZOFEXPR;
+				ast->data = ASTFlags[SZOFEXPR];
+				ast->num = ast->cap = 1;
+				ast->c = atmp;
+				AST(&root->c[2],ast);
+			}
+		}else if (strcmp(root->data,"assignment_expression1") == 0){
+			if (strcmp(root->c[0].data,"assignment_operator") == 0){
+				atmp = getAst(2);
+				atmp[0] = *ast;
+				atmp[1].type = EXPR;
+				AST(&root->c[1],&atmp[1]);
+				ast->type = BINAEXPR;
+				ast->data = root->c[0].c[0].data;
+				ast->num = ast->cap = 2;
+				ast->c = atmp;
+			}else{
+				for (i = 0;i < root->num;++i) AST(&root->c[i],ast);
+			}
+		}else if (strcmp(root->data,"assignment_expression2") == 0){
+			//never
+		}else if (strcmp(root->data,"constant_expression") == 0){
+			AST(&root->c[0],ast);
+		}else if (strcmp(root->data,"logical_or_expression") == 0){
+			for (i = 0;i < root->num;++i) AST(&root->c[i],ast);
+		}else if (strcmp(root->data,"comma_logical_and_expressions") == 0){
+			atmp = getAst(2);
+			atmp[0] = *ast;
+			atmp[1].type = EXPR;
+			AST(&root->c[1],&atmp[1]);
+			ast->type = BINAEXPR;
+			ast->data = root->c[0].data;
+			ast->num = ast->cap = 2;
+			ast->c = atmp;
+			if (root->num > 2) AST(&root->c[2],ast);
+		}else if (strcmp(root->data,"logical_and_expression") == 0){
+			for (i = 0;i < root->num;++i) AST(&root->c[i],ast);
+		}else if (strcmp(root->data,"comma_inclusive_or_expressions") == 0){
+			atmp = getAst(2);
+			atmp[0] = *ast;
+			atmp[1].type = EXPR;
+			AST(&root->c[1],&atmp[1]);
+			ast->type = BINAEXPR;
+			ast->data = root->c[0].data;
+			ast->num = ast->cap = 2;
+			ast->c = atmp;
+			if (root->num > 2) AST(&root->c[2],ast);
+		}else if (strcmp(root->data,"inclusive_or_expression") == 0){
+			for (i = 0;i < root->num;++i) AST(&root->c[i],ast);
+		}else if (strcmp(root->data,"comma_exclusive_or_expressions") == 0){
+			atmp = getAst(2);
+			atmp[0] = *ast;
+			atmp[1].type = EXPR;
+			AST(&root->c[1],&atmp[1]);
+			ast->type = BINAEXPR;
+			ast->data = root->c[0].data;
+			ast->num = ast->cap = 2;
+			ast->c = atmp;
+			if (root->num > 2) AST(&root->c[2],ast);
+		}else if (strcmp(root->data,"exclusive_or_expression") == 0){
+			for (i = 0;i < root->num;++i) AST(&root->c[i],ast);
+		}else if (strcmp(root->data,"comma_and_expressions") == 0){
+			atmp = getAst(2);
+			atmp[0] = *ast;
+			atmp[1].type = EXPR;
+			AST(&root->c[1],&atmp[1]);
+			ast->type = BINAEXPR;
+			ast->data = root->c[0].data;
+			ast->num = ast->cap = 2;
+			ast->c = atmp;
+			if (root->num > 2) AST(&root->c[2],ast);
+		}else if (strcmp(root->data,"and_expression") == 0){
+			for (i = 0;i < root->num;++i) AST(&root->c[i],ast);
+		}else if (strcmp(root->data,"comma_equality_expressions") == 0){
+			atmp = getAst(2);
+			atmp[0] = *ast;
+			atmp[1].type = EXPR;
+			AST(&root->c[1],&atmp[1]);
+			ast->type = BINAEXPR;
+			ast->data = root->c[0].data;
+			ast->num = ast->cap = 2;
+			ast->c = atmp;
+			if (root->num > 2) AST(&root->c[2],ast);
+		}else if (strcmp(root->data,"equality_expression") == 0){
+			for (i = 0;i < root->num;++i) AST(&root->c[i],ast);
+		}else if (strcmp(root->data,"comma_relational_expressions") == 0){
+			atmp = getAst(2);
+			atmp[0] = *ast;
+			atmp[1].type = EXPR;
+			AST(&root->c[1],&atmp[1]);
+			ast->type = BINAEXPR;
+			ast->data = root->c[0].c[0].data;
+			ast->num = ast->cap = 2;
+			ast->c = atmp;
+			if (root->num > 2) AST(&root->c[2],ast);
+		}else if (strcmp(root->data,"relational_expression") == 0){
+			for (i = 0;i < root->num;++i) AST(&root->c[i],ast);
+		}else if (strcmp(root->data,"comma_shift_expressions") == 0){
+			atmp = getAst(2);
+			atmp[0] = *ast;
+			atmp[1].type = EXPR;
+			AST(&root->c[1],&atmp[1]);
+			ast->type = BINAEXPR;
+			ast->data = root->c[0].c[0].data;
+			ast->num = ast->cap = 2;
+			ast->c = atmp;
+			if (root->num > 2) AST(&root->c[2],ast);
+		}else if (strcmp(root->data,"shift_expression") == 0){
+			for (i = 0;i < root->num;++i) AST(&root->c[i],ast);
+		}else if (strcmp(root->data,"comma_additive_expressions") == 0){
+			atmp = getAst(2);
+			atmp[0] = *ast;
+			atmp[1].type = EXPR;
+			AST(&root->c[1],&atmp[1]);
+			ast->type = BINAEXPR;
+			ast->data = root->c[0].c[0].data;
+			ast->num = ast->cap = 2;
+			ast->c = atmp;
+			if (root->num > 2) AST(&root->c[2],ast);
+		}else if (strcmp(root->data,"additive_expression") == 0){
+			for (i = 0;i < root->num;++i) AST(&root->c[i],ast);
+		}else if (strcmp(root->data,"comma_multiplicative_expressions") == 0){
+			atmp = getAst(2);
+			atmp[0] = *ast;
+			atmp[1].type = EXPR;
+			AST(&root->c[1],&atmp[1]);
+			ast->type = BINAEXPR;
+			ast->data = root->c[0].c[0].data;
+			ast->num = ast->cap = 2;
+			ast->c = atmp;
+			if (root->num > 2) AST(&root->c[2],ast);
+		}else if (strcmp(root->data,"multiplicative_expression") == 0){
+			for (i = 0;i < root->num;++i) AST(&root->c[i],ast);
+		}else if (strcmp(root->data,"comma_cast_expressions") == 0){
+			atmp = getAst(2);
+			atmp[0] = *ast;
+			atmp[1].type = EXPR;
+			AST(&root->c[1],&atmp[1]);
+			ast->type = BINAEXPR;
+			ast->data = root->c[0].c[0].data;
+			ast->num = ast->cap = 2;
+			ast->c = atmp;
+			if (root->num > 2) AST(&root->c[2],ast);
+		}else if (strcmp(root->data,"cast_expression") == 0){
+			if (strcmp(root->c[0].data,"identifier") == 0){
+				for (i = 0;i < root->num;++i) AST(&root->c[i],ast);
+			}else if (strcmp(root->c[0].data,"constant") == 0){
+				for (i = 0;i < root->num;++i) AST(&root->c[i],ast);
+			}else if (strcmp(root->c[0].data,"string") == 0){
+				for (i = 0;i < root->num;++i) AST(&root->c[i],ast);
+			}else if (strcmp(root->c[0].data,"(") == 0){
+				AST(&root->c[1],ast);
+			}else if (strcmp(root->c[0].data,"++") == 0){
+				AST(&root->c[1],ast);
+				atmp = getAst(1);
+				*atmp = *ast;
+				ast->type = UNAREXPR;
+				ast->data = root->c[0].data;
+				ast->num = ast->cap = 1;
+				ast->c = atmp;
+			}else if (strcmp(root->c[0].data,"--") == 0){
+				AST(&root->c[1],ast);
+				atmp = getAst(1);
+				*atmp = *ast;
+				ast->type = UNAREXPR;
+				ast->data = root->c[0].data;
+				ast->num = ast->cap = 1;
+				ast->c = atmp;
+			}else if (strcmp(root->c[0].data,"unary_operator") == 0){
+				AST(&root->c[1],ast);
+				atmp = getAst(1);
+				*atmp = *ast;
+				ast->type = UNAREXPR;
+				ast->data = root->c[0].c[0].data;
+				ast->num = ast->cap = 1;
+				ast->c = atmp;
+			}else{//sizeof ...
+				AST(&root->c[1],ast);
+				atmp = getAst(1);
+				*atmp = *ast;
+				ast->type = SZOFEXPR;
+				ast->data = ASTFlags[SZOFEXPR];
+				ast->num = ast->cap = 1;
+				ast->c = atmp;
+			}
+		}else if (strcmp(root->data,"cast_expression1") == 0){
+			if (strcmp(root->c[0].data,"expression") == 0){
+				AST(&root->c[0],ast);
+				if (root->num > 2) AST(&root->c[2],ast);
+			}else{
+				atmp = getAst(2);
+				atmp[0].type = EXPR;
+				AST(&root->c[0],&atmp[0]);
+				atmp[1].type = EXPR;
+				AST(&root->c[2],&atmp[1]);
+				ast.type = CASTEXPR;
+				ast->data = ASTFlags[CASTEXPR];
+				ast->num = ast->cap = 2;
+				ast->c = atmp;
+			}
+		}else if (strcmp(root->data,"type_name") == 0){
+			
+		}
 	}else{}
 }
 /*
@@ -720,10 +997,10 @@ int main(void){
 	}
 	ast = malloc(sizeof (struct ASTNode));
 	ast->type = ROOT;
-	AST(root,ast);
+//	AST(root,ast);
 //	del(ast);
 //	free(ast);
-//	print(root,0);
+	print(root,0);
 	del(root);
 	free(root);
 	free(list);
