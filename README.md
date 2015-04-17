@@ -22,4 +22,5 @@ Chu Wei's compiler project
 | **0.6a** | 2015.4.9 | some bugs fixed && can analyse simple programs now |
 | **0.6b** | 2015.4.9 | some bugs fixed |
 | **0.6c** | 2015.4.12 | some bugs fixed |
-| **0.7** | 2015.4.17 | ast nearly done && lost of bugs to be fixed |
+| **0.7** | 2015.4.17 | **AST nearly done** && lost of bugs to be fixed |
+| **0.7a** | 2015.4.17 | some fatal bugs fixed && many bugs to be fixed |

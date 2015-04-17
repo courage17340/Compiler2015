@@ -231,14 +231,10 @@ static void AST(struct node *root,struct ASTNode *ast){
 //	ast->num = ast->cap = 0;
 	if (ast->type == ROOT){
 		ast->data = ASTFlags[ast->type];
-		ast->c = NULL;
-		ast->num = ast->cap = 0;
-		while (root->data != NULL){
-			if (ast->cap == 0){
-				ast->c = getAst(1);
-				ast->num = 0;
-				ast->cap = 1;
-			}
+		ast->c = getAst(1);
+		ast->num = 0;
+		ast->cap = 1;
+		while (1){
 			if (ast->cap == ast->num) doubleSpace(ast);
 			++ast->num;
 			ast->c[ast->num - 1].type = DECL;
@@ -270,7 +266,7 @@ static void AST(struct node *root,struct ASTNode *ast){
 		if (ast->cap == ast->num) doubleSpace(ast);
 		++ast->num;
 		ast->c[ast->num - 1].type = IDEN;
-		AST(&ctmp->c[0],&ast->c[ast->num - 1]);
+		AST(ctmp,&ast->c[ast->num - 1]);
 		root = &root->c[1];//dec_or_func2
 		if (strcmp(root->c[0].data,"(") == 0){//'(' function_definition1
 			while (numOfPtrs--){
@@ -283,6 +279,7 @@ static void AST(struct node *root,struct ASTNode *ast){
 				ast->c[ast->num - 2].cap = 1;
 			}
 			ast->type = FUNCDECL;
+			ast->data = ASTFlags[ast->type];
 			root = &root->c[1];//function_definition1
 			if (strcmp(root->c[0].data,")") == 0){//')' compound_statement
 				if (ast->num == ast->cap) doubleSpace(ast);
@@ -305,7 +302,7 @@ static void AST(struct node *root,struct ASTNode *ast){
 			if (ast->num == ast->cap) doubleSpace(ast);
 			++ast->num;
 			ast->c[ast->num - 1].type = COMPSTMT;
-			AST(&root->c[0],&ast->c[ast->num - 1]);
+			AST(root,&ast->c[ast->num - 1]);
 		}else{//comma_array_sizes init_declarator1 comma_init_declarators ';'
 			int cptr;
 			ast->type = VARIDECL;
@@ -376,7 +373,7 @@ static void AST(struct node *root,struct ASTNode *ast){
 						ast->c[ast->num - 1].cap = 1;
 					}
 					ctmp = &root->c[1];//init_declarator
-					ctmp = &root->c[0];//declarator
+					ctmp = &ctmp->c[0];//declarator
 					ttmp = &ctmp->c[0];//plain_declarator
 					while (ttmp->num > 1){
 						ttmp = &ttmp->c[1];
