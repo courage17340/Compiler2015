@@ -1,4 +1,4 @@
 bin/
 *.exe
 *.o
-phase1/CST.txt
+phase1/AST.txt

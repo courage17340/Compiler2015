@@ -33,7 +33,7 @@ struct node *parse(char *s){
 	int i,j,ptr;
 	list = makeList(s);
 	freopen("grammar.out","r",stdin);
-	freopen("CST.txt","w",stdout);
+	freopen("AST.txt","w",stdout);
 	scanf("%d",&terNum);
 	for (i = 1;i <= terNum;++i) scanf("%s",terminals[i]);
 	scanf("%d",&nonNum);
@@ -641,9 +641,9 @@ static void AST(struct node *root,struct ASTNode *ast){
 				ctmp = &root->c[0];//declaration
 				if (ast->num == ast->cap) doubleSpace(ast);
 				++ast->num;
-				ast->c[ast->num - 1].type = DECL;
+				ast->c[ast->num - 1].type = VARIDECL;
 				atmp = &ast->c[ast->num - 1];
-				atmp->data = ASTFlags[DECL];
+				atmp->data = ASTFlags[VARIDECL];
 				atmp->c = getAst(1);
 				atmp->num = atmp->cap = 1;
 				atmp->c[0].type = TYPE;
@@ -1359,21 +1359,169 @@ static void tab(int t){
 	for (i = 0;i < t;++i) printf("\t");
 }
 
-static void astPrint(struct ASTNode *ast,int t){
+static void astPrint(char *s,struct ASTNode *ast,int t){
 	int i;
 	tab(t);
-	printf("%s\n",ast->data);
-	for (i = 0;i < ast->num;++i) astPrint(&ast->c[i],t + 1);
+	if (s != NULL) printf("%s",s);
+	if (ast->type == ROOT){
+		printf("Root\n");
+		for (i = 0;i < ast->num;++i)
+			astPrint(NULL,&ast->c[i],t + 1);
+	}else if (ast->type == DECL){
+		printf("Decl\n");
+		for (i = 0;i < ast->num;++i)
+			astPrint(NULL,&ast->c[i],t + 1);
+	}else if (ast->type == FUNCDECL){
+		printf("FuncDecl\n");
+		astPrint("ReturnType: ",&ast->c[0],t + 1);
+		astPrint("FuncName: ",&ast->c[1],t + 1);
+		astPrint("Parameters: ",&ast->c[2],t + 1);
+		astPrint("Definition: ",&ast->c[3],t + 1);
+	}else if (ast->type == STRUDECL){
+		//never
+	}else if (ast->type == UNIODECL){
+		//never
+	}else if (ast->type == VARIDECL){
+		printf("VariDecl\n");
+		astPrint("BaseType: ",&ast->c[0],t + 1);
+		for (i = 1;i < ast->num;++i){
+			if (ast->c[i].type == IDEN)
+				s = "Identifier: ";
+			else if (TYPE <= ast->c[i].type && ast->c[i].type <= ARRATYPE)
+				s = "Type: ";
+			else
+				s = NULL;
+			astPrint(s,&ast->c[i],t + 1);
+		}
+	}else if (ast->type == TYPE){
+		//never
+	}else if (ast->type == BASITYPE){
+		//never
+	}else if (ast->type == INTETYPE){
+		printf("IntType\n");
+	}else if (ast->type == CHARTYPE){
+		printf("CharType\n");
+	}else if (ast->type == VOIDTYPE){
+		printf("VoidType\n");
+	}else if (ast->type == STRUTYPE){
+		printf("StructType\n");
+		astPrint("StructName: ",&ast->c[0],t + 1);
+		if (ast->num > 1) astPrint("StructMembers: ",&ast->c[1],t + 1);
+	}else if (ast->type == UNIOTYPE){
+		printf("UnionType\n");
+		astPrint("UnionName: ",&ast->c[0],t + 1);
+		if (ast->num > 1) astPrint("UnionMembers: ",&ast->c[1],t + 1);
+	}else if (ast->type == PTERTYPE){
+		printf("PointerType\n");
+		astPrint("BaseType: ",&ast->c[0],t + 1);
+	}else if (ast->type == ARRATYPE){
+		printf("ArrayType\n");
+		astPrint("BaseType: ",&ast->c[0],t + 1);
+		astPrint("ArraySize: ",&ast->c[1],t + 1);
+	}else if (ast->type == STMT){
+		//never
+	}else if (ast->type == BREASTMT){
+		printf("BreakStmt\n");
+	}else if (ast->type == CONTSTMT){
+		printf("ContinueStmt\n");
+	}else if (ast->type == IFTESTMT){
+		printf("IfStmt\n");
+		astPrint("Condition: ",&ast->c[0],t + 1);
+		astPrint("Then: ",&ast->c[1],t + 1);
+		if (ast->num > 2) astPrint("Else: ",&ast->c[2],t + 1);
+	}
+	else if (ast->type == FORRLOOP){
+		printf("ForLoop\n");
+		astPrint("Initialize: ",&ast->c[0],t + 1);
+		astPrint("Condition: ",&ast->c[1],t + 1);
+		astPrint("StepAction: ",&ast->c[2],t + 1);
+		astPrint("Body: ",&ast->c[3],t + 1);
+	}else if (ast->type == WHILLOOP){
+		printf("WhileLoop\n");
+		astPrint("Condition: ",&ast->c[0],t + 1);
+		astPrint("Body: ",&ast->c[1],t + 1);
+	}else if (ast->type == EXPRSTMT){
+		printf("ExprStmt\n");
+		astPrint(NULL,&ast->c[0],t + 1);
+	}else if (ast->type == RETNSTMT){
+		printf("ReturnStmt\n");
+		astPrint(NULL,&ast->c[0],t + 1);
+	}else if (ast->type == COMPSTMT){
+		printf("CompoundStmt\n");
+		for (i = 0;i < ast->num;++i) astPrint(NULL,&ast->c[i],t + 1);
+	}else if (ast->type == EXPR){
+		//never
+	}else if (ast->type == EMPTEXPR){
+		printf("EmptyExpr\n");
+	}else if (ast->type == BINAEXPR){
+		printf("BinaryExpr: %s\n",ast->data);
+		astPrint(NULL,&ast->c[0],t + 1);
+		astPrint(NULL,&ast->c[1],t + 1);
+	}else if (ast->type == UNAREXPR){
+		printf("UnaryExpr: %s\n",ast->data);
+		astPrint(NULL,&ast->c[0],t + 1);
+	}else if (ast->type == SZOFEXPR){
+		printf("SizeofExpr\n");
+		astPrint(NULL,&ast->c[0],t + 1);
+	}else if (ast->type == CASTEXPR){
+		printf("CastExpr\n");
+		astPrint("CastType: ",&ast->c[0],t + 1);
+		astPrint("BaseExpr: ",&ast->c[1],t + 1);
+	}else if (ast->type == PTERACSS){
+		printf("PointerAccess\n");
+		astPrint("Pointer: ",&ast->c[0],t + 1);
+		astPrint("Field: ",&ast->c[1],t + 1);
+	}else if (ast->type == RECOACSS){
+		printf("RecordAccess\n");
+		astPrint("Record: ",&ast->c[0],t + 1);
+		astPrint("Field: ",&ast->c[1],t + 1);
+	}else if (ast->type == SELFINCR){
+		printf("SelfIncrement\n");
+		astPrint(NULL,&ast->c[0],t + 1);
+	}else if (ast->type == SELFDECR){
+		printf("SelfDecrement\n");
+		astPrint(NULL,&ast->c[0],t + 1);
+	}else if (ast->type == ARRAACSS){
+		printf("ArrayAccess\n");
+		astPrint("Array: ",&ast->c[0],t + 1);
+		astPrint("Index: ",&ast->c[1],t + 1);
+	}else if (ast->type == FUNCCALL){
+		printf("FunctionCall\n");
+		astPrint("FuncName: ",&ast->c[0],t + 1);
+		astPrint("Parameters: ",&ast->c[1],t + 1);
+	}else if (ast->type == IDEN){
+		printf("%s\n",ast->data);
+	}else if (ast->type == INTECONS){
+		printf("%s\n",ast->data);
+	}else if (ast->type == CHARCONS){
+		printf("%s\n",ast->data);
+	}else if (ast->type == STRICONS){
+		printf("%s\n",ast->data);
+	}else if (ast->type == PARA){
+		printf("%s\n",ast->data);
+		for (i = 0;i < ast->num;++i) astPrint(NULL,&ast->c[i],t + 1);
+	}else if (ast->type == TYPESPEC){
+		printf("%s\n",ast->data);
+		for (i = 0;i < ast->num;++i) astPrint(NULL,&ast->c[i],t + 1);
+	}else if (ast->type == DATAFILD){
+		printf("%s\n",ast->data);
+		astPrint("BaseType: ",&ast->c[0],t + 1);
+		for (i = 1;i < ast->num;++i){
+			if (ast->c[i].type == IDEN)
+				s = "Identifier: ";
+			else if (TYPE <= ast->c[i].type && ast->c[i].type <= ARRATYPE)
+				s = "Type: ";
+			else
+				s = NULL;
+			astPrint(s,&ast->c[i],t + 1);
+		}
+	}else if (ast->type == INIT){
+		printf("%s\n",ast->data);
+		for (i = 0;i < ast->num;++i) astPrint(NULL,&ast->c[i],t + 1);
+	}else{
+		//never
+	}
 }
-/*
-	FUNCDECL,STRUDECL,UNIODECL,VARIDECL,TYPE,BASITYPE,
-	INTETYPE,CHARTYPE,VOIDTYPE,STRUTYPE,UNIOTYPE,PTERTYPE,
-	ARRATYPE,STMT,BREASTMT,CONTSTMT,IFTESTMT,FORRLOOP,WHILLOOP,
-	RETNSTMT,COMPSTMT,EXPR,EMPTEXPR,BINAEXPR,UNAREXPR,SZOFEXPR,
-	CASTEXPR,PTERACSS,RECOACSS,SELFINCR,SELFDECR,ARRAACSS,
-	FUNCCALL,IDEN,INTECONS,CHARCONS,STRICONS,
-	PARA,TYPESPEC,DATAFILD,INIT
-*/
 
 static void astDel(struct ASTNode *ast){
 	int i;
@@ -1381,7 +1529,6 @@ static void astDel(struct ASTNode *ast){
 	for (i = 0;i < ast->num;++i) astDel(&ast->c[i]);
 	free(ast->c);
 }
-
 
 int main(void){
 	static char s[1000010];
@@ -1411,7 +1558,7 @@ int main(void){
 	ast = malloc(sizeof (struct ASTNode));
 	ast->type = ROOT;
 	AST(root,ast);
-	astPrint(ast,0);
+	astPrint(NULL,ast,0);
 	astDel(ast);
 	free(ast);
 //	print(root,0);
