@@ -24,3 +24,4 @@ Chu Wei's compiler project
 | **0.6c** | 2015.4.12 | some bugs fixed |
 | **0.7** | 2015.4.17 | **AST nearly done** && lost of bugs to be fixed |
 | **0.7a** | 2015.4.17 | some fatal bugs fixed && many bugs to be fixed |
+| **1.0** | 2015.4.18 | all pre-found bugs fixed now && phase1 done|
