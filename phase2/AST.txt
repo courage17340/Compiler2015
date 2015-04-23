@@ -1,0 +1,293 @@
+Root
+	FuncDecl
+		ReturnType: IntType
+		FuncName: main
+		Parameters: Parameters
+		Definition: CompoundStmt
+			VariDecl
+				BaseType: IntType
+				Type: IntType
+				Identifier: a
+				Type: IntType
+				Identifier: b
+				Type: IntType
+				Identifier: c
+				Type: IntType
+				Identifier: ab
+				Type: IntType
+				Identifier: xy
+				Type: IntType
+				Identifier: xz
+			VariDecl
+				BaseType: CharType
+				Type: ArrayType
+					BaseType: CharType
+					ArraySize: 50
+				Identifier: QQ641053434
+				Initializer
+					"This is the qq of the author."
+				Type: ArrayType
+					BaseType: CharType
+					ArraySize: 50
+				Identifier: BD20140222
+				Initializer
+					"Birthday of whom?"
+				Type: CharType
+				Identifier: symbol_symbol$symbols
+			ExprStmt
+				123
+			ExprStmt
+				456
+			ExprStmt
+				789
+			ExprStmt
+				0123
+			ExprStmt
+				0456
+			ExprStmt
+				0777
+			ExprStmt
+				0x123
+			ExprStmt
+				0x456
+			ExprStmt
+				0x789
+			ExprStmt
+				BinaryExpr: ,
+					BinaryExpr: ,
+						'g'
+						'h'
+					'j'
+			ExprStmt
+				BinaryExpr: ,
+					BinaryExpr: ,
+						'\n'
+						'\t'
+					'\b'
+			ExprStmt
+				BinaryExpr: ,
+					'\x32'
+					'\040'
+			ExprStmt
+				"string"
+			ExprStmt
+				"longerstring"
+			ExprStmt
+				"whatisyourname\n"
+			ExprStmt
+				"for science!!"
+	Decl
+		StructType
+			StructName: Lesson
+			StructMembers: TypeSpecifiers
+				DataField
+					BaseType: CharType
+					Type: CharType
+					Identifier: name
+				DataField
+					BaseType: IntType
+					Type: IntType
+					Identifier: score
+				DataField
+					BaseType: UnionType
+						UnionName: 
+						UnionMembers: TypeSpecifiers
+							DataField
+								BaseType: IntType
+								Type: IntType
+								Identifier: a
+							DataField
+								BaseType: CharType
+								Type: CharType
+								Identifier: b
+					Type: UnionType
+						UnionName: 
+					Identifier: comment
+	FuncDecl
+		ReturnType: VoidType
+		FuncName: getMoreGPA
+		Parameters: Parameters
+			VariDecl
+				BaseType: IntType
+				Identifier: compiler
+		Definition: CompoundStmt
+			VariDecl
+				BaseType: IntType
+				Type: IntType
+				Identifier: i
+			IfStmt
+				Condition: BinaryExpr: >=
+					RecordAccess
+						Record: compiler
+						Field: score
+					95
+				Then: CompoundStmt
+					ExprStmt
+						FunctionCall
+							FuncName: printf
+							Parameters: "target achieved\n"
+				Else: CompoundStmt
+					ExprStmt
+						FunctionCall
+							FuncName: printf
+							Parameters: "How can I become a CS scientist if I get this score on this course!\n"
+			WhileLoop
+				Condition: true
+				Body: CompoundStmt
+					BreakStmt
+			ForLoop
+				Initialize: BinaryExpr: =
+					i
+					1
+				Condition: BinaryExpr: <
+					i
+					10
+				StepAction: UnaryExpr: ++
+					i
+				Body: CompoundStmt
+					ContinueStmt
+			ExprStmt
+				SizeofExpr
+					CharType
+			ReturnStmt
+				EmptyExpr
+	FuncDecl
+		ReturnType: VoidType
+		FuncName: moreTests
+		Parameters: Parameters
+		Definition: CompoundStmt
+			VariDecl
+				BaseType: IntType
+				Type: IntType
+				Identifier: a
+				Initializer
+					BinaryExpr: +
+						1
+						1
+				Type: IntType
+				Identifier: b
+				Initializer
+					BinaryExpr: +
+						2
+						2
+				Type: ArrayType
+					BaseType: IntType
+					ArraySize: 20
+				Identifier: c
+				Initializer
+					Initializer
+						BinaryExpr: *
+							1
+							2
+					Initializer
+						BinaryExpr: /
+							2
+							1
+					Initializer
+						BinaryExpr: %
+							3
+							2
+					Initializer
+						BinaryExpr: |
+							7
+							4
+					Initializer
+						BinaryExpr: &
+							8
+							1
+					Initializer
+						UnaryExpr: ~
+							8
+					Initializer
+						UnaryExpr: !
+							9
+			VariDecl
+				BaseType: IntType
+				Type: IntType
+				Identifier: t
+			ExprStmt
+				BinaryExpr: =
+					RecordAccess
+						Record: RecordAccess
+							Record: t
+							Field: comment
+						Field: a
+					a
+			ExprStmt
+				BinaryExpr: ||
+					a
+					BinaryExpr: &&
+						b
+						BinaryExpr: ==
+							ArrayAccess
+								Array: c
+								Index: 0
+							ArrayAccess
+								Array: c
+								Index: 1
+			ExprStmt
+				BinaryExpr: !=
+					a
+					b
+			ExprStmt
+				BinaryExpr: <=
+					a
+					b
+			ExprStmt
+				BinaryExpr: >=
+					a
+					b
+			ExprStmt
+				BinaryExpr: >>
+					a
+					b
+			ExprStmt
+				BinaryExpr: <<
+					a
+					b
+			ExprStmt
+				BinaryExpr: ,
+					UnaryExpr: ++
+						a
+					UnaryExpr: --
+						b
+			ExprStmt
+				BinaryExpr: *=
+					a
+					b
+			ExprStmt
+				BinaryExpr: /=
+					a
+					b
+			ExprStmt
+				BinaryExpr: %=
+					a
+					b
+			ExprStmt
+				BinaryExpr: +=
+					a
+					b
+			ExprStmt
+				BinaryExpr: -=
+					a
+					b
+			ExprStmt
+				BinaryExpr: <<=
+					a
+					b
+			ExprStmt
+				BinaryExpr: >>=
+					a
+					b
+			ExprStmt
+				BinaryExpr: &=
+					a
+					b
+			ExprStmt
+				BinaryExpr: ^=
+					a
+					b
+			ExprStmt
+				BinaryExpr: |=
+					a
+					b

@@ -33,7 +33,7 @@ struct node *parse(char *s){
 	int i,j,ptr;
 	list = makeList(s);
 	freopen("grammar.out","r",stdin);
-	freopen("AST.txt","w",stdout);
+//	freopen("AST.txt","w",stdout);
 	scanf("%d",&terNum);
 	for (i = 1;i <= terNum;++i) scanf("%s",terminals[i]);
 	scanf("%d",&nonNum);
@@ -183,33 +183,6 @@ static void del(struct node *s){
 }
 
 //------for------ast------
-
-enum ASTType{
-	ROOT,DECL,FUNCDECL,STRUDECL,UNIODECL,VARIDECL,TYPE,BASITYPE,
-	INTETYPE,CHARTYPE,VOIDTYPE,STRUTYPE,UNIOTYPE,PTERTYPE,
-	ARRATYPE,STMT,BREASTMT,CONTSTMT,IFTESTMT,FORRLOOP,WHILLOOP,EXPRSTMT,
-	RETNSTMT,COMPSTMT,EXPR,EMPTEXPR,BINAEXPR,UNAREXPR,SZOFEXPR,
-	CASTEXPR,PTERACSS,RECOACSS,SELFINCR,SELFDECR,ARRAACSS,
-	FUNCCALL,IDEN,INTECONS,CHARCONS,STRICONS,
-	PARA,TYPESPEC,DATAFILD,INIT
-};
-
-static char ASTFlags[50][30] = {
-	"Root","Decl","FunctionDecl","StructDecl","UnionDecl","VarDecl","Type","BasicType",
-	"IntType","CharType","VoidType","StructType","UnionType","PointerType",
-	"ArrayType","Stmt","BreakStmt","ContinueStmt","IfStmt","ForLoop","WhileLoop","ExprStmt",
-	"ReturnStmt","CompoundStmt","Expr","EmptyExpr","BinaryExpr","UnaryExpr","SizeofExpr",
-	"CastExpr","PointerAccess","RecordAccess","SelfIncrement","SelfDecrement","ArrayAccess",
-	"FunctionCall","Identifier","IntConst","CharConst","StringConst",
-	"Parameters","TypeSpecifiers","DataField","Initializer"
-};
-
-struct ASTNode{
-	int type;
-	char *data;
-	int num,cap;
-	struct ASTNode *c;
-};
 
 static void doubleSpace(struct ASTNode *a){
 	struct ASTNode *tmp = (struct ASTNode *)malloc(sizeof(struct ASTNode) * a->cap * 2);
@@ -1359,7 +1332,7 @@ static void tab(int t){
 	for (i = 0;i < t;++i) printf("\t");
 }
 
-static void astPrint(char *s,struct ASTNode *ast,int t){
+void astPrint(char *s,struct ASTNode *ast,int t){
 	int i;
 	tab(t);
 	if (s != NULL) printf("%s",s);
@@ -1523,48 +1496,40 @@ static void astPrint(char *s,struct ASTNode *ast,int t){
 	}
 }
 
-static void astDel(struct ASTNode *ast){
+void astDel(struct ASTNode *ast){
 	int i;
 	if (ast->c == NULL || ast->num == 0) return;
 	for (i = 0;i < ast->num;++i) astDel(&ast->c[i]);
 	free(ast->c);
 }
 
-int main(void){
-	static char s[1000010];
+struct ASTNode *makeAst(char *s,int *flag){
 	struct node *root;
 	struct ASTNode *ast;
-	int c,p;
-	p = -1;
-	c = getchar();
-	while (c != EOF){
-		s[++p] = c;
-		c = getchar();
-	}
 	removeComments(s);
 	if (strcmp(s,"CompileError") == 0){
-		puts(s);
+		*flag = 0;
 		free(list);
-		return 0;
+		return NULL;
 	}
 	split(s);
 	root = parse(s);
 	if (error){
 		del(root);
-		printf("Compile Error at token \"%s\"\n",list[error - 1].ptr);
+		*flag = 0;
 		free(list);
-		return 0;
+		return NULL;
 	}
 	ast = malloc(sizeof (struct ASTNode));
 	ast->type = ROOT;
 	AST(root,ast);
-	astPrint(NULL,ast,0);
-	astDel(ast);
-	free(ast);
+//	astPrint(NULL,ast,0);
+//	astDel(ast);
+//	free(ast);
 //	print(root,0);
 	del(root);
 	free(root);
-	free(list);
-	return 0;
+//	free(list);
+	return ast;
 }
 
