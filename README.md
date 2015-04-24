@@ -11,6 +11,7 @@ Chu Wei's compiler project
 ##Version details
 | Version | Date | Description |
 |:-------:|:----:|:-----------:|
+| **1.1** | 2015.4.23 | **pretty printer done** |
 | 1.0b | 2015.4.23 | program structure modified for phase 2 |
 | 1.0a | 2015.4.18 | AST output format changed && parser usage added |
 | **1.0** | 2015.4.18 | **AST done** && all pre-found bugs fixed now |

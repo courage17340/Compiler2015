@@ -42,7 +42,6 @@ struct node *parse(char *s){
 	for (i = 1;i <= ruleNum;++i){
 		scanf("%d%d",&rules[i].non,&rules[i].num);
 		for (j = 1;j <= rules[i].num;++j) scanf("%d%d",&rules[i].items[j][0],&rules[i].items[j][1]);
-
 	}
 	for (i = 1;i <= nonNum;++i)
 		for (j = 1;j <= terNum;++j) scanf("%d",&M[i][j]);
@@ -175,10 +174,10 @@ static void print(struct node *root,int col){
 	for (i = 0;i < root->num;++i) print(&root->c[i],col + 1);
 }
 
-static void del(struct node *s){
+void cstDel(struct node *s){
 	int n,i;
 	n = s->num;
-	for (i = 0;i < n;++i) del(&s->c[i]);
+	for (i = 0;i < n;++i) cstDel(&s->c[i]);
 	free(s->c);
 }
 
@@ -1503,7 +1502,7 @@ void astDel(struct ASTNode *ast){
 	free(ast->c);
 }
 
-struct ASTNode *makeAst(char *s,int *flag){
+struct ASTNode *makeAst(char *s,int *flag,int *size,struct node **r){
 	struct node *root;
 	struct ASTNode *ast;
 	removeComments(s);
@@ -1515,7 +1514,7 @@ struct ASTNode *makeAst(char *s,int *flag){
 	split(s);
 	root = parse(s);
 	if (error){
-		del(root);
+		cstDel(root);
 		*flag = 0;
 		free(list);
 		return NULL;
@@ -1527,9 +1526,11 @@ struct ASTNode *makeAst(char *s,int *flag){
 //	astDel(ast);
 //	free(ast);
 //	print(root,0);
-	del(root);
-	free(root);
+//	cstDel(root);
+//	free(root);
 //	free(list);
+	*size = listSize;
+	*r = root;
 	return ast;
 }
 

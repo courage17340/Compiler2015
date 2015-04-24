@@ -27,7 +27,7 @@ static int equal(struct token,char *);
 static struct node *getNode(void);
 static int getType(struct token);
 static void print(struct node *,int);
-static void del(struct node *);
+void cstDel(struct node *);
 //for ast
 enum ASTType{
 	ROOT,DECL,FUNCDECL,STRUDECL,UNIODECL,VARIDECL,TYPE,BASITYPE,
@@ -59,5 +59,5 @@ static void AST(struct node *,struct ASTNode *);
 static void tab(int);
 void astPrint(char *,struct ASTNode *,int);
 void astDel(struct ASTNode *);
-struct ASTNode *makeAst(char *,int *);
+struct ASTNode *makeAst(char *,int *,int *,struct node **);
 #endif
