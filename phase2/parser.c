@@ -607,7 +607,6 @@ static void AST(struct node *root,struct ASTNode *ast){
 		if (strcmp(root->c[ptr].data,"comma_declarations") == 0){
 			struct node *ctmp,*ctmp1,*ctmp2;
 			struct ASTNode *atmp,*atmp1;
-			int numOfPtrs;
 			root = &root->c[ptr];//comma_declarations
 			while (1){
 				ctmp = &root->c[0];//declaration
@@ -622,7 +621,6 @@ static void AST(struct node *root,struct ASTNode *ast){
 				AST(&ctmp->c[0],&atmp->c[0]);
 				ctmp = &ctmp->c[1];//declaration1
 				if (ctmp->num > 1){
-					char *name;
 					ctmp = &ctmp->c[0];//init_declarators
 					while (1){
 						ctmp1 = &ctmp->c[0];//init_declarator
@@ -703,8 +701,7 @@ static void AST(struct node *root,struct ASTNode *ast){
 		}
 	}else if (EXPR <= ast->type && ast->type <= STRICONS){
 		int i;
-		struct node *ctmp;
-		struct ASTNode *atmp,*atmp1;
+		struct ASTNode *atmp;
 		if (strcmp(root->data,"expression") == 0){
 			AST(&root->c[0],ast);
 			if (root->num > 1){

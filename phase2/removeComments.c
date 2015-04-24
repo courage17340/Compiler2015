@@ -65,7 +65,6 @@ static void deal(char *in,char *out){
 }
 
 void removeComments(char *in){
-	int L = strlen(in);
 	static char out[1000010];
 	deal(in,out);
 	strcpy(in,out);

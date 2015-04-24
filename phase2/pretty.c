@@ -272,7 +272,7 @@ void prettyPrint(struct node *root,int t,int newLine){
 			printf(";");
 		}else{
 			root = &root->c[1];
-			if (root->num = 1){
+			if (root->num == 1){
 				printf(";");
 			}else{
 				printf(" ");
@@ -556,5 +556,6 @@ int main(void){
 		free(root);
 		free(list);
 	}
+	return 0;
 }
 
