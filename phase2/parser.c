@@ -339,8 +339,8 @@ static void AST(struct node *root,struct ASTNode *ast){
 						ast->c[ast->num - 1].c[0].type = IDEN;
 						ast->c[ast->num - 1].c[0].data = ast->c[0].c[0].data;
 						ast->c[ast->num - 1].c[0].c = NULL;
-						ast->c[ast->num - 2].c[0].num = 0;
-						ast->c[ast->num - 2].c[0].cap = 0;
+						ast->c[ast->num - 1].c[0].num = 0;
+						ast->c[ast->num - 1].c[0].cap = 0;
 						ast->c[ast->num - 1].num = 1;
 						ast->c[ast->num - 1].cap = 1;
 					}

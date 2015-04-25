@@ -69,7 +69,7 @@ void prettyPrint(struct node *root,int t,int newLine){
 			prettyPrint(&root->c[1],t,0);
 		}else{
 			prettyPrint(&root->c[0],t,0);
-			printf(")");
+			printf(") ");
 			prettyPrint(&root->c[2],t,0);
 		}
 	}else if (strcmp(root->data,"parameters") == 0){
@@ -129,7 +129,10 @@ void prettyPrint(struct node *root,int t,int newLine){
 			printf("}");
 		}else{
 			prettyPrint(&root->c[0],t,0);
-			if (root->num > 1) prettyPrint(&root->c[1],t,0);
+			if (root->num > 1){
+				printf(" ");
+				prettyPrint(&root->c[1],t,0);
+			}
 		}
 	}else if (strcmp(root->data,"type_specifier2") == 0){
 		printf("{\n");

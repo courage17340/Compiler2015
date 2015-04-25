@@ -1,2 +1,2 @@
 pretty : parser.h parser.c removeComments.h removeComments.c split.h split.c tokens.h tokens.c pretty.c
-	gcc -g -Wall parser.c removeComments.c split.c tokens.c pretty.c -o pretty
+	gcc -g parser.c removeComments.c split.c tokens.c pretty.c -o pretty
