@@ -11,6 +11,7 @@ Chu Wei's compiler project
 ##Version details
 | Version | Date | Description |
 |:-------:|:----:|:-----------:|
+| 1.1c | 2015.4.26 | some bugs fixed |
 | 1.1b | 2015.4.25 | some bugs fixed |
 | 1.1a | 2015.4.24 | some bugs fixed |
 | **1.1** | 2015.4.24 | **pretty printer done** |

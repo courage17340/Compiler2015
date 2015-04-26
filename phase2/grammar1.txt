@@ -317,8 +317,8 @@ unary_operator cast_expression \
 'sizeof' unary_expression1
 \\
 unary_expression1
-identifier postfixes\
-constant postfixes\
+identifier postfixes \
+constant postfixes \
 string postfixes \
 '(' unary_expression2 \
 '++' unary_expression \
