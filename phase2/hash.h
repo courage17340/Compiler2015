@@ -12,7 +12,7 @@ struct Hash{
 	} *sym;
 	struct Hash *next;
 };
-static struct Hash *hashTable[HASH_SIZE];
+struct Hash *typeHash[HASH_SIZE],*nameHash[HASH_SIZE];
 static struct Symbol *symTable[HASH_SIZE];
 static int hash(char *s){
 	char *t;
@@ -47,22 +47,22 @@ static struct Symbol *getSymbol(char *s,int flag){
 		return NULL;
 	}
 }
-void pushHash(char *s,void *bind){
+void pushHash(struct Hash **h,char *s,void *bind){
 	struct Symbol *sym = getSymbol(s,1);
 	int i = hash(s);
-	hashTable[i] = makeHash(s,bind,sym,hashTable[i]);
+	h[i] = makeHash(s,bind,sym,h[i]);
 }
-void popHash(char *s){
+void popHash(struct Hash **h,char *s){
 	int i = hash(s);
-	struct Hash *tmp = hashTable[i];
-	hashTable[i] = tmp->next;
+	struct Hash *tmp = h[i];
+	h[i] = tmp->next;
 	free(tmp);
 }
-void *getHash(char *s){
+void *getHash(struct Hash **h,char *s){
 	struct Symbol* sym = getSymbol(s,0);
 	int i = hash(s);
 	struct Hash *t;
-	for (t = hashTable[i];t != NULL;t = t->next)
+	for (t = h[i];t != NULL;t = t->next)
 		if (t->sym == sym) return t->bind;
 	return NULL;
 }
