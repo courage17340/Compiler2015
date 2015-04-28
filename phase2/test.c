@@ -1,6 +1,8 @@
-stuct{
+struct{
 	int a;
-}i;
+	union{int x;}b,c;
+}i,*j,***k;
+union{int x;} *a,*x[10];
 int main(){
 	i. a;
 }

@@ -1,5 +1,5 @@
-semantic : parser.h parser.c hash.h semantic.h semantic.c removeComments.h removeComments.o split.h split.o tokens.h tokens.o
-	gcc -g semantic.c parser.c removeComments.o split.o tokens.o -o semantic
+semantic : parser.h parser.c hash.h hash.c semantic.h semantic.c removeComments.h removeComments.o split.h split.o tokens.h tokens.o
+	gcc -g semantic.c parser.c hash.c removeComments.o split.o tokens.o -o semantic
 removeComments.o : removeComments.h removeComments.c
 	gcc -c removeComments.c
 split.o : split.h split.c

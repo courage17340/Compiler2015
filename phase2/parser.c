@@ -424,8 +424,18 @@ static void AST(struct node *root,struct AstNode *ast){
 				if (root->num > 1){
 					root = &root->c[1];//type_specifier2
 				}else return;
-			}else{
-				ast->c[0].data = "";
+			}else{//give names for unnamed struct / union
+				int t,f[10],p = 0,i;
+				++nStructName;
+				t = nStructName;
+				structName[++pStructName] = '#';
+				ast->c[0].data = &structName[pStructName];
+				while (t){
+					f[++p] = t % 10 + '0';
+					t /= 10;
+				}
+				for (i = p;i >= 1;--i) structName[++pStructName] = f[i];
+				structName[++pStructName] = 0;
 				ast->c[0].num = 0;
 				ast->c[0].cap = 0;
 			}
@@ -1516,6 +1526,8 @@ struct AstNode *makeAst(char *s,int *flag,int *size,struct node **r){
 		free(list);
 		return NULL;
 	}
+	pStructName = -1;
+	nStructName = 0;
 	ast = malloc(sizeof (struct AstNode));
 	ast->type = ROOT;
 	AST(root,ast);

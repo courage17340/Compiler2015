@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "tokens.h"
+static char structName[1000000];
+static int nStructName,pStructName;
 struct node{
 	char *data;
 	struct node *c;
@@ -53,7 +55,7 @@ struct AstNode{
 	int num,cap;
 	struct AstNode *c;
 	//following are added for semantic check
-	int lValue;
+	int lValue,constant;
 	struct AstNode *retType;
 };
 static void doubleSpace(struct AstNode *);
