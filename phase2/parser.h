@@ -38,16 +38,16 @@ enum ASTType{
 	RETNSTMT,COMPSTMT,EXPR,EMPTEXPR,BINAEXPR,UNAREXPR,SZOFEXPR,
 	CASTEXPR,PTERACSS,RECOACSS,SELFINCR,SELFDECR,ARRAACSS,
 	FUNCCALL,IDEN,INTECONS,CHARCONS,STRICONS,
-	PARA,TYPESPEC,DATAFILD,INIT
+	PARA,TYPESPEC,DATAFILD,INIT,FUNCPARA,VARI
 };
-static char ASTFlags[50][30] = {
+static char AstFlags[50][30] = {
 	"Root","Decl","FunctionDecl","StructDecl","UnionDecl","VarDecl","Type","BasicType",
 	"IntType","CharType","VoidType","StructType","UnionType","PointerType",
 	"ArrayType","Stmt","BreakStmt","ContinueStmt","IfStmt","ForLoop","WhileLoop","ExprStmt",
 	"ReturnStmt","CompoundStmt","Expr","EmptyExpr","BinaryExpr","UnaryExpr","SizeofExpr",
 	"CastExpr","PointerAccess","RecordAccess","SelfIncrement","SelfDecrement","ArrayAccess",
 	"FunctionCall","Identifier","IntConst","CharConst","StringConst",
-	"Parameters","TypeSpecifiers","DataField","Initializer"
+	"Parameters","TypeSpecifiers","DataField","Initializer","FuncPara","Variable"
 };
 struct AstNode{
 	int type;
@@ -56,7 +56,7 @@ struct AstNode{
 	struct AstNode *c;
 	//following are added for semantic check
 	int lValue,constant;
-	struct AstNode *retType;
+	void *retType;
 };
 static void doubleSpace(struct AstNode *);
 static struct AstNode *getAst(int);

@@ -14,12 +14,13 @@ static struct Symbol *makeSymbol(char *s,struct Symbol *next){
 	return ret;
 }
 
-static struct Hash *makeHash(char *s,void *bind,struct Symbol *sym,struct Hash *next){
+static struct Hash *makeHash(char *s,void *bind,struct Symbol *sym,struct Hash *next,int flag){
 	struct Hash *ret = malloc(sizeof *ret);
 	ret->name = s;
 	ret->bind = bind;
 	ret->sym = sym;
 	ret->next = next;
+	ret->flag = flag;
 	return ret;
 }
 
@@ -32,10 +33,10 @@ static struct Symbol *getSymbol(char *s){
 	return symTable[i];
 }
 
-int pushHash(struct Hash **h,char *s,void *bind){
+int pushHash(struct Hash **h,char *s,void *bind,int flag){
 	struct Symbol *sym = getSymbol(s);
 	int i = hash(s);
-	h[i] = makeHash(s,bind,sym,h[i]);
+	h[i] = makeHash(s,bind,sym,h[i],flag);
 	return i;
 }
 
@@ -52,6 +53,15 @@ void *getHash(struct Hash **h,char *s){
 	for (t = h[i];t != NULL;t = t->next)
 		if (t->sym == sym) return t->bind;
 	return NULL;
+}
+
+int hasHash(struct Hash **h,char *s,int flag){
+	struct Symbol* sym = getSymbol(s);
+	int i = hash(s);
+	struct Hash *t;
+	for (t = h[i];t != NULL;t = t->next)
+		if (t->flag ==flag && t->sym == sym) return 1;
+	return 0;
 }
 
 void clearAll(void){

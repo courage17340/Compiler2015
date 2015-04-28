@@ -6,6 +6,7 @@
 struct Hash{
 	char *name;
 	void *bind;
+	int flag;
 	struct Symbol{
 		char *name;
 		struct Symbol *next;
@@ -16,10 +17,11 @@ struct Hash *typeHash[HASH_SIZE],*nameHash[HASH_SIZE];
 static struct Symbol *symTable[HASH_SIZE];
 static int hash(char *);
 static struct Symbol *makeSymbol(char *,struct Symbol *);
-static struct Hash *makeHash(char *,void *,struct Symbol *,struct Hash *);
+static struct Hash *makeHash(char *,void *,struct Symbol *,struct Hash *,int);
 static struct Symbol *getSymbol(char *);
-int pushHash(struct Hash **,char *,void *);
+int pushHash(struct Hash **,char *,void *,int);
 void popHash(struct Hash **,int);
 void *getHash(struct Hash **,char *);
+int hasHash(struct Hash **,char *,int);
 void clearAll(void);
 #endif

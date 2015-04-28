@@ -198,11 +198,11 @@ static struct AstNode *getAst(int n){
 }
 
 static void AST(struct node *root,struct AstNode *ast){
-//	ast->data = ASTFlags[ast->type];
+//	ast->data = AstFlags[ast->type];
 //	ast->c = NULL;
 //	ast->num = ast->cap = 0;
 	if (ast->type == ROOT){
-		ast->data = ASTFlags[ast->type];
+		ast->data = AstFlags[ast->type];
 		ast->c = getAst(1);
 		ast->num = 0;
 		ast->cap = 1;
@@ -214,11 +214,11 @@ static void AST(struct node *root,struct AstNode *ast){
 			if (root->num > 1) root = &root->c[1];else break;
 		}
 	}else if (ast->type == DECL){//dec_or_func
-		ast->data = ASTFlags[ast->type];
-		ast->c = NULL;
-		ast->num = ast->cap = 0;
 		struct AstNode *atmp;
 		struct node *ctmp;
+		ast->data = AstFlags[ast->type];
+		ast->c = NULL;
+		ast->num = ast->cap = 0;
 		int numOfPtrs = 0;
 		ast->c = getAst(1);
 		ast->num = 1;
@@ -245,19 +245,19 @@ static void AST(struct node *root,struct AstNode *ast){
 				atmp = getAst(1);
 				*atmp = ast->c[ast->num - 2];
 				ast->c[ast->num - 2].type = PTERTYPE;
-				ast->c[ast->num - 2].data = ASTFlags[PTERTYPE];
+				ast->c[ast->num - 2].data = AstFlags[PTERTYPE];
 				ast->c[ast->num - 2].c = atmp;
 				ast->c[ast->num - 2].num = 1;
 				ast->c[ast->num - 2].cap = 1;
 			}
 			ast->type = FUNCDECL;
-			ast->data = ASTFlags[ast->type];
+			ast->data = AstFlags[ast->type];
 			root = &root->c[1];//function_definition1
 			if (strcmp(root->c[0].data,")") == 0){//')' compound_statement
 				if (ast->num == ast->cap) doubleSpace(ast);
 				++ast->num;
 				ast->c[ast->num - 1].type = PARA;
-				ast->c[ast->num - 1].data = ASTFlags[PARA];
+				ast->c[ast->num - 1].data = AstFlags[PARA];
 				ast->c[ast->num - 1].num = 0;
 				ast->c[ast->num - 1].cap = 0;
 				ast->c[ast->num - 1].c = NULL;
@@ -278,7 +278,7 @@ static void AST(struct node *root,struct AstNode *ast){
 		}else{//comma_array_sizes init_declarator1 comma_init_declarators ';'
 			int cptr;
 			ast->type = VARIDECL;
-			ast->data = ASTFlags[VARIDECL];
+			ast->data = AstFlags[VARIDECL];
 			if (ast->num == ast->cap) doubleSpace(ast);
 			++ast->num;
 			ast->c[ast->num - 1] = ast->c[ast->num - 2];
@@ -297,7 +297,7 @@ static void AST(struct node *root,struct AstNode *ast){
 				atmp = getAst(1);
 				*atmp = ast->c[ast->num - 2];
 				ast->c[ast->num - 2].type = PTERTYPE;
-				ast->c[ast->num - 2].data = ASTFlags[PTERTYPE];
+				ast->c[ast->num - 2].data = AstFlags[PTERTYPE];
 				ast->c[ast->num - 2].c = atmp;
 				ast->c[ast->num - 2].num = 1;
 				ast->c[ast->num - 2].cap = 1;
@@ -312,7 +312,7 @@ static void AST(struct node *root,struct AstNode *ast){
 					atmp[1].type = EXPR;
 					AST(&ctmp->c[1],&atmp[1]);
 					ast->c[ast->num - 2].type = ARRATYPE;
-					ast->c[ast->num - 2].data = ASTFlags[ARRATYPE];
+					ast->c[ast->num - 2].data = AstFlags[ARRATYPE];
 					ast->c[ast->num - 2].c = atmp;
 					ast->c[ast->num - 2].num = 2;
 					ast->c[ast->num - 2].cap = 2;
@@ -352,7 +352,7 @@ static void AST(struct node *root,struct AstNode *ast){
 						atmp = getAst(1);
 						*atmp = ast->c[ast->num - 1];
 						ast->c[ast->num - 1].type = PTERTYPE;
-						ast->c[ast->num - 1].data = ASTFlags[PTERTYPE];
+						ast->c[ast->num - 1].data = AstFlags[PTERTYPE];
 						ast->c[ast->num - 1].c = atmp;
 						ast->c[ast->num - 1].num = 1;
 						ast->c[ast->num - 1].cap = 1;
@@ -369,7 +369,7 @@ static void AST(struct node *root,struct AstNode *ast){
 							atmp[1].type = EXPR;
 							AST(&ctmp->c[1],&atmp[1]);
 							ast->c[ast->num - 2].type = ARRATYPE;
-							ast->c[ast->num - 2].data = ASTFlags[ARRATYPE];
+							ast->c[ast->num - 2].data = AstFlags[ARRATYPE];
 							ast->c[ast->num - 2].c = atmp;
 							ast->c[ast->num - 2].num = 2;
 							ast->c[ast->num - 2].cap = 2;
@@ -388,6 +388,7 @@ static void AST(struct node *root,struct AstNode *ast){
 				}
 			}
 		}
+		AST(NULL,ast);
 	}else if (ast->type == FUNCDECL){
 		//never
 	}else if (ast->type == STRUDECL){
@@ -395,27 +396,54 @@ static void AST(struct node *root,struct AstNode *ast){
 	}else if (ast->type == UNIODECL){
 		//never
 	}else if (ast->type == VARIDECL){
-		//never
+		struct AstNode *tmp = ast->c;
+		int num = ast->num,i;
+		ast->c = getAst(1);
+		ast->num = ast->cap = 1;
+		ast->c[0] = tmp[0];
+		i = 1;
+		while (i < num){
+			struct AstNode *t;
+			if (ast->num == ast->cap) doubleSpace(ast);
+			++ast->num;
+			t = &ast->c[ast->num - 1];
+			t->type = VARI;
+			t->data = AstFlags[VARI];
+			t->c = getAst(3);
+			t->num = 0;
+			t->cap = 3;
+			++t->num;
+			t->c[t->num - 1] = tmp[i];
+			++i;
+			++t->num;
+			t->c[t->num - 1] = tmp[i];
+			++i;
+			if (i < num && tmp[i].type == INIT){
+				++t->num;
+				t->c[t->num - 1] = tmp[i];
+				++i;
+			}
+		}
 	}else if (ast->type == TYPE){//type_specifier
-		ast->data = ASTFlags[ast->type];
+		ast->data = AstFlags[ast->type];
 		ast->c = NULL;
 		ast->num = ast->cap = 0;
 		if (strcmp(root->c[0].data,"void") == 0){
 			ast->type = VOIDTYPE;
-			ast->data = ASTFlags[VOIDTYPE];
+			ast->data = AstFlags[VOIDTYPE];
 		}else if (strcmp(root->c[0].data,"char") == 0){
 			ast->type = CHARTYPE;
-			ast->data = ASTFlags[CHARTYPE];
+			ast->data = AstFlags[CHARTYPE];
 		}else if (strcmp(root->c[0].data,"int") == 0){
 			ast->type = INTETYPE;
-			ast->data = ASTFlags[INTETYPE];
+			ast->data = AstFlags[INTETYPE];
 		}else{//struct_or_union type_specifier1
 			if (strcmp(root->c[0].c[0].data,"struct") == 0)
 				ast->type = STRUTYPE;
 			else
 				ast->type = UNIOTYPE;
 			root = &root->c[1];//type_specifier1
-			ast->data = ASTFlags[ast->type];
+			ast->data = AstFlags[ast->type];
 			ast->c = getAst(1);
 			ast->num = ast->cap = 1;
 			ast->c[0].type = IDEN;
@@ -462,18 +490,18 @@ static void AST(struct node *root,struct AstNode *ast){
 	}else if (ast->type == ARRATYPE){
 		//never
 	}else if (ast->type == STMT){
-		ast->data = ASTFlags[ast->type];
+		ast->data = AstFlags[ast->type];
 		ast->c = NULL;
 		ast->num = ast->cap = 0;
 		if (strcmp(root->c[0].data,"expression_statement") == 0){
 			ast->type = EXPRSTMT;
-			ast->data = ASTFlags[ast->type];
+			ast->data = AstFlags[ast->type];
 			root = &root->c[0];
 			if (root->num == 1){
 				ast->c = getAst(1);
 				ast->num = ast->cap = 1;
 				ast->c[0].type = EMPTEXPR;
-				ast->c[0].data = ASTFlags[EMPTEXPR];
+				ast->c[0].data = AstFlags[EMPTEXPR];
 				ast->c[0].num = 0;
 				ast->c[0].cap = 0;
 				ast->c[0].c = NULL;
@@ -490,7 +518,7 @@ static void AST(struct node *root,struct AstNode *ast){
 		}else if (strcmp(root->c[0].data,"selection_statement") == 0){
 			root = &root->c[0];
 			ast->type = IFTESTMT;
-			ast->data = ASTFlags[ast->type];
+			ast->data = AstFlags[ast->type];
 			ast->c = getAst(2);
 			ast->num = ast->cap = 2;
 			ast->c[0].type = EXPR;
@@ -517,13 +545,13 @@ static void AST(struct node *root,struct AstNode *ast){
 			root = &root->c[0];
 			if (strcmp(root->c[0].data,"continue") == 0){
 				ast->type = CONTSTMT;
-				ast->data = ASTFlags[ast->type];
+				ast->data = AstFlags[ast->type];
 			}else if (strcmp(root->c[0].data,"break") == 0){
 				ast->type = BREASTMT;
-				ast->data = ASTFlags[ast->type];
+				ast->data = AstFlags[ast->type];
 			}else if (strcmp(root->c[0].data,"return") == 0){
 				ast->type = RETNSTMT;
-				ast->data = ASTFlags[ast->type];
+				ast->data = AstFlags[ast->type];
 				root = &root->c[1];//jump_statement1
 				ast->c = getAst(1);
 				ast->num = ast->cap = 1;
@@ -532,7 +560,7 @@ static void AST(struct node *root,struct AstNode *ast){
 					AST(&root->c[0],&ast->c[0]);
 				}else{
 					ast->c[0].type = EMPTEXPR;
-					ast->c[0].data = ASTFlags[ast->c[0].type];
+					ast->c[0].data = AstFlags[ast->c[0].type];
 					ast->c[0].num = 0;
 					ast->c[0].cap = 0;
 					ast->c[0].c = NULL;
@@ -546,7 +574,7 @@ static void AST(struct node *root,struct AstNode *ast){
 	}else if (ast->type == IFTESTMT){
 		//never
 	}else if (ast->type == FORRLOOP){
-		ast->data = ASTFlags[ast->type];
+		ast->data = AstFlags[ast->type];
 		ast->c = NULL;
 		ast->num = ast->cap = 0;
 		struct node *tmp;
@@ -557,7 +585,7 @@ static void AST(struct node *root,struct AstNode *ast){
 		tmp = &root->c[0];//expression_statement
 		if (tmp->num == 1){
 			ast->c[0].type = EMPTEXPR;
-			ast->c[0].data = ASTFlags[EMPTEXPR];
+			ast->c[0].data = AstFlags[EMPTEXPR];
 			ast->c[0].c = NULL;
 			ast->c[0].num = 0;
 			ast->c[0].cap = 0;
@@ -569,7 +597,7 @@ static void AST(struct node *root,struct AstNode *ast){
 		tmp = &root->c[0];//expression_statement
 		if (tmp->num == 1){
 			ast->c[1].type = EMPTEXPR;
-			ast->c[1].data = ASTFlags[EMPTEXPR];
+			ast->c[1].data = AstFlags[EMPTEXPR];
 			ast->c[1].c = NULL;
 			ast->c[1].num = 0;
 			ast->c[1].cap = 0;
@@ -580,7 +608,7 @@ static void AST(struct node *root,struct AstNode *ast){
 		root = &root->c[1];//iteration_statement3
 		if (strcmp(root->c[0].data,")") == 0){
 			ast->c[2].type = EMPTEXPR;
-			ast->c[2].data = ASTFlags[EMPTEXPR];
+			ast->c[2].data = AstFlags[EMPTEXPR];
 			ast->c[2].c = NULL;
 			ast->c[2].num = 0;
 			ast->c[2].cap = 0;
@@ -593,7 +621,7 @@ static void AST(struct node *root,struct AstNode *ast){
 		ast->c[3].type = STMT;
 		AST(root,&ast->c[3]);
 	}else if (ast->type == WHILLOOP){
-		ast->data = ASTFlags[ast->type];
+		ast->data = AstFlags[ast->type];
 		ast->c = NULL;
 		ast->num = ast->cap = 0;
 		ast->c = getAst(2);
@@ -605,7 +633,7 @@ static void AST(struct node *root,struct AstNode *ast){
 	}else if (ast->type == RETNSTMT){
 		//never
 	}else if (ast->type == COMPSTMT){
-		ast->data = ASTFlags[ast->type];
+		ast->data = AstFlags[ast->type];
 		ast->c = NULL;
 		ast->num = ast->cap = 0;
 		struct node *bk;
@@ -624,7 +652,7 @@ static void AST(struct node *root,struct AstNode *ast){
 				++ast->num;
 				ast->c[ast->num - 1].type = VARIDECL;
 				atmp = &ast->c[ast->num - 1];
-				atmp->data = ASTFlags[VARIDECL];
+				atmp->data = AstFlags[VARIDECL];
 				atmp->c = getAst(1);
 				atmp->num = atmp->cap = 1;
 				atmp->c[0].type = TYPE;
@@ -655,7 +683,7 @@ static void AST(struct node *root,struct AstNode *ast){
 							atmp1 = getAst(1);
 							*atmp1 = atmp->c[atmp->num - 1];
 							atmp->c[atmp->num - 1].type = PTERTYPE;
-							atmp->c[atmp->num - 1].data = ASTFlags[PTERTYPE];
+							atmp->c[atmp->num - 1].data = AstFlags[PTERTYPE];
 							atmp->c[atmp->num - 1].num = 1;
 							atmp->c[atmp->num - 1].cap = 1;
 							atmp->c[atmp->num - 1].c = atmp1;
@@ -674,7 +702,7 @@ static void AST(struct node *root,struct AstNode *ast){
 								atmp1[1].type = EXPR;
 								AST(&ctmp2->c[1],&atmp1[1]);
 								atmp->c[atmp->num - 2].type = ARRATYPE;
-								atmp->c[atmp->num - 2].data = ASTFlags[ARRATYPE];
+								atmp->c[atmp->num - 2].data = AstFlags[ARRATYPE];
 								atmp->c[atmp->num - 2].num = 2;
 								atmp->c[atmp->num - 2].cap = 2;
 								atmp->c[atmp->num - 2].c = atmp1;
@@ -694,6 +722,7 @@ static void AST(struct node *root,struct AstNode *ast){
 							break;
 					}
 				}
+				AST(NULL,atmp);
 				if (root->num > 1) root = &root->c[1];else break;
 			}
 			++ptr;
@@ -738,7 +767,7 @@ static void AST(struct node *root,struct AstNode *ast){
 					atmp[1].type = EXPR;
 					for (i = 2;i < root->num;++i) AST(&root->c[i],&atmp[1]);
 					ast->type = CASTEXPR;
-					ast->data = ASTFlags[CASTEXPR];
+					ast->data = AstFlags[CASTEXPR];
 					ast->c = atmp;
 					ast->num = ast->cap = 2;
 				}else{
@@ -783,7 +812,7 @@ static void AST(struct node *root,struct AstNode *ast){
 				atmp = getAst(1);
 				*atmp = *ast;
 				ast->type = SZOFEXPR;
-				ast->data = ASTFlags[SZOFEXPR];
+				ast->data = AstFlags[SZOFEXPR];
 				ast->num = ast->cap = 1;
 				ast->c = atmp;
 				if (root->num > 2) AST(&root->c[2],ast);
@@ -963,7 +992,7 @@ static void AST(struct node *root,struct AstNode *ast){
 				atmp = getAst(1);
 				*atmp = *ast;
 				ast->type = SZOFEXPR;
-				ast->data = ASTFlags[SZOFEXPR];
+				ast->data = AstFlags[SZOFEXPR];
 				ast->num = ast->cap = 1;
 				ast->c = atmp;
 			}
@@ -978,7 +1007,7 @@ static void AST(struct node *root,struct AstNode *ast){
 				atmp[1].type = EXPR;
 				AST(&root->c[2],&atmp[1]);
 				ast->type = CASTEXPR;
-				ast->data = ASTFlags[CASTEXPR];
+				ast->data = AstFlags[CASTEXPR];
 				ast->num = ast->cap = 2;
 				ast->c = atmp;
 			}
@@ -991,7 +1020,7 @@ static void AST(struct node *root,struct AstNode *ast){
 					atmp = getAst(1);
 					*atmp = *ast;
 					ast->type = PTERTYPE;
-					ast->data = ASTFlags[PTERTYPE];
+					ast->data = AstFlags[PTERTYPE];
 					ast->num = ast->cap = 1;
 					ast->c = atmp;
 					if (root->num > 1) root = &root->c[1];else break;
@@ -1031,7 +1060,7 @@ static void AST(struct node *root,struct AstNode *ast){
 				atmp = getAst(1);
 				*atmp = *ast;
 				ast->type = SZOFEXPR;
-				ast->data = ASTFlags[SZOFEXPR];
+				ast->data = AstFlags[SZOFEXPR];
 				ast->num = ast->cap = 1;
 				ast->c = atmp;
 			}
@@ -1073,7 +1102,7 @@ static void AST(struct node *root,struct AstNode *ast){
 				atmp = getAst(1);
 				*atmp = *ast;
 				ast->type = SZOFEXPR;
-				ast->data = ASTFlags[SZOFEXPR];
+				ast->data = AstFlags[SZOFEXPR];
 				ast->num = ast->cap = 1;
 				ast->c = atmp;
 			}
@@ -1095,7 +1124,7 @@ static void AST(struct node *root,struct AstNode *ast){
 				atmp[1].type = EXPR;
 				AST(&root->c[1],&atmp[1]);
 				ast->type = ARRAACSS;
-				ast->data = ASTFlags[ARRAACSS];
+				ast->data = AstFlags[ARRAACSS];
 				ast->num = ast->cap = 2;
 				ast->c = atmp;
 			}else if (strcmp(root->c[0].data,"(") == 0){
@@ -1104,15 +1133,15 @@ static void AST(struct node *root,struct AstNode *ast){
 				atmp[0] = *ast;
 				if (strcmp(root->c[0].data,")") == 0){
 					atmp[1].type = EMPTEXPR;
-					atmp[1].data = ASTFlags[EMPTEXPR];
+					atmp[1].data = AstFlags[EMPTEXPR];
 					atmp[1].num = atmp[1].cap = 0;
 					atmp[1].c = 0;
 				}else{
-					atmp[1].type = EXPR;
+					atmp[1].type = FUNCPARA;
 					AST(&root->c[0].c[0],&atmp[1]);
 				}
 				ast->type = FUNCCALL;
-				ast->data = ASTFlags[FUNCCALL];
+				ast->data = AstFlags[FUNCCALL];
 				ast->num = ast->cap = 2;
 				ast->c = atmp;
 			}else if (strcmp(root->c[0].data,".") == 0){
@@ -1121,7 +1150,7 @@ static void AST(struct node *root,struct AstNode *ast){
 				atmp[1].type = EXPR;
 				AST(&root->c[1],&atmp[1]);
 				ast->type = RECOACSS;
-				ast->data = ASTFlags[RECOACSS];
+				ast->data = AstFlags[RECOACSS];
 				ast->num = ast->cap = 2;
 				ast->c = atmp;
 			}else if (strcmp(root->c[0].data,"->") == 0){
@@ -1130,21 +1159,21 @@ static void AST(struct node *root,struct AstNode *ast){
 				atmp[1].type = EXPR;
 				AST(&root->c[1],&atmp[1]);
 				ast->type = PTERACSS;
-				ast->data = ASTFlags[PTERACSS];
+				ast->data = AstFlags[PTERACSS];
 				ast->num = ast->cap = 2;
 				ast->c = atmp;
 			}else if (strcmp(root->c[0].data,"++") == 0){
 				atmp = getAst(1);
 				*atmp = *ast;
 				ast->type = SELFINCR;
-				ast->data = ASTFlags[SELFINCR];
+				ast->data = AstFlags[SELFINCR];
 				ast->num = ast->cap = 1;
 				ast->c = atmp;
 			}else{//--
 				atmp = getAst(1);
 				*atmp = *ast;
 				ast->type = SELFDECR;
-				ast->data = ASTFlags[SELFDECR];
+				ast->data = AstFlags[SELFDECR];
 				ast->num = ast->cap = 1;
 				ast->c = atmp;
 			}
@@ -1183,7 +1212,7 @@ static void AST(struct node *root,struct AstNode *ast){
 		}
 	}else if (ast->type == PARA){
 		if (strcmp(root->data,"parameters") == 0){
-			ast->data = ASTFlags[ast->type];
+			ast->data = AstFlags[ast->type];
 			ast->c = getAst(1);
 			ast->num = ast->cap = 1;
 			ast->c[0].type = PARA;
@@ -1192,8 +1221,8 @@ static void AST(struct node *root,struct AstNode *ast){
 		}else if (strcmp(root->data,"plain_declaration") == 0){
 			struct node *ctmp;
 			struct AstNode *atmp;
-			ast->type = VARIDECL;
-			ast->data = ASTFlags[ast->type];
+			ast->type = VARI;
+			ast->data = AstFlags[ast->type];
 			ast->c = getAst(2);
 			ast->num = ast->cap = 2;
 			ast->c[0].type = TYPE;
@@ -1205,7 +1234,7 @@ static void AST(struct node *root,struct AstNode *ast){
 				atmp = getAst(1);
 				*atmp = ast->c[0];
 				ast->c[0].type = PTERTYPE;
-				ast->c[0].data = ASTFlags[PTERTYPE];
+				ast->c[0].data = AstFlags[PTERTYPE];
 				ast->c[0].num = ast->c[0].cap = 1;
 				ast->c[0].c = atmp;
 			}
@@ -1220,7 +1249,7 @@ static void AST(struct node *root,struct AstNode *ast){
 					atmp[1].type = EXPR;
 					AST(&ctmp->c[1],&atmp[1]);
 					ast->type = ARRATYPE;
-					ast->data = ASTFlags[ARRATYPE];
+					ast->data = AstFlags[ARRATYPE];
 					ast->num = ast->cap = 2;
 					ast->c = atmp;
 					if (ctmp->num > 3) ctmp = &ctmp->c[3];else break;
@@ -1235,7 +1264,7 @@ static void AST(struct node *root,struct AstNode *ast){
 		}
 	}else if (ast->type == TYPESPEC){
 		if (strcmp(root->data,"type_specifiers") == 0){
-			ast->data = ASTFlags[ast->type];
+			ast->data = AstFlags[ast->type];
 			ast->c = getAst(1);
 			ast->num = 0;
 			ast->cap = 1;
@@ -1248,7 +1277,7 @@ static void AST(struct node *root,struct AstNode *ast){
 	}else if (ast->type == DATAFILD){//comma_type_specifiers should be ignored
 		struct node *ctmp;
 		struct AstNode *atmp;
-		ast->data = ASTFlags[ast->type];
+		ast->data = AstFlags[ast->type];
 		ast->c = getAst(1);
 		ast->num = ast->cap = 1;
 		ast->c[0].type = TYPE;
@@ -1275,7 +1304,7 @@ static void AST(struct node *root,struct AstNode *ast){
 				atmp = getAst(1);
 				*atmp = ast->c[ast->num - 1];
 				ast->c[ast->num - 1].type = PTERTYPE;
-				ast->c[ast->num - 1].data = ASTFlags[PTERTYPE];
+				ast->c[ast->num - 1].data = AstFlags[PTERTYPE];
 				ast->c[ast->num - 1].c = atmp;
 				ast->c[ast->num - 1].num = 1;
 				ast->c[ast->num - 1].cap = 1;
@@ -1295,7 +1324,7 @@ static void AST(struct node *root,struct AstNode *ast){
 					atmp[1].type = EXPR;
 					AST(&ctmp->c[1],&atmp[1]);
 					ast->c[ast->num - 2].type = ARRATYPE;
-					ast->c[ast->num - 2].data = ASTFlags[ARRATYPE];
+					ast->c[ast->num - 2].data = AstFlags[ARRATYPE];
 					ast->c[ast->num - 2].c = atmp;
 					ast->c[ast->num - 2].num = 2;
 					ast->c[ast->num - 2].cap = 2;
@@ -1304,9 +1333,9 @@ static void AST(struct node *root,struct AstNode *ast){
 			}
 			if (strcmp(root->c[root->num - 1].data,"comma_declarators") == 0) root = &root->c[root->num - 1];else break;
 		}
-	}else{//init
+	}else if(ast->type == INIT){//init
 		if (strcmp(root->data,"initializer") == 0){
-			ast->data = ASTFlags[ast->type];
+			ast->data = AstFlags[ast->type];
 			ast->c = getAst(1);
 			ast->num = ast->cap = 1;
 			if (root->num == 1){
@@ -1323,6 +1352,22 @@ static void AST(struct node *root,struct AstNode *ast){
 			ast->c[ast->num - 1].type = INIT;
 			AST(&root->c[1],&ast->c[ast->num - 1]);
 			if (root->num > 2) AST(&root->c[2],ast);
+		}
+	}else{//funcpara
+		ast->data = AstFlags[ast->type];
+		ast->c = getAst(1);
+		ast->num = ast->cap = 1;
+		ast->c[0].type = EXPR;
+		AST(&root->c[0],&ast->c[0]);
+		if (root->num > 1){
+			root = &root->c[1];//comma_assignment_expressions
+			while (1){
+				if (ast->num == ast->cap) doubleSpace(ast);
+				++ast->num;
+				ast->c[ast->num - 1].type = EXPR;
+				AST(&root->c[1],&ast->c[ast->num - 1]);
+				if (root->num > 2) root = &root->c[2];else break;
+			}
 		}
 	}
 }
@@ -1363,15 +1408,8 @@ void astPrint(char *s,struct AstNode *ast,int t){
 	}else if (ast->type == VARIDECL){
 		printf("VariDecl\n");
 		astPrint("BaseType: ",&ast->c[0],t + 1);
-		for (i = 1;i < ast->num;++i){
-			if (ast->c[i].type == IDEN)
-				s = "Identifier: ";
-			else if (TYPE <= ast->c[i].type && ast->c[i].type <= ARRATYPE)
-				s = "Type: ";
-			else
-				s = NULL;
-			astPrint(s,&ast->c[i],t + 1);
-		}
+		for (i = 1;i < ast->num;++i)
+			astPrint(NULL,&ast->c[i],t + 1);
 	}else if (ast->type == TYPE){
 		//never
 	}else if (ast->type == BASITYPE){
@@ -1467,7 +1505,7 @@ void astPrint(char *s,struct AstNode *ast,int t){
 	}else if (ast->type == FUNCCALL){
 		printf("FunctionCall\n");
 		astPrint("FuncName: ",&ast->c[0],t + 1);
-		astPrint("Parameters: ",&ast->c[1],t + 1);
+		astPrint("Parameters:",&ast->c[1],t + 1);
 	}else if (ast->type == IDEN){
 		printf("%s\n",ast->data);
 	}else if (ast->type == INTECONS){
@@ -1497,6 +1535,14 @@ void astPrint(char *s,struct AstNode *ast,int t){
 	}else if (ast->type == INIT){
 		printf("%s\n",ast->data);
 		for (i = 0;i < ast->num;++i) astPrint(NULL,&ast->c[i],t + 1);
+	}else if (ast->type == FUNCPARA){
+		printf("\n");
+		for (i = 0;i < ast->num;++i) astPrint(NULL,&ast->c[i],t + 1);
+	}else if (ast->type == VARI){
+		printf("%s\n",ast->data);
+		astPrint("Type: ",&ast->c[0],t + 1);
+		astPrint("Identifier: ",&ast->c[1],t + 1);
+		if (ast->num > 2) astPrint(NULL,&ast->c[2],t + 1);
 	}else{
 		//never
 	}
