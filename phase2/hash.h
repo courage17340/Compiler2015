@@ -66,4 +66,30 @@ void *getHash(struct Hash **h,char *s){
 		if (t->sym == sym) return t->bind;
 	return NULL;
 }
+void clearAll(void){
+	struct Hash *h;
+	struct Symbol *s;
+	void *t;
+	int i;
+	for (i = 0;i < HASH_SIZE;++i){
+		h = typeHash[i];
+		while (h != NULL){
+			t = h;
+			h = h->next;
+			free(t);
+		}
+		h = nameHash[i];
+		while (h != NULL){
+			t = h;
+			h = h->next;
+			free(t);
+		}
+		s = symTable[i];
+		while (s != NULL){
+			t = s;
+			s = s->next;
+			free(t);
+		}
+	}
+}
 #endif

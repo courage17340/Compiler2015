@@ -2,3 +2,5 @@ bin/
 *.exe
 *.o
 *.bat
+semantic
+pretty

@@ -1,3 +1,6 @@
+stuct{
+	int a;
+}i;
 int main(){
-	a.
+	i. a;
 }

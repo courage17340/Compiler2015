@@ -47,17 +47,20 @@ static char ASTFlags[50][30] = {
 	"FunctionCall","Identifier","IntConst","CharConst","StringConst",
 	"Parameters","TypeSpecifiers","DataField","Initializer"
 };
-struct ASTNode{
+struct AstNode{
 	int type;
 	char *data;
 	int num,cap;
-	struct ASTNode *c;
+	struct AstNode *c;
+	//following are added for semantic check
+	int lValue;
+	struct AstNode *retType;
 };
-static void doubleSpace(struct ASTNode *);
-static struct ASTNode *getAst(int);
-static void AST(struct node *,struct ASTNode *);
+static void doubleSpace(struct AstNode *);
+static struct AstNode *getAst(int);
+static void AST(struct node *,struct AstNode *);
 static void tab(int);
-void astPrint(char *,struct ASTNode *,int);
-void astDel(struct ASTNode *);
-struct ASTNode *makeAst(char *,int *,int *,struct node **);
+void astPrint(char *,struct AstNode *,int);
+void astDel(struct AstNode *);
+struct AstNode *makeAst(char *,int *,int *,struct node **);
 #endif

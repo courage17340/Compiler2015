@@ -153,7 +153,7 @@ void prettyPrint(struct node *root,int t,int newLine){
 		if (root->num > 3) prettyPrint(&root->c[3],t,1);
 	}else if (strcmp(root->data,"struct_or_union") == 0){
 		if (newLine) tab(t);
-		printf(root->c[0].data);
+		printf("%s",root->c[0].data);
 	}else if (strcmp(root->data,"plain_declaration") == 0){
 		prettyPrint(&root->c[0],t,0);
 		printf(" ");
@@ -544,7 +544,7 @@ void prettyPrint(struct node *root,int t,int newLine){
 	}
 }
 int main(void){
-	struct ASTNode *tmp;
+	struct AstNode *tmp;
 	struct node *root;
 	flag = 1;
 	readInput();

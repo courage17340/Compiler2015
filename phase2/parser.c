@@ -183,8 +183,8 @@ void cstDel(struct node *s){
 
 //------for------ast------
 
-static void doubleSpace(struct ASTNode *a){
-	struct ASTNode *tmp = (struct ASTNode *)malloc(sizeof(struct ASTNode) * a->cap * 2);
+static void doubleSpace(struct AstNode *a){
+	struct AstNode *tmp = (struct AstNode *)malloc(sizeof(struct AstNode) * a->cap * 2);
 	int i;
 	for (i = 0;i < a->cap;++i)
 		tmp[i] = a->c[i];
@@ -193,11 +193,11 @@ static void doubleSpace(struct ASTNode *a){
 	a->c = tmp;
 }
 
-static struct ASTNode *getAst(int n){
-	return (struct ASTNode *)malloc(sizeof(struct ASTNode) * n);
+static struct AstNode *getAst(int n){
+	return (struct AstNode *)malloc(sizeof(struct AstNode) * n);
 }
 
-static void AST(struct node *root,struct ASTNode *ast){
+static void AST(struct node *root,struct AstNode *ast){
 //	ast->data = ASTFlags[ast->type];
 //	ast->c = NULL;
 //	ast->num = ast->cap = 0;
@@ -217,7 +217,7 @@ static void AST(struct node *root,struct ASTNode *ast){
 		ast->data = ASTFlags[ast->type];
 		ast->c = NULL;
 		ast->num = ast->cap = 0;
-		struct ASTNode *atmp;
+		struct AstNode *atmp;
 		struct node *ctmp;
 		int numOfPtrs = 0;
 		ast->c = getAst(1);
@@ -606,7 +606,7 @@ static void AST(struct node *root,struct ASTNode *ast){
 		bk = root;
 		if (strcmp(root->c[ptr].data,"comma_declarations") == 0){
 			struct node *ctmp,*ctmp1,*ctmp2;
-			struct ASTNode *atmp,*atmp1;
+			struct AstNode *atmp,*atmp1;
 			root = &root->c[ptr];//comma_declarations
 			while (1){
 				ctmp = &root->c[0];//declaration
@@ -701,7 +701,7 @@ static void AST(struct node *root,struct ASTNode *ast){
 		}
 	}else if (EXPR <= ast->type && ast->type <= STRICONS){
 		int i;
-		struct ASTNode *atmp;
+		struct AstNode *atmp;
 		if (strcmp(root->data,"expression") == 0){
 			AST(&root->c[0],ast);
 			if (root->num > 1){
@@ -1181,7 +1181,7 @@ static void AST(struct node *root,struct ASTNode *ast){
 			if (root->num > 1) AST(&root->c[1],ast);
 		}else if (strcmp(root->data,"plain_declaration") == 0){
 			struct node *ctmp;
-			struct ASTNode *atmp;
+			struct AstNode *atmp;
 			ast->type = VARIDECL;
 			ast->data = ASTFlags[ast->type];
 			ast->c = getAst(2);
@@ -1237,7 +1237,7 @@ static void AST(struct node *root,struct ASTNode *ast){
 		if (root->num > 3) AST(&root->c[3],ast);
 	}else if (ast->type == DATAFILD){//comma_type_specifiers should be ignored
 		struct node *ctmp;
-		struct ASTNode *atmp;
+		struct AstNode *atmp;
 		ast->data = ASTFlags[ast->type];
 		ast->c = getAst(1);
 		ast->num = ast->cap = 1;
@@ -1328,7 +1328,7 @@ static void tab(int t){
 	for (i = 0;i < t;++i) printf("\t");
 }
 
-void astPrint(char *s,struct ASTNode *ast,int t){
+void astPrint(char *s,struct AstNode *ast,int t){
 	int i;
 	tab(t);
 	if (s != NULL) printf("%s",s);
@@ -1492,16 +1492,16 @@ void astPrint(char *s,struct ASTNode *ast,int t){
 	}
 }
 
-void astDel(struct ASTNode *ast){
+void astDel(struct AstNode *ast){
 	int i;
 	if (ast->c == NULL || ast->num == 0) return;
 	for (i = 0;i < ast->num;++i) astDel(&ast->c[i]);
 	free(ast->c);
 }
 
-struct ASTNode *makeAst(char *s,int *flag,int *size,struct node **r){
+struct AstNode *makeAst(char *s,int *flag,int *size,struct node **r){
 	struct node *root;
-	struct ASTNode *ast;
+	struct AstNode *ast;
 	removeComments(s);
 	if (strcmp(s,"CompileError") == 0){
 		*flag = 0;
@@ -1516,7 +1516,7 @@ struct ASTNode *makeAst(char *s,int *flag,int *size,struct node **r){
 		free(list);
 		return NULL;
 	}
-	ast = malloc(sizeof (struct ASTNode));
+	ast = malloc(sizeof (struct AstNode));
 	ast->type = ROOT;
 	AST(root,ast);
 //	astPrint(NULL,ast,0);
