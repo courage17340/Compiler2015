@@ -1446,8 +1446,7 @@ void astPrint(char *s,struct AstNode *ast,int t){
 		astPrint("Condition: ",&ast->c[0],t + 1);
 		astPrint("Then: ",&ast->c[1],t + 1);
 		if (ast->num > 2) astPrint("Else: ",&ast->c[2],t + 1);
-	}
-	else if (ast->type == FORRLOOP){
+	}else if (ast->type == FORRLOOP){
 		printf("ForLoop\n");
 		astPrint("Initialize: ",&ast->c[0],t + 1);
 		astPrint("Condition: ",&ast->c[1],t + 1);

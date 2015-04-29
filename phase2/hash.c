@@ -24,7 +24,7 @@ static struct Hash *makeHash(char *s,void *bind,struct Symbol *sym,struct Hash *
 	return ret;
 }
 
-static struct Symbol *getSymbol(char *s){
+struct Symbol *getSymbol(char *s){
 	int i = hash(s);
 	struct Symbol *sym;
 	for (sym = symTable[i];sym != NULL;sym = sym->next)

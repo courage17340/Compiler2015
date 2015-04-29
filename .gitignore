@@ -4,3 +4,5 @@ bin/
 *.bat
 semantic
 pretty
+astPrint
+

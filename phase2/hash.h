@@ -18,7 +18,7 @@ static struct Symbol *symTable[HASH_SIZE];
 static int hash(char *);
 static struct Symbol *makeSymbol(char *,struct Symbol *);
 static struct Hash *makeHash(char *,void *,struct Symbol *,struct Hash *,int);
-static struct Symbol *getSymbol(char *);
+struct Symbol *getSymbol(char *);
 int pushHash(struct Hash **,char *,void *,int);
 void popHash(struct Hash **,int);
 void *getHash(struct Hash **,char *);
