@@ -1,4 +1,3 @@
-struct a{
-int c,d;
-struct b *e,**f;
-};
+int main(){
+a[2];
+}

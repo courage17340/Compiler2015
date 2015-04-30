@@ -271,11 +271,12 @@ static void astCheck(struct AstNode *ast,int isInLoop,void *retType){
 		if (ast->num > 1){
 			if (hasType(ast->c[0].data,flag)){
 				if (tmp->num > 1) halt();
-				addType(ast->c[0].data,(void *)ast,flag);
 			}
-			astCheck(&ast->c[1]);
+			astCheck(&ast->c[1],isInLoop,retType);
+			addType(ast->c[0].data,(void *)ast,flag);
 		}else{
 			if (!hasType(ast->c[0].data,flag)){
+				astCheck(&ast->c[1],isInLoop,retType);
 				addType(ast->c[0].data,(void *)ast,flag);
 			}
 		}
@@ -358,25 +359,65 @@ static void astCheck(struct AstNode *ast,int isInLoop,void *retType){
 	}else if (ast->type == PTERACSS){
 		//TODO
 	}else if (ast->type == RECOACSS){
-		//TODO
+		void *t;
+		struct AstNode *tmp;
+		int j;
+		astCheck(&ast->c[0],isInLoop,retType);
+		t = ast->c[0].retType;
+		if (t == (void *)&intType || t == (void *)&charType || t == (void *)&voidType || t == (void *)&pterType) halt();
+		tmp = t;
+		if (tmp->type != STRUTYPE && tmp->type != UNIOTYPE) halt();
+		tmp = getTypeHash(tmp->c[0].data);
+		if (tmp->num == 1) halt();
+		if (ast->c[1].type != IDEN) halt();
+		for (i = 0;i < tmp->num;++i)
+			for (j = 2;j < tmp->c[i].num;++j)
+				if (strcmp(ast->c[1].data,tmp->c[i].c[j].data) == 0){
+					ast->retType = &tmp->c[i].c[j - 1];
+					if (tmp->c[i].c[j - 1].type != ARRATYPE) ast->lValue = 1;
+					return;
+				}
+		halt();
 	}else if (ast->type == SELFINCR){
 		astCheck(&ast->c[0],isInLoop,retType);
 		if (!ast->c[0].lValue) halt();
 		if (!canConvert(ast->c[0].retType,(void *)&intType)) halt();
-		ast->retType == (void *)&intType;
+		ast->retType == ast->c[0].retType;
 	}else if (ast->type == SELFDECR){
 		astCheck(&ast->c[0],isInLoop,retType);
 		if (!ast->c[0].lValue) halt();
 		if (!canConvert(ast->c[0].retType,(void *)&intType)) halt();
-		ast->retType == (void *)&intType;
+		ast->retType == ast->c[0].retType;
 	}else if (ast->type == ARRAACSS){
-		
-		//TODO
+		void *t;
+		struct AstNode *tmp;
+		astCheck(&ast->c[0],isInLoop,retType);
+		astCheck(&ast->c[1],isInLoop,retType);
+		if (!canConvert(ast->c[1].retType,(void *)&intType)) halt();
+		t = ast->c[0].retType;
+		if (t == (void *)&intType || t == (void *)&charType || t == (void *)&voidType) halt();
+		if (t == (void *)&pterType){
+			if (flag == 0) halt();//int a["11"[0]]; ERROR int f(){int a["11"[0]];} RIGHT
+			ast->retType = (void *)&charType;
+			ast->constant = 1;
+		}
+		tmp = t;
+		if (tmp->type != ARRATYPE && tmp->type != PTERTYPE) halt();
+		ast->retType = tmp->c[0].retType;
+		if (tmp->type == ARRATYPE){
+			if (tmp->c[0].type != ARRATYPE){
+				ast->lValue = 1;
+			}
+		}else{
+			ast->lValue = 1;
+		}
 	}else if (ast->type == FUNCCALL){
 		//TODO
 	}else if (ast->type == IDEN){
-		if (getNameHash(ast->data) == NULL) halt();
-		ast->retType = getNameHash(ast->data);
+		struct AstNode *tmp = getNameHash(ast->data);
+		if (tmp == NULL) halt();
+		ast->retType = tmp;
+		if (tmp->type == FUNCDECL) halt();
 		ast->lValue = 1;
 	}else if (ast->type == INTECONS){
 		int t = 0,b,k,l;
@@ -419,29 +460,54 @@ static void astCheck(struct AstNode *ast,int isInLoop,void *retType){
 	}else if (ast->type == PARA){
 		//TODO
 	}else if (ast->type == TYPESPEC){
+		int n = 0,j,k = -1;
+		struct Symbol ** f;
 		for (i = 0;i < ast->num;++i) astCheck(&ast->c[i],isInLoop,retType);
-		//TODO
+		for (i = 0;i < ast->num;++i) n += ast->c[i].num / 2;
+		f = malloc(n * sizeof(struct Symbol *));
+		for (i = 0;i < ast->num;++i)
+			for (j = 2;j < ast->c[i].num;j += 2) f[++k] = getSymbol(ast->c[i].c[j].data);
+		for (i = 0;i < n;++i)
+			for (j = i + 1;j < n;++j)
+				if (f[i] == f[j]){
+					free(f);
+					halt();
+				}
+		free(f);
 	}else if (ast->type == DATAFILD){
-		//TODO
+		struct AstNode *tmp;
+		astCheck(&ast->c[0],isInLoop,retType);
+		if (ast->c[0].type != STRUTYPE && ast->c[0].type != UNIOTYPE) return;
+		for (i = 1;i < ast->num;i += 2){
+			tmp = &ast->c[i];
+			while (tmp->type == ARRATYPE){
+				tmp = &tmp->c[0];
+			}
+			if (tmp->type != PTERTYPE){
+				struct AstNode *t = getTypeHash(ast->c[0].data);
+				if (t->num == 1) halt();
+			}
+		}
 	}else if (ast->type == INIT){
 		//TODO
 	}else if (ast->type == FUNCPARA){
 		//TODO
 	}else if (ast->type == VARI){
 		astCheck(&ast->c[0],isInLoop,retType);
+		if (ast->c[0].type == VOIDTYPE) halt();
 		if (flag && hasName(ast->c[1].data,flag)) halt();
 		if (!flag && hasName(ast->c[1].data,flag)){
 			struct AstNode *t = getNameHash(ast->c[1].data);
+			if (t->type == FUNCDECL) halt();
 			if (!sameType(&t->c[0],&ast->c[0])) halt();
-			if (t->c[0].type == STRUTYPE || t->c[0].type == UNIOTYPE){
-			
-			}
+//			if (t->c[0].type == STRUTYPE || t->c[0].type == UNIOTYPE){
+//			
+//			}
 			if (t->num == 3 && ast->num == 3) halt();
 			if (t->num == 2) addName(ast->c[1].data,(void *)ast,flag);
 		}else{
-		
+			addName(ast->c[1].data,(void *)ast,flag);
 		}
-		//TODO
 	}else{
 		//never
 	}
@@ -468,6 +534,9 @@ int main(int args,char **argv){
 	nameStack.num = 0;
 	nameStack.cap = 1;
 //	astPrint(NULL,ast,0);
+	addName("print",NULL,0);
+	addName("getchar",NULL,0);
+	addName("malloc",NULL,0);
 	astCheck(ast,0,NULL);
 //	semantic(ast);
 	clearAll();

@@ -5,4 +5,4 @@ bin/
 semantic
 pretty
 astPrint
-
+test.c
