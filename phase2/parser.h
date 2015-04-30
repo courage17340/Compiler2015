@@ -55,7 +55,7 @@ struct AstNode{
 	int num,cap;
 	struct AstNode *c;
 	//following are added for semantic check
-	int lValue,constant;
+	int lValue,constant,value;
 	void *retType;
 };
 static void doubleSpace(struct AstNode *);

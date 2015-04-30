@@ -1,10 +1,4 @@
-int a,b,c,d;
 struct a{
-int a,b,c,d;
+int c,d;
+struct b *e,**f;
 };
-int main(){
-int a,b,c,d;
-struct a{
-	int a,b,c,d;
-};
-}

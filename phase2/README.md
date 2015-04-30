@@ -1,15 +1,10 @@
 #Phase 2
 ***
-##test
+##astPrint
 ###Description
 AST printer
 ###Usage
-####Windows
-1. mingw32-make
-2. test < source.c > ast.txt
-
-####Ubuntu
-1. make
+1. make -f makefile_ast
 2. ./test < source.c > ast.txt
 
 ***
@@ -18,7 +13,6 @@ AST printer
 ###Description
 pretty printer
 ###Usage
-####Windows
-1. mingw32-make -f makefile_pretty
-2. pretty < source.c > pretty.c
+1. make -f makefile_pretty
+2. ./pretty < source.c > pretty.c
 

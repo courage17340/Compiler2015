@@ -17,7 +17,7 @@ static void doubleStack(struct Stack *s){
 	free(s->ele);
 	s->ele = tmp;
 }
-static void addtype(char *s,void *bind,int flag){
+static void addType(char *s,void *bind,int flag){
 	if (typeStack.num == typeStack.cap) doubleStack(&typeStack);
 	++typeStack.num;
 	typeStack.ele[typeStack.num - 1].flag = flag;
@@ -92,6 +92,139 @@ static int canConvert(void *a,void *b){
 	}
 }
 
+static int sameType(struct AstNode *a,struct AstNode *b){
+	if (a->type != b->type) return 0;
+	if (a->type == INTETYPE || a->type == CHARTYPE || a->type == VOIDTYPE) return 1;
+	if (a->type == ARRATYPE){
+		if (!sameType(&a->c[0],&b->c[0])) return 0;
+		if (a->c[1].value != b->c[1].value) return 0;
+	}else if (a->type == PTERTYPE){
+		return sameType(&a->c[0],&b->c[0]);
+	}else{
+		return strcmp(a->c[0].data,b->c[0].data) == 0;
+	}
+	return 1;
+}
+
+static int charToInt(char c){
+	if ('0' <= c && c <= '9') return c - '0';
+	if ('a' <= c && c <= 'f') return c - 'a' + 10;
+	if ('A' <= c && c <= 'F') return c - 'A' + 10;
+	return -1;
+}
+
+static void conToChar(char *s){
+	int ret = 0,l = strlen(s),i = 0;
+	while (i < l){
+		ret = 0;
+		if (s[i] != '\\'){
+			ret = s[i];
+		}else{
+			++i;
+			if (s[i] == 'a'){
+				ret = '\a';
+			}else if (s[i] == 'b'){
+				ret = '\b';
+			}else if (s[i] == 'f'){
+				ret = '\f';
+			}else if (s[i] == 'n'){
+				ret = '\n';
+			}else if (s[i] == 'r'){
+				ret = '\r';
+			}else if (s[i] == 't'){
+				ret = '\t';
+			}else if (s[i] == 'v'){
+				ret = '\v';
+			}else if (s[i] == '\\'){
+				ret = '\\';
+			}else if (s[i] == '\''){
+				ret = '\'';
+			}else if (s[i] == '"'){
+				ret = '"';
+			}else if ('0' <= s[i] && s[i] <= '7'){
+				ret = s[i] - '0';
+				if (i + 1 < l && '0' <= s[i + 1] && s[i + 1] <= '7'){
+					++i;
+					ret = ret * 8 + s[i + 1] - '0';
+				}
+				if (i + 1 < l && '0' <= s[i + 1] && s[i + 1] <= '7'){
+					++i;
+					ret = ret * 8 + s[i + 1] - '0';
+				}
+			}else if (s[i] == 'x'){
+				ret = 0;
+				++i;
+				if (i >= l || charToInt(s[i]) == -1) halt();
+				ret = ret * 16 + charToInt(s[i]);
+				++i;
+				if (i >= l || charToInt(s[i]) == -1) halt();
+				ret = ret * 16 + charToInt(s[i]);
+			}else{
+				ret = s[i];
+			}
+		}
+		++i;
+	}
+	s[0] = ret;
+	s[1] = 0;
+}
+
+static void conToStr(char *s){
+	int ret = 0,l = strlen(s),i = 0,t = -1;
+	while (i < l){
+		ret = 0;
+		if (s[i] != '\\'){
+			ret = s[i];
+		}else{
+			++i;
+			if (s[i] == 'a'){
+				ret = '\a';
+			}else if (s[i] == 'b'){
+				ret = '\b';
+			}else if (s[i] == 'f'){
+				ret = '\f';
+			}else if (s[i] == 'n'){
+				ret = '\n';
+			}else if (s[i] == 'r'){
+				ret = '\r';
+			}else if (s[i] == 't'){
+				ret = '\t';
+			}else if (s[i] == 'v'){
+				ret = '\v';
+			}else if (s[i] == '\\'){
+				ret = '\\';
+			}else if (s[i] == '\''){
+				ret = '\'';
+			}else if (s[i] == '"'){
+				ret = '"';
+			}else if ('0' <= s[i] && s[i] <= '7'){
+				ret = s[i] - '0';
+				if (i + 1 < l && '0' <= s[i + 1] && s[i + 1] <= '7'){
+					++i;
+					ret = ret * 8 + s[i + 1] - '0';
+				}
+				if (i + 1 < l && '0' <= s[i + 1] && s[i + 1] <= '7'){
+					++i;
+					ret = ret * 8 + s[i + 1] - '0';
+				}
+			}else if (s[i] == 'x'){
+				ret = 0;
+				++i;
+				if (i >= l || charToInt(s[i]) == -1) halt();
+				ret = ret * 16 + charToInt(s[i]);
+				++i;
+				if (i >= l || charToInt(s[i]) == -1) halt();
+				ret = ret * 16 + charToInt(s[i]);
+			}else{
+				ret = s[i];
+			}
+		}
+		++i;
+		s[++t] = ret;
+	}
+	s[++t] = 0;
+}
+
 static void astCheck(struct AstNode *ast,int isInLoop,void *retType){
 	//flag for scopes
 	static int flag = 0;
@@ -130,9 +263,39 @@ static void astCheck(struct AstNode *ast,int isInLoop,void *retType){
 	}else if (ast->type == VOIDTYPE){
 		ast->retType = (void *)&voidType;
 	}else if (ast->type == STRUTYPE){
-		//TODO
+		struct AstNode *tmp;
+		if (hasType(ast->c[0].data,flag)){
+			tmp = getTypeHash(ast->c[0].data);
+			if (ast->type != tmp->type) halt();
+		}
+		if (ast->num > 1){
+			if (hasType(ast->c[0].data,flag)){
+				if (tmp->num > 1) halt();
+				addType(ast->c[0].data,(void *)ast,flag);
+			}
+			astCheck(&ast->c[1]);
+		}else{
+			if (!hasType(ast->c[0].data,flag)){
+				addType(ast->c[0].data,(void *)ast,flag);
+			}
+		}
 	}else if (ast->type == UNIOTYPE){
-		//TODO
+		struct AstNode *tmp;
+		if (hasType(ast->c[0].data,flag)){
+			tmp = getTypeHash(ast->c[0].data);
+			if (ast->type != tmp->type) halt();
+		}
+		if (ast->num > 1){
+			if (hasType(ast->c[0].data,flag)){
+				if (tmp->num > 1) halt();
+				addType(ast->c[0].data,(void *)ast,flag);
+			}
+			astCheck(&ast->c[1]);
+		}else{
+			if (!hasType(ast->c[0].data,flag)){
+				addType(ast->c[0].data,(void *)ast,flag);
+			}
+		}
 	}else if (ast->type == PTERTYPE){
 		ast->retType = (void *)ast;
 		astCheck(&ast->c[0],isInLoop,retType);
@@ -216,18 +379,42 @@ static void astCheck(struct AstNode *ast,int isInLoop,void *retType){
 		ast->retType = getNameHash(ast->data);
 		ast->lValue = 1;
 	}else if (ast->type == INTECONS){
-		//TODO
+		int t = 0,b,k,l;
+		char *s = ast->data;
+		l = strlen(s);
+		if (s[0] != '0'){
+			b = 10;
+			for (i = 0;i < l;++i){
+				k = charToInt(s[i]);
+				if (k == -1 || k > 9) halt();
+				t = t * b + k;
+			}
+		}else if (l > 1 && (s[1] == 'x' || s[1] == 'X')){
+			b = 16;
+			if (l == 2) halt();
+			for (i = 2;i < l;++i){
+				k = charToInt(s[i]);
+				if (k == -1) halt();
+				t = t * b + k;
+			}
+		}else{
+			b = 8;
+			for (i = 1;i < l;++i){
+				k = charToInt(s[i]);
+				if (k == -1 || k > 7) halt();
+				t = t * b + k;
+			}
+		}
 		ast->constant = 1;
 		ast->retType = (void *)&intType;
+		ast->value = t;
 	}else if (ast->type == CHARCONS){
-		//TODO
-		//deal with \ddd \xff etc.
 		ast->constant = 1;
+		conToChar(ast->data);
 		ast->retType = (void *)&charType;
 	}else if (ast->type == STRICONS){
-		//TODO
-		//deal with \ddd \xff etc.
 		ast->constant = 1;
+		conToStr(ast->data);
 		ast->retType = (void *)&pterType;
 	}else if (ast->type == PARA){
 		//TODO
@@ -245,7 +432,10 @@ static void astCheck(struct AstNode *ast,int isInLoop,void *retType){
 		if (flag && hasName(ast->c[1].data,flag)) halt();
 		if (!flag && hasName(ast->c[1].data,flag)){
 			struct AstNode *t = getNameHash(ast->c[1].data);
-			if (t->retType != ast->c[0].retType) halt();//TODO
+			if (!sameType(&t->c[0],&ast->c[0])) halt();
+			if (t->c[0].type == STRUTYPE || t->c[0].type == UNIOTYPE){
+			
+			}
 			if (t->num == 3 && ast->num == 3) halt();
 			if (t->num == 2) addName(ast->c[1].data,(void *)ast,flag);
 		}else{
