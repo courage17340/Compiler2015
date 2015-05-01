@@ -1,5 +1,7 @@
+all : semantic
+
 semantic : parser.h parser.c hash.h hash.c semantic.h semantic.c removeComments.h removeComments.o split.h split.o tokens.h tokens.o
-	gcc -g semantic.c parser.c hash.c removeComments.o split.o tokens.o -o semantic
+	gcc -O2 semantic.c parser.c hash.c removeComments.o split.o tokens.o -o semantic
 	mkdir bin
 	cp semantic bin/semantic
 removeComments.o : removeComments.h removeComments.c
