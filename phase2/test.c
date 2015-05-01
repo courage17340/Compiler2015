@@ -1,4 +1,4 @@
-int f(int a,int b){}
+int f(int a,char b){}
 int main(){
-	f();
+	g(c,d);
 }

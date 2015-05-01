@@ -183,7 +183,7 @@ void cstDel(struct node *s){
 
 //------for------ast------
 
-static void doubleSpace(struct AstNode *a){
+void doubleSpace(struct AstNode *a){
 	struct AstNode *tmp = (struct AstNode *)malloc(sizeof(struct AstNode) * a->cap * 2);
 	int i;
 	for (i = 0;i < a->cap;++i)
@@ -193,7 +193,7 @@ static void doubleSpace(struct AstNode *a){
 	a->c = tmp;
 }
 
-static struct AstNode *getAst(int n){
+struct AstNode *getAst(int n){
 	return (struct AstNode *)malloc(sizeof(struct AstNode) * n);
 }
 

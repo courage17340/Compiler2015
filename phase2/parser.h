@@ -58,8 +58,8 @@ struct AstNode{
 	int lValue,constant,value;
 	void *retType;
 };
-static void doubleSpace(struct AstNode *);
-static struct AstNode *getAst(int);
+void doubleSpace(struct AstNode *);
+struct AstNode *getAst(int);
 static void AST(struct node *,struct AstNode *);
 static void tab(int);
 void astPrint(char *,struct AstNode *,int);
