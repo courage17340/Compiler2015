@@ -1,3 +1,4 @@
+int f(int a,int b){}
 int main(){
-a[2];
+	f();
 }

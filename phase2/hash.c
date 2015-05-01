@@ -63,7 +63,16 @@ int hasHash(struct Hash **h,char *s,int flag){
 		if (t->flag ==flag && t->sym == sym) return 1;
 	return 0;
 }
-
+/*
+int getFlagHash(char *s){
+	struct Symbol* sym = getSymbol(s);
+	int i = hash(s);
+	struct Hash *t;
+	for (t = h[i];t != NULL;t = t->next)
+		if (t->sym == sym) return t->flag;
+	return -1;
+}
+*/
 void clearAll(void){
 	struct Hash *h;
 	struct Symbol *s;

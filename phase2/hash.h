@@ -23,5 +23,6 @@ int pushHash(struct Hash **,char *,void *,int);
 void popHash(struct Hash **,int);
 void *getHash(struct Hash **,char *);
 int hasHash(struct Hash **,char *,int);
+//int getFlagHash(char *);
 void clearAll(void);
 #endif
