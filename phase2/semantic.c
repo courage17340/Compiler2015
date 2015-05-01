@@ -223,7 +223,29 @@ static void conToStr(char *s){
 	}
 	s[++t] = 0;
 }
-//TODO expression structure refinement
+
+static void addAno(struct AstNode *ast,struct AstNode *t){
+	if (ast->num == ast->cap) doubleSpace(ast);
+	++ast->num;
+	ast->c[ast->num - 1].type = PTERTYPE;
+	ast->c[ast->num - 1].num = 0;//TO avoid the second deletion
+	ast->c[ast->num - 1].cap = 0;
+	ast->c[ast->num - 1].data = NULL;
+	ast->c[ast->num - 1].c = t;
+	ast->retType = &ast->c[ast->num - 1];
+}
+
+static void makeInt(struct AstNode *ast){
+	if (ast->num == ast->cap) doubleSpace(ast);
+	++ast->num;
+	ast->c[ast->num - 1].type = INTETYPE;
+	ast->c[ast->num - 1].data = NULL;
+	ast->c[ast->num - 1].c = NULL;
+	ast->c[ast->num - 1].num = 0;
+	ast->c[ast->num - 1].cap = 0;
+	ast->retType = &ast->c[ast->num - 1];
+}
+
 static void astCheck(struct AstNode *ast,int isInLoop,void *retType){
 	//flag for scopes
 	static int flag = 0;
@@ -348,8 +370,263 @@ static void astCheck(struct AstNode *ast,int isInLoop,void *retType){
 		ast->c[0].cap = ast->c[0].num = 0;
 		ast->c[0].c = NULL;
 		ast->retType = (void *)&ast->c[0];
-	}else if (ast->type == BINAEXPR){
-		//TODO
+	}else if (ast->type == BINAEXPR){	//Pointers here are specially designed so that they won't be freed twice
+		struct AstNode *a,*b;
+		astCheck(&ast->c[0],isInLoop,retType);
+		astCheck(&ast->c[1],isInLoop,retType);
+		a = ast->c[0].retType;
+		b = ast->c[1].retType;
+		if (strcmp(ast->data,",") == 0){
+			ast->retType = b;
+			if (ast->c[1].constant) ast->constant = 1;
+		}else if (strcmp(ast->data,"=") == 0){
+			if (!ast->c[0].lValue) halt();
+			if (!canConvert(a,b)) halt();
+			ast->retType = a;
+			ast->lValue = 1;
+		}else if (strcmp(ast->data,"|") == 0){
+			if (a->type != INTETYPE && a->type != CHARTYPE) halt();
+			if (b->type != INTETYPE && b->type != CHARTYPE) halt();
+			makeInt(ast);
+			if (ast->c[0].constant && ast->c[1].constant){
+				ast->constant = 1;
+				ast->value = ast->c[0].value | ast->c[1].value;
+			}
+		}else if (strcmp(ast->data,"^") == 0){
+			if (a->type != INTETYPE && a->type != CHARTYPE) halt();
+			if (b->type != INTETYPE && b->type != CHARTYPE) halt();
+			makeInt(ast);
+			if (ast->c[0].constant && ast->c[1].constant){
+				ast->constant = 1;
+				ast->value = ast->c[0].value ^ ast->c[1].value;
+			}
+		}else if (strcmp(ast->data,"&") == 0){
+			if (a->type != INTETYPE && a->type != CHARTYPE) halt();
+			if (b->type != INTETYPE && b->type != CHARTYPE) halt();
+			makeInt(ast);
+			if (ast->c[0].constant && ast->c[1].constant){
+				ast->constant = 1;
+				ast->value = ast->c[0].value & ast->c[1].value;
+			}
+		}else if (strcmp(ast->data,"<") == 0){
+			if (a->type != INTETYPE && a->type != CHARTYPE && a->type != PTERTYPE) halt();
+			if (b->type != INTETYPE && b->type != CHARTYPE && b->type != PTERTYPE) halt();
+			makeInt(ast);
+			if (ast->c[0].constant && ast->c[1].constant){
+				ast->constant = 1;
+				ast->value = ast->c[0].value < ast->c[1].value;
+			}
+		}else if (strcmp(ast->data,">") == 0){
+			if (a->type != INTETYPE && a->type != CHARTYPE && a->type != PTERTYPE && a->type != ARRATYPE) halt();
+			if (b->type != INTETYPE && b->type != CHARTYPE && b->type != PTERTYPE && b->type != ARRATYPE) halt();
+			makeInt(ast);
+			if (ast->c[0].constant && ast->c[1].constant){
+				ast->constant = 1;
+				ast->value = ast->c[0].value > ast->c[1].value;
+			}
+		}else if (strcmp(ast->data,"+") == 0){
+			if (a->type != INTETYPE && a->type != CHARTYPE && a->type != PTERTYPE && a->type != ARRATYPE) halt();
+			if (b->type != INTETYPE && b->type != CHARTYPE && b->type != PTERTYPE && b->type != ARRATYPE) halt();
+			if (a->type != INTETYPE && a->type != CHARTYPE && b->type != INTETYPE && b->type != CHARTYPE) halt();
+			if ((a->type == INTETYPE || a->type == CHARTYPE) && (b->type == INTETYPE || b->type == CHARTYPE)){
+				makeInt(ast);
+			}else{
+				if (a->type == INTETYPE || a->type == CHARTYPE) ast->retType = b;else ast->retType = a;
+			}
+			if (ast->c[0].constant && ast->c[1].constant){
+				ast->constant = 1;
+				ast->value = ast->c[0].value + ast->c[1].value;
+			}
+		}else if (strcmp(ast->data,"-") == 0){
+			if (a->type != INTETYPE && a->type != CHARTYPE && a->type != PTERTYPE && a->type != ARRATYPE) halt();
+			if (b->type != INTETYPE && b->type != CHARTYPE && b->type != PTERTYPE && b->type != ARRATYPE) halt();
+			if ((a->type == INTETYPE || a->type == CHARTYPE) && (b->type == INTETYPE || b->type == CHARTYPE)){
+				makeInt(ast);
+			}else{
+				if (a->type == INTETYPE || a->type == CHARTYPE){
+					halt();
+				}else{
+					if (!sameType(&a->c[0],&b->c[0])) halt();
+					addAno(ast,&a->c[0]);
+				}
+			}
+			if (ast->c[0].constant && ast->c[1].constant){
+				ast->constant = 1;
+				ast->value = ast->c[0].value - ast->c[1].value;
+			}
+		}else if (strcmp(ast->data,"*") == 0){
+			if (a->type != INTETYPE && a->type != CHARTYPE) halt();
+			if (b->type != INTETYPE && b->type != CHARTYPE) halt();
+			makeInt(ast);
+			if (ast->c[0].constant && ast->c[1].constant){
+				ast->constant = 1;
+				ast->value = ast->c[0].value * ast->c[1].value;
+			}
+		}else if (strcmp(ast->data,"/") == 0){
+			if (a->type != INTETYPE && a->type != CHARTYPE) halt();
+			if (b->type != INTETYPE && b->type != CHARTYPE) halt();
+			makeInt(ast);
+			if (ast->c[1].constant && ast->c[1].value == 0) halt();//divide by 0
+			if (ast->c[0].constant && ast->c[1].constant){
+				ast->constant = 1;
+				ast->value = ast->c[0].value / ast->c[1].value;
+			}
+		}else if (strcmp(ast->data,"%") == 0){
+			if (a->type != INTETYPE && a->type != CHARTYPE) halt();
+			if (b->type != INTETYPE && b->type != CHARTYPE) halt();
+			makeInt(ast);
+			if (ast->c[1].constant && ast->c[1].value == 0) halt();//divide by 0
+			if (ast->c[0].constant && ast->c[1].constant){
+				ast->constant = 1;
+				ast->value = ast->c[0].value % ast->c[1].value;
+			}
+		}else if (strcmp(ast->data,"||") == 0){
+			if (!canConvert(a,(void *)&intType)) halt();
+			if (!canConvert(b,(void *)&intType)) halt();
+			makeInt(ast);
+			if (ast->c[0].constant && ast->c[0].value){// 1 || x == 1
+				ast->constant = 1;
+				ast->value = 1;
+			}else if (ast->c[0].constant && ast->c[1].constant){
+				ast->constant = 1;
+				ast->value = ast->c[0].value || ast->c[1].value;
+			}
+		}else if (strcmp(ast->data,"&&") == 0){
+			if (!canConvert(a,(void *)&intType)) halt();
+			if (!canConvert(b,(void *)&intType)) halt();
+			makeInt(ast);
+			if (ast->c[0].constant && ast->c[0].value == 0){// 0 && x == 0
+				ast->constant = 1;
+				ast->value = 1;
+			}else if (ast->c[0].constant && ast->c[1].constant){
+				ast->constant = 1;
+				ast->value = ast->c[0].value && ast->c[1].value;
+			}
+		}else if (strcmp(ast->data,"==") == 0){
+			if (!canConvert(a,(void *)&intType)) halt();
+			if (!canConvert(b,(void *)&intType)) halt();
+			makeInt(ast);
+			if (ast->c[0].constant && ast->c[1].constant){
+				ast->constant = 1;
+				ast->value = ast->c[0].value == ast->c[1].value;
+			}
+		}else if (strcmp(ast->data,"!=") == 0){
+			if (!canConvert(a,(void *)&intType)) halt();
+			if (!canConvert(b,(void *)&intType)) halt();
+			makeInt(ast);
+			if (ast->c[0].constant && ast->c[1].constant){
+				ast->constant = 1;
+				ast->value = ast->c[0].value != ast->c[1].value;
+			}
+		}else if (strcmp(ast->data,"<=") == 0){
+			if (!canConvert(a,(void *)&intType)) halt();
+			if (!canConvert(b,(void *)&intType)) halt();
+			makeInt(ast);
+			if (ast->c[0].constant && ast->c[1].constant){
+				ast->constant = 1;
+				ast->value = ast->c[0].value <= ast->c[1].value;
+			}
+		}else if (strcmp(ast->data,">=") == 0){
+			if (!canConvert(a,(void *)&intType)) halt();
+			if (!canConvert(b,(void *)&intType)) halt();
+			makeInt(ast);
+			if (ast->c[0].constant && ast->c[1].constant){
+				ast->constant = 1;
+				ast->value = ast->c[0].value >= ast->c[1].value;
+			}
+		}else if (strcmp(ast->data,"<<") == 0){
+			if (a->type != INTETYPE && a->type != CHARTYPE) halt();
+			if (b->type != INTETYPE && b->type != CHARTYPE) halt();
+			makeInt(ast);
+			if (ast->c[0].constant && ast->c[1].constant){
+				ast->constant = 1;
+				ast->value = ast->c[0].value << ast->c[1].value;
+			}
+		}else if (strcmp(ast->data,">>") == 0){
+			if (a->type != INTETYPE && a->type != CHARTYPE) halt();
+			if (b->type != INTETYPE && b->type != CHARTYPE) halt();
+			makeInt(ast);
+			if (ast->c[0].constant && ast->c[1].constant){
+				ast->constant = 1;
+				ast->value = ast->c[0].value >> ast->c[1].value;
+			}
+		}else if (strcmp(ast->data,"*=") == 0){
+			if (a->type != INTETYPE && a->type != CHARTYPE) halt();
+			if (b->type != INTETYPE && b->type != CHARTYPE) halt();
+			if (!ast->c[0].lValue) halt();
+			makeInt(ast);
+		}else if (strcmp(ast->data,"/=") == 0){
+			if (a->type != INTETYPE && a->type != CHARTYPE) halt();
+			if (b->type != INTETYPE && b->type != CHARTYPE) halt();
+			if (!ast->c[0].lValue) halt();
+			makeInt(ast);
+			if (ast->c[1].constant && ast->c[1].value == 0) halt();//a /= 0;
+		}else if (strcmp(ast->data,"%=") == 0){
+			if (a->type != INTETYPE && a->type != CHARTYPE) halt();
+			if (b->type != INTETYPE && b->type != CHARTYPE) halt();
+			if (!ast->c[0].lValue) halt();
+			makeInt(ast);
+			if (ast->c[1].constant && ast->c[1].value == 0) halt();//a %= 0;
+		}else if (strcmp(ast->data,"<<=") == 0){
+			if (a->type != INTETYPE && a->type != CHARTYPE) halt();
+			if (b->type != INTETYPE && b->type != CHARTYPE) halt();
+			if (!ast->c[0].lValue) halt();
+			makeInt(ast);
+		}else if (strcmp(ast->data,">>=") == 0){
+			if (a->type != INTETYPE && a->type != CHARTYPE) halt();
+			if (b->type != INTETYPE && b->type != CHARTYPE) halt();
+			if (!ast->c[0].lValue) halt();
+			makeInt(ast);
+		}else if (strcmp(ast->data,"&=") == 0){
+			if (a->type != INTETYPE && a->type != CHARTYPE) halt();
+			if (b->type != INTETYPE && b->type != CHARTYPE) halt();
+			if (!ast->c[0].lValue) halt();
+			makeInt(ast);
+		}else if (strcmp(ast->data,"|=") == 0){
+			if (a->type != INTETYPE && a->type != CHARTYPE) halt();
+			if (b->type != INTETYPE && b->type != CHARTYPE) halt();
+			if (!ast->c[0].lValue) halt();
+			makeInt(ast);
+		}else if (strcmp(ast->data,"^=") == 0){
+			if (a->type != INTETYPE && a->type != CHARTYPE) halt();
+			if (b->type != INTETYPE && b->type != CHARTYPE) halt();
+			if (!ast->c[0].lValue) halt();
+			makeInt(ast);
+		}else if (strcmp(ast->data,"+=") == 0){
+			if (!ast->c[0].lValue) halt();
+			if (a->type != INTETYPE && a->type != CHARTYPE && a->type != PTERTYPE && a->type != ARRATYPE) halt();
+			if (b->type != INTETYPE && b->type != CHARTYPE && b->type != PTERTYPE && b->type != ARRATYPE) halt();
+			if (a->type != INTETYPE && a->type != CHARTYPE && b->type != INTETYPE && b->type != CHARTYPE) halt();
+			if ((a->type == INTETYPE || a->type == CHARTYPE) && (b->type == INTETYPE || b->type == CHARTYPE)){
+				makeInt(ast);
+			}else{
+				if (a->type == INTETYPE || a->type == CHARTYPE){
+					makeInt(ast);
+				}else{
+					addAno(ast,&a->c[0]);
+				}
+			}
+		}else if (strcmp(ast->data,"-=") == 0){
+			if (!ast->c[0].lValue) halt();
+			if (a->type != INTETYPE && a->type != CHARTYPE && a->type != PTERTYPE && a->type != ARRATYPE) halt();
+			if (b->type != INTETYPE && b->type != CHARTYPE && b->type != PTERTYPE && b->type != ARRATYPE) halt();
+			if ((a->type == INTETYPE || a->type == CHARTYPE) && (b->type == INTETYPE || b->type == CHARTYPE)){
+				makeInt(ast);
+			}else{
+				if (a->type == INTETYPE || a->type == CHARTYPE){
+					halt();
+				}else{
+					if (b->type == INTETYPE || b->type == CHARTYPE){
+						addAno(ast,&a->c[0]);
+					}else{
+						if (!sameType(&a->c[0],&b->c[0])) halt();
+						makeInt(ast);
+					}
+				}
+			}
+		}else{
+			//never
+		}
 	}else if (ast->type == UNAREXPR){
 		//TODO
 	}else if (ast->type == SZOFEXPR){
@@ -359,14 +636,7 @@ static void astCheck(struct AstNode *ast,int isInLoop,void *retType){
 		if (tmp == NULL) tmp = &ast->c[0];
 		if (tmp->type == VOIDTYPE) halt();
 		ast->constant = 1;
-		if (ast->num == ast->cap) doubleSpace(ast);
-		++ast->num;
-		ast->c[ast->num - 1].type = INTETYPE;
-		ast->c[ast->num - 1].data = NULL;
-		ast->c[ast->num - 1].c = 0;
-		ast->c[ast->num - 1].num = 0;
-		ast->c[ast->num - 1].cap = 0;
-		ast->retType = (void *)&ast->c[ast->num - 1];
+		makeInt(ast);
 		ast->constant = 1;
 	}else if (ast->type == CASTEXPR){
 		astCheck(&ast->c[0],isInLoop,retType);
@@ -444,27 +714,13 @@ static void astCheck(struct AstNode *ast,int isInLoop,void *retType){
 		if (strcmp(ast->c[0].data,"printf") == 0){
 			if (tmp != NULL) halt();
 			if (ast->c[1].type == EMPTEXPR) halt();
-			if (!canConvert(ast->c[1].c[0].retType,(void *)&pterType)) halt();
-			if (ast->num == ast->cap) doubleSpace(ast);
-			++ast->num;
-			ast->c[ast->num - 1].type = INTETYPE;
-			ast->c[ast->num - 1].data = NULL;
-			ast->c[ast->num - 1].c = NULL;
-			ast->c[ast->num - 1].num = 0;
-			ast->c[ast->num - 1].cap = 0;
-			ast->retType = (void *)&ast->c[ast->num - 1];
+			if (!canConvert(ast->c[1].c[0].retType,(void *)&intType)) halt();
+			makeInt(ast);
 			return;
 		}else if (strcmp(ast->c[0].data,"getchar") == 0){
 			if (tmp != NULL) halt();
 			if (ast->c[1].type != EMPTEXPR) halt();
-			if (ast->num == ast->cap) doubleSpace(ast);
-			++ast->num;
-			ast->c[ast->num - 1].type = INTETYPE;
-			ast->c[ast->num - 1].data = NULL;
-			ast->c[ast->num - 1].c = NULL;
-			ast->c[ast->num - 1].num = 0;
-			ast->c[ast->num - 1].cap = 0;
-			ast->retType = (void *)&ast->c[ast->num - 1];
+			makeInt(ast);
 			return;
 		}else if (strcmp(ast->c[0].data,"malloc") == 0){
 			if (tmp != NULL) halt();
@@ -497,7 +753,7 @@ static void astCheck(struct AstNode *ast,int isInLoop,void *retType){
 	}else if (ast->type == IDEN){
 		struct AstNode *tmp = getNameHash(ast->data);
 		if (tmp == NULL) halt();
-		if (tmp->type == FUNCDECL) halt():
+		if (tmp->type == FUNCDECL) halt();
 		ast->retType = &tmp->c[0];
 		if (tmp->c[0].type != ARRATYPE) ast->lValue = 1;
 	}else if (ast->type == INTECONS){
