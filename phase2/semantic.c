@@ -301,7 +301,7 @@ static void astCheck(struct AstNode *ast,int isInLoop,void *retType){
 			astCheck(&ast->c[1],isInLoop,retType);
 			addType(ast->c[0].data,(void *)ast,flag);
 		}else{
-			if (!hasType(ast->c[0].data,flag)){
+			if (getTypeHash(ast->c[0].data) == NULL){
 				addType(ast->c[0].data,(void *)ast,flag);
 //				astCheck(&ast->c[1],isInLoop,retType);
 			}
@@ -319,7 +319,7 @@ static void astCheck(struct AstNode *ast,int isInLoop,void *retType){
 			astCheck(&ast->c[1],isInLoop,retType);
 			addType(ast->c[0].data,(void *)ast,flag);
 		}else{
-			if (!hasType(ast->c[0].data,flag)){
+			if (getTypeHash(ast->c[0].data) == NULL){
 //				astCheck(&ast->c[1],isInLoop,retType);
 				addType(ast->c[0].data,(void *)ast,flag);
 			}
@@ -449,6 +449,8 @@ static void astCheck(struct AstNode *ast,int isInLoop,void *retType){
 			}else{
 				if (a->type == INTETYPE || a->type == CHARTYPE){
 					halt();
+				}else if (b->type == INTETYPE || b->type == CHARTYPE){
+					addAno(ast,&a->c[0]);
 				}else{
 					if (!sameType(&a->c[0],&b->c[0])) halt();
 					addAno(ast,&a->c[0]);
@@ -664,7 +666,7 @@ static void astCheck(struct AstNode *ast,int isInLoop,void *retType){
 				ast->value = ~ast->c[0].value;
 			}
 		}else if (strcmp(ast->data,"!") == 0){
-			if (a->type != INTETYPE && a->type != CHARTYPE) halt();
+			if (!canConvert(a,(void *)&intType)) halt();
 			makeInt(ast);
 			if (ast->c[0].constant){
 				ast->constant = 1;
@@ -684,7 +686,11 @@ static void astCheck(struct AstNode *ast,int isInLoop,void *retType){
 	}else if (ast->type == SZOFEXPR){
 		struct AstNode *tmp;
 		astCheck(&ast->c[0],isInLoop,retType);
-		tmp = ast->c[0].retType;
+		if (TYPE <= ast->c[0].type && ast->c[0].type <= ARRATYPE){
+			tmp = &ast->c[0];
+		}else{
+			tmp = ast->c[0].retType;
+		}
 		if (tmp == NULL) tmp = &ast->c[0];
 		if (tmp->type == VOIDTYPE) halt();
 		ast->constant = 1;
@@ -739,12 +745,12 @@ static void astCheck(struct AstNode *ast,int isInLoop,void *retType){
 		astCheck(&ast->c[0],isInLoop,retType);
 		if (!ast->c[0].lValue) halt();
 		if (!canConvert(ast->c[0].retType,(void *)&intType)) halt();
-		ast->retType == ast->c[0].retType;
+		ast->retType = ast->c[0].retType;
 	}else if (ast->type == SELFDECR){
 		astCheck(&ast->c[0],isInLoop,retType);
 		if (!ast->c[0].lValue) halt();
 		if (!canConvert(ast->c[0].retType,(void *)&intType)) halt();
-		ast->retType == ast->c[0].retType;
+		ast->retType = ast->c[0].retType;
 	}else if (ast->type == ARRAACSS){
 		struct AstNode *tmp;
 		astCheck(&ast->c[0],isInLoop,retType);
@@ -868,7 +874,7 @@ static void astCheck(struct AstNode *ast,int isInLoop,void *retType){
 		ast->c[0].c[0].c = NULL;
 		ast->c[0].c[0].num = 0;
 		ast->c[0].c[0].cap = 0;
-		ast->c[0].num = ast->c[0].cap = 0;
+		ast->c[0].num = ast->c[0].cap = 1;
 		ast->retType = (void *)&ast->c[0];
 	}else if (ast->type == PARA){
 		for (i = 0;i < ast->num;++i) astCheck(&ast->c[i],isInLoop,retType);

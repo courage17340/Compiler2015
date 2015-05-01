@@ -1,4 +1,11 @@
-struct a{
-struct b{int x;}x;
-};
-struct b{int x;};
+/** REMARK: Function return value has no address.
+ *
+**/
+
+int gg()
+{
+}
+int main()
+{
+    &gg();
+}

@@ -4,7 +4,9 @@ static int hash(char *s){
 	int ret = 0;
 	for (t = s;*t;++t)
 		ret = ret * 65599 + *t;
-	return ret % HASH_SIZE;
+	ret %= HASH_SIZE;
+	if (ret < 0) ret += HASH_SIZE;
+	return ret;
 }
 
 static struct Symbol *makeSymbol(char *s,struct Symbol *next){
