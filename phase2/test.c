@@ -1,4 +1,4 @@
-int f(int a,char b){}
-int main(){
-	g(c,d);
-}
+struct a{
+struct b{int x;}x;
+};
+struct b{int x;};
