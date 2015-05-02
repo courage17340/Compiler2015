@@ -963,7 +963,7 @@ int main(int args,char **argv){
 	struct node *root;
 	static char s[1000010];
 	int flag,size;
-	freopen(argv[1],"r",stdin);
+//	freopen(argv[1],"r",stdin);
 	flag = 1;
 	readInput(s);
 	ast = makeAst(s,&flag,&size,&root);

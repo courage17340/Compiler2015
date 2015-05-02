@@ -246,25 +246,27 @@ static void makeInt(struct AstNode *ast){
 	ast->retType = &ast->c[ast->num - 1];
 }
 
-static void checkInit(struct AstNode *type,struct AstNode *init){
-/*
+static void checkInit(struct AstNode *type,struct AstNode *init,int flag){
+
 	int n,i;
-	if (ast->type != ARRATYPE){
+	if (type->type != ARRATYPE){
 		while (init->type == INIT) init = &init->c[0];
 		if (!canConvert(type,init->retType)) halt();
-		if (!init->constant && !(init->type == STRICONS && type == PTERTYPE && type->c[0].type == CHARTYPE)) halt();
+		if (!flag && type->type == PTERTYPE && (((struct AstNode *)init->retType)->type == PTERTYPE) || ((struct AstNode *)init->retType)->type == ARRATYPE){
+			if (!sameType(&type->c[0],&((struct AstNode *)init->retType)->c[0])) halt();
+		}else if (!flag && !init->constant) halt();
 		return;
 	}
 	if (init->type != INIT){
-		while (type == ARRATYPE) type = &type->c[0];
+		while (type->type == ARRATYPE) type = &type->c[0];
 		if (!canConvert(type,init->retType)) halt();
-		if (!init->constant) halt();
+		if (!flag && !init->constant) halt();
 		return;
 	}
 	n = type->c[1].value;
 	if (n > init->num) n = init->num;
-	for (i = 0;i < n;++i) checkInit(&type->c[i],&init->c[i]);
-*/
+	for (i = 0;i < n;++i) checkInit(&type->c[i],&init->c[i],flag);
+
 }
 
 static void astCheck(struct AstNode *ast,int isInLoop,void *retType){
@@ -952,7 +954,7 @@ static void astCheck(struct AstNode *ast,int isInLoop,void *retType){
 		}
 		if (ast->num == 3){
 			astCheck(&ast->c[2],isInLoop,retType);
-			if (flag == 0) checkInit(&ast->c[0],&ast->c[2]);
+			checkInit(&ast->c[0],&ast->c[2],flag);
 		}
 	}else{
 		//never
@@ -963,7 +965,7 @@ int main(int args,char **argv){
 	struct node *root;
 	static char s[1000010];
 	int flag,size;
-	freopen(argv[1],"r",stdin);
+//	freopen(argv[1],"r",stdin);
 	flag = 1;
 	readInput(s);
 	ast = makeAst(s,&flag,&size,&root);
