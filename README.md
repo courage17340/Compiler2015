@@ -11,6 +11,7 @@ Chu Wei's compiler project
 ##Version details
 | Version | Date | Description |
 |:-------:|:----:|:-----------:|
+| 1.2b | 2015.5.2 | some bugs fixed |
 | 1.2a | 2015.5.1 | some bugs fixed |
 | **1.2** | 2015.5.1 | semantic check nearly done |
 | 1.1d | 2015.4.28 | some bugs fixed && all struct / union have name now |
