@@ -247,7 +247,24 @@ static void makeInt(struct AstNode *ast){
 }
 
 static void checkInit(struct AstNode *type,struct AstNode *init){
-	
+/*
+	int n,i;
+	if (ast->type != ARRATYPE){
+		while (init->type == INIT) init = &init->c[0];
+		if (!canConvert(type,init->retType)) halt();
+		if (!init->constant && !(init->type == STRICONS && type == PTERTYPE && type->c[0].type == CHARTYPE)) halt();
+		return;
+	}
+	if (init->type != INIT){
+		while (type == ARRATYPE) type = &type->c[0];
+		if (!canConvert(type,init->retType)) halt();
+		if (!init->constant) halt();
+		return;
+	}
+	n = type->c[1].value;
+	if (n > init->num) n = init->num;
+	for (i = 0;i < n;++i) checkInit(&type->c[i],&init->c[i]);
+*/
 }
 
 static void astCheck(struct AstNode *ast,int isInLoop,void *retType){
@@ -914,6 +931,7 @@ static void astCheck(struct AstNode *ast,int isInLoop,void *retType){
 		}
 	}else if (ast->type == INIT){
 		for (i = 0;i < ast->num;++i) astCheck(&ast->c[i],isInLoop,retType);
+		if (ast->num == 1) ast->retType = ast->c[0].retType;
 	}else if (ast->type == FUNCPARA){
 		for (i = 0;i < ast->num;++i) astCheck(&ast->c[i],isInLoop,retType);
 	}else if (ast->type == VARI){
@@ -934,7 +952,7 @@ static void astCheck(struct AstNode *ast,int isInLoop,void *retType){
 		}
 		if (ast->num == 3){
 			astCheck(&ast->c[2],isInLoop,retType);
-			checkInit(&ast->c[0],&ast->c[2]);
+			if (flag == 0) checkInit(&ast->c[0],&ast->c[2]);
 		}
 	}else{
 		//never

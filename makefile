@@ -4,6 +4,7 @@ semantic : parser.h parser.c hash.h hash.c semantic.h semantic.c removeComments.
 	gcc -O2 semantic.c parser.c hash.c removeComments.o split.o tokens.o -o semantic
 	mkdir bin
 	cp semantic bin/semantic
+	cp grammar.out bin/grammar.out
 removeComments.o : removeComments.h removeComments.c
 	gcc -c removeComments.c
 split.o : split.h split.c
