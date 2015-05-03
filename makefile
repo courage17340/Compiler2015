@@ -12,5 +12,5 @@ split.o : split.h split.c
 tokens.o : tokens.h tokens.c
 	gcc -c tokens.c
 clean :
-	rm semantic removeComments.o split.o tokens.o
+	rm -f semantic removeComments.o split.o tokens.o
 	rm -rf bin/
