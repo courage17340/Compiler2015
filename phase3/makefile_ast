@@ -1,4 +1,4 @@
 astPrint : parser.h parser.c removeComments.h removeComments.c split.h split.c tokens.h tokens.c astPrint.c
 	gcc -g parser.c removeComments.c split.c tokens.c astPrint.c -o astPrint
 clean :
-	rm astPrint
+	rm -f astPrint

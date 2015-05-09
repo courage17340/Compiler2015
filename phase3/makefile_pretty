@@ -1,4 +1,4 @@
 pretty : parser.h parser.c removeComments.h removeComments.c split.h split.c tokens.h tokens.c pretty.c
 	gcc -g parser.c removeComments.c split.c tokens.c pretty.c -o pretty
 clean :
-	rm pretty
+	rm -f pretty

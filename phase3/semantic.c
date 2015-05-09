@@ -1,14 +1,4 @@
 #include "semantic.h"
-static struct AstNode *ast;
-static int intType;
-struct StackNode{
-	int flag,index;
-};
-struct Stack{
-	struct StackNode *ele;
-	int num,cap;
-};
-static struct Stack typeStack,nameStack;
 static void doubleStack(struct Stack *s){
 	int i;
 	s->cap *= 2;
@@ -55,14 +45,6 @@ static void *getTypeHash(char *s){
 }
 static void *getNameHash(char *s){
 	return getHash(nameHash,s);
-}
-static void readInput(char *s){
-	int n = -1,c = getchar();
-	while (c != EOF){
-		s[++n] = c;
-		c = getchar();
-	}
-	s[++n] = 0;
 }
 static void halt(void){
 	clearAll();
@@ -287,6 +269,7 @@ static void astCheck(struct AstNode *ast,int isInLoop,void *retType){
 	int i;
 	ast->lValue = 0;
 	ast->constant = 0;
+	ast->size = 0;
 	if (ast->type == ROOT){
 		for (i = 0;i < ast->num;++i) astCheck(&ast->c[i],isInLoop,retType);
 	}else if (ast->type == DECL){
@@ -973,16 +956,13 @@ static void astCheck(struct AstNode *ast,int isInLoop,void *retType){
 	}
 }
 
-int main(int args,char **argv){
+void semanticCheck(char *s){
 	struct node *root;
-	static char s[1000010];
 	int flag,size;
-//	freopen(argv[1],"r",stdin);
 	flag = 1;
-	readInput(s);
 	ast = makeAst(s,&flag,&size,&root);
 	if (!flag){
-		return 1;
+		exit(1);
 	}else{
 		cstDel(root);
 		free(root);
@@ -993,18 +973,14 @@ int main(int args,char **argv){
 	nameStack.ele = (struct StackNode *)malloc(sizeof(struct StackNode));
 	nameStack.num = 0;
 	nameStack.cap = 1;
-//	astPrint(NULL,ast,0);
 	addName("printf",NULL,0);
 	addName("getchar",NULL,0);
 	addName("malloc",NULL,0);
 	astCheck(ast,0,NULL);
-//	semantic(ast);
 	clearAll();
-	astDel(ast);
-	free(ast);
-	free(list);
+//	astDel(ast);
+//	free(ast);
+//	free(list);
 	free(typeStack.ele);
 	free(nameStack.ele);
-	return 0;
-//	if (flag) return 0;else return 1;
 }

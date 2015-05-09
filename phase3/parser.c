@@ -304,19 +304,21 @@ static void AST(struct node *root,struct AstNode *ast){
 			}
 			cptr = 0;
 			if (strcmp(root->c[cptr].data,"comma_array_sizes") == 0){
+				struct AstNode *xxx = &ast->c[ast->num - 2];
 				ctmp = &root->c[cptr];
 				++cptr;
 				while (1){
 					atmp = getAst(2);
-					atmp[0] = ast->c[ast->num - 2];
+					atmp[0] = *xxx;
 					atmp[1].type = EXPR;
 					AST(&ctmp->c[1],&atmp[1]);
-					ast->c[ast->num - 2].type = ARRATYPE;
-					ast->c[ast->num - 2].data = AstFlags[ARRATYPE];
-					ast->c[ast->num - 2].c = atmp;
-					ast->c[ast->num - 2].num = 2;
-					ast->c[ast->num - 2].cap = 2;
+					xxx->type = ARRATYPE;
+					xxx->data = AstFlags[ARRATYPE];
+					xxx->c = atmp;
+					xxx->num = 2;
+					xxx->cap = 2;
 					if (ctmp->num >= 4) ctmp = &ctmp->c[3];else break;
+					xxx = &xxx->c[0];
 				}
 			}
 			if (strcmp(root->c[cptr].data,"init_declarator1") == 0){
@@ -362,18 +364,20 @@ static void AST(struct node *root,struct AstNode *ast){
 					ast->c[ast->num - 1].type = IDEN;
 					AST(&ttmp->c[0],&ast->c[ast->num - 1]);
 					if (ctmp->num > 1){
+						struct AstNode *xxx = &ast->c[ast->num - 2];
 						ctmp = &ctmp->c[1];//comma_array_sizes
 						while (1){
 							atmp = getAst(2);
-							atmp[0] = ast->c[ast->num - 2];
+							atmp[0] = *xxx;
 							atmp[1].type = EXPR;
 							AST(&ctmp->c[1],&atmp[1]);
-							ast->c[ast->num - 2].type = ARRATYPE;
-							ast->c[ast->num - 2].data = AstFlags[ARRATYPE];
-							ast->c[ast->num - 2].c = atmp;
-							ast->c[ast->num - 2].num = 2;
-							ast->c[ast->num - 2].cap = 2;
+							xxx->type = ARRATYPE;
+							xxx->data = AstFlags[ARRATYPE];
+							xxx->c = atmp;
+							xxx->num = 2;
+							xxx->cap = 2;
 							if (ctmp->num >= 4) ctmp = &ctmp->c[3];else break;
+							xxx = &xxx->c[0];
 						}
 					}
 					ctmp = &root->c[1];//init_decrator
@@ -695,18 +699,20 @@ static void AST(struct node *root,struct AstNode *ast){
 						AST(ctmp2,&atmp->c[atmp->num - 1]);
 						ctmp2 = &ctmp1->c[0];//declarator
 						if (ctmp2->num > 1){
+							struct AstNode *xxx = &atmp->c[atmp->num - 2];
 							ctmp2 = &ctmp2->c[1];//comma_array_sizes
 							while (1){
 								atmp1 = getAst(2);
-								atmp1[0] = atmp->c[atmp->num - 2];
+								atmp1[0] = *xxx;
 								atmp1[1].type = EXPR;
 								AST(&ctmp2->c[1],&atmp1[1]);
-								atmp->c[atmp->num - 2].type = ARRATYPE;
-								atmp->c[atmp->num - 2].data = AstFlags[ARRATYPE];
-								atmp->c[atmp->num - 2].num = 2;
-								atmp->c[atmp->num - 2].cap = 2;
-								atmp->c[atmp->num - 2].c = atmp1;
+								xxx->type = ARRATYPE;
+								xxx->data = AstFlags[ARRATYPE];
+								xxx->num = 2;
+								xxx->cap = 2;
+								xxx->c = atmp1;
 								if (ctmp2->num > 3) ctmp2 = &ctmp2->c[3];else break;
+								xxx = &xxx->c[0];
 							}
 						}
 						if (ctmp1->num > 1){
@@ -1242,17 +1248,19 @@ static void AST(struct node *root,struct AstNode *ast){
 			ast->c[1].type = IDEN;
 			AST(ctmp,&ast->c[1]);
 			if (root->num > 1){
+				struct AstNode *xxx = &ast->c[0];
 				ctmp = &root->c[1];//comma_array_sizes
 				while (1){
 					atmp = getAst(2);
-					atmp[0] = ast->c[0];
+					atmp[0] = *xxx;
 					atmp[1].type = EXPR;
 					AST(&ctmp->c[1],&atmp[1]);
-					ast->type = ARRATYPE;
-					ast->data = AstFlags[ARRATYPE];
-					ast->num = ast->cap = 2;
-					ast->c = atmp;
+					xxx->type = ARRATYPE;
+					xxx->data = AstFlags[ARRATYPE];
+					xxx->num = xxx->cap = 2;
+					xxx->c = atmp;
 					if (ctmp->num > 3) ctmp = &ctmp->c[3];else break;
+					xxx = &xxx->c[0];
 				}
 			}
 		}else{//comma_plain_declarations
@@ -1317,18 +1325,20 @@ static void AST(struct node *root,struct AstNode *ast){
 			ctmp = &root->c[0];//declarator
 			if (strcmp(ctmp->data,",") == 0) ctmp = &root->c[1];
 			if (ctmp->num > 1){
+				struct AstNode *xxx = &ast->c[ast->num - 2];
 				ctmp = &ctmp->c[1];//comma_array_sizes
 				while (1){
 					atmp = getAst(2);
-					atmp[0] = ast->c[ast->num - 2];
+					atmp[0] = *xxx;
 					atmp[1].type = EXPR;
 					AST(&ctmp->c[1],&atmp[1]);
-					ast->c[ast->num - 2].type = ARRATYPE;
-					ast->c[ast->num - 2].data = AstFlags[ARRATYPE];
-					ast->c[ast->num - 2].c = atmp;
-					ast->c[ast->num - 2].num = 2;
-					ast->c[ast->num - 2].cap = 2;
+					xxx->type = ARRATYPE;
+					xxx->data = AstFlags[ARRATYPE];
+					xxx->c = atmp;
+					xxx->num = 2;
+					xxx->cap = 2;
 					if (ctmp->num > 3) ctmp = &ctmp->c[3];else break;
+					xxx = &xxx->c[0];
 				}
 			}
 			if (strcmp(root->c[root->num - 1].data,"comma_declarators") == 0) root = &root->c[root->num - 1];else break;
