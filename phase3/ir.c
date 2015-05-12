@@ -94,8 +94,6 @@ static struct Object addIntc(int x){
 }
 static struct Object addExpr(struct AstNode *ast){
 	//TODO
-	struct Object t;
-	return t;
 }
 static void addItgt(struct AstNode *ast,int label){
 	struct Object t = addExpr(ast);
@@ -236,9 +234,7 @@ static void addCompStmt(struct AstNode *ast,int beginLabel,int endLabel,int retu
 	for (i = 0;i < ast->num;++i) addStmt(&ast->c[i],beginLabel,endLabel,returnLabel);
 }
 
-
 static void addStmt(struct AstNode *ast,int beginLabel,int endLabel,int returnLabel){
-	//TODO
 	int i;
 	if (ast->type == BREASTMT){
 		addBreakStmt(endLabel);
@@ -246,10 +242,20 @@ static void addStmt(struct AstNode *ast,int beginLabel,int endLabel,int returnLa
 		addContStmt(beginLabel);
 	}else if (ast->type == IFTESTMT){
 		addIfteStmt(ast,beginLabel,endLabel,returnLabel);
+	}else if (ast->type == FORRLOOP){
+		addForLoop(ast,beginLabel,endLabel,returnLabel);
+	}else if (ast->type == WHILLOOP){
+		addWhileLoop(ast,beginLabel,endLabel,returnLabel);
+	}else if (ast->type == EXPRSTMT){
+		addExprStmt(ast);
+	}else if (ast->type == RETNSTMT){
+		addReturnStmt(ast,returnLabel);
+	}else if (ast->type == COMPSTMT){
+		addCompStmt(ast,beginLabel,endLabel,returnLabel);
+	}else{
+		//never
 	}
 }
-
-
 
 
 static void addFunc(struct AstNode *ast){
@@ -289,6 +295,7 @@ int main(void){
 	
 	readInput(s);
 	semanticCheck(s);
+	astPrint(NULL,ast,0);
 	
 	IRNum = 0;
 	temp = 0;

@@ -1434,17 +1434,29 @@ void astPrint(char *s,struct AstNode *ast,int t){
 		printf("StructType\n");
 		astPrint("StructName: ",&ast->c[0],t + 1);
 		if (ast->num > 1) astPrint("StructMembers: ",&ast->c[1],t + 1);
+		
+		tab(t + 1);
+		printf("Size: %d\n",ast->size);
 	}else if (ast->type == UNIOTYPE){
 		printf("UnionType\n");
 		astPrint("UnionName: ",&ast->c[0],t + 1);
 		if (ast->num > 1) astPrint("UnionMembers: ",&ast->c[1],t + 1);
+		
+		tab(t + 1);
+		printf("Size: %d\n",ast->size);
 	}else if (ast->type == PTERTYPE){
 		printf("PointerType\n");
 		astPrint("BaseType: ",&ast->c[0],t + 1);
+		
+		tab(t + 1);
+		printf("Size: %d\n",ast->size);
 	}else if (ast->type == ARRATYPE){
 		printf("ArrayType\n");
 		astPrint("BaseType: ",&ast->c[0],t + 1);
 		astPrint("ArraySize: ",&ast->c[1],t + 1);
+		
+		tab(t + 1);
+		printf("Size: %d\n",ast->size);
 	}else if (ast->type == STMT){
 		//never
 	}else if (ast->type == BREASTMT){

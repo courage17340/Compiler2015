@@ -11,6 +11,7 @@ Chu Wei's compiler project
 ##Version details
 | Version | Date | Description |
 |:-------:|:----:|:-----------:|
+| 2.0 | 2015.5.12 | type size added |
 | 1.2b | 2015.5.2 | some bugs fixed |
 | 1.2a | 2015.5.1 | some bugs fixed |
 | **1.2** | 2015.5.1 | semantic check nearly done |
