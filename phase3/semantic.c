@@ -1,4 +1,34 @@
+#include <stdlib.h>
+#include <string.h>
+#include "parser.h"
+#include "hash.h"
 #include "semantic.h"
+//======local function declarations======
+static void doubleStack(struct Stack *s);
+static void addType(char *s,void *bind,int flag);
+static void addName(char *s,void *bind,int flag);
+static void popType(int flag);
+static void popName(int flag);
+static int hasType(char *s,int flag);
+static int hasName(char *s,int flag);
+static void *getTypeHash(char *s);
+static void *getNameHash(char *s);
+static void halt(void);
+static int canConvert(struct AstNode *a,void *t);
+static int sameType(struct AstNode *a,struct AstNode *b);
+static int charToInt(char c);
+static void conToChar(char *s);
+static void conToStr(char *s);
+static void addAno(struct AstNode *ast,struct AstNode *t);
+static void makeInt(struct AstNode *ast);
+static void checkInit(struct AstNode *type,struct AstNode *init);
+
+//======local variables======
+static struct Stack typeStack,nameStack;
+static int intType;
+
+//======main======
+
 static void doubleStack(struct Stack *s){
 	int i;
 	s->cap *= 2;
@@ -1000,7 +1030,7 @@ static void astCheck(struct AstNode *ast,int isInLoop,void *retType){
 		free(f);
 	}else if (ast->type == DATAFILD){
 		struct AstNode *tmp;
-		int k;
+//		int k;
 		astCheck(&ast->c[0],isInLoop,retType);
 		if (ast->c[0].type != STRUTYPE && ast->c[0].type != UNIOTYPE){
 			for (i = 1;i < ast->num;i += 2) astCheck(&ast->c[i],isInLoop,retType);

@@ -1,5 +1,14 @@
+#include <string.h>
+#include <stdlib.h>
 #include "split.h"
-#include <stdio.h>
+
+#define MAX_STR 1000010
+//local function declaration
+static int isWhite(char);
+static int isDigit(char);
+static int isLetter(char);
+static int isSingle(char);
+
 static int isWhite(char c){
 	return c == ' ' || c == '\t' || c == '\n';
 }

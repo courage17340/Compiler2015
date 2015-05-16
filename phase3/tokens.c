@@ -1,6 +1,11 @@
+#include <string.h>
 #include "tokens.h"
 //removeComments & split needed. '\n's should be replaced
 //with 0 so that the buffer is composed of c-style-strs
+static char keywordDic[20][10] = {"void","char","int","struct","union","if","else","while","for","continue","break","return","sizeof"};
+//local function declarations
+static int check(char *);
+
 void getTokenType(struct token *t){
 	char *s = t->ptr;
 //---constants: char, string, or number---

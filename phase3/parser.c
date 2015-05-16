@@ -1,6 +1,40 @@
+#include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
 #include "parser.h"
 #include "removeComments.h"
 #include "split.h"
+#include "tokens.h"
+//======local function declarations======
+static struct token *makeList(char *);
+static void init(void);
+static int findTer(char *);
+//static int findNon(char *);
+static void build(struct node *,int *,int,int);
+static int equal(struct token,char *);
+static struct node *getNode(void);
+static int getType(struct token);
+//static void print(struct node *,int);
+static void AST(struct node *,struct AstNode *);
+static void tab(int);
+//======local variables======
+static char structName[1000000];
+static int nStructName,pStructName;
+static int error = 0;
+static int M[200][200],listSize,nonNum,terNum,ruleNum;
+static char terminals[200][40],nonterminals[200][40];
+static struct ruleType rules[300];
+static char AstFlags[50][30] = {
+	"Root","Decl","FunctionDecl","StructDecl","UnionDecl","VarDecl","Type","BasicType",
+	"IntType","CharType","VoidType","StructType","UnionType","PointerType",
+	"ArrayType","Stmt","BreakStmt","ContinueStmt","IfStmt","ForLoop","WhileLoop","ExprStmt",
+	"ReturnStmt","CompoundStmt","Expr","EmptyExpr","BinaryExpr","UnaryExpr","SizeofExpr",
+	"CastExpr","PointerAccess","RecordAccess","SelfIncrement","SelfDecrement","ArrayAccess",
+	"FunctionCall","Identifier","IntConst","CharConst","StringConst",
+	"Parameters","TypeSpecifiers","DataField","Initializer","FuncPara","Variable"
+};
+
+
 static struct token *makeList(char *s){	//Remember to free the memory!!
 	int n,m,l,r,i;
 	struct token *list;
@@ -62,13 +96,13 @@ static int findTer(char *s){
 	for (i = 1;i <= terNum;++i) if (strcmp(s,terminals[i]) == 0) return i;
 	return 0;
 }
-
+/*
 static int findNon(char *s){
 	int i;
 	for (i = 1;i <= nonNum;++i) if (strcmp(s,nonterminals[i]) == 0) return i;
 	return 0;
 }
-
+*/
 static void build(struct node *root,int *next,int k,int x){
 	struct token t;
 	int r,i,n,m;
@@ -160,20 +194,15 @@ static int getType(struct token t){
 	if (t.tokenDetail == IDENTIFIER) return findTer("identifier");
 	return findTer(t.ptr);
 }
-
+/*
 static void print(struct node *root,int col){
 	int i;
 	if (root->data == NULL) return;
-//	if (root->num == 1){
-//		print(&root->c[0],col);
-//		return;
-//	}
-//	if (root->data[0] == ',' || root->data[0] == ';') return;
 	for (i = 1;i <= col;++i) printf("\t");
 	printf("%s\n",root->data);
 	for (i = 0;i < root->num;++i) print(&root->c[i],col + 1);
 }
-
+*/
 void cstDel(struct node *s){
 	int n,i;
 	n = s->num;

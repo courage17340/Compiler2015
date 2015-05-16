@@ -1,4 +1,17 @@
+#include <stdlib.h>
+#include <string.h>
 #include "hash.h"
+//======local function declarations======
+
+static int hash(char *);
+static struct Symbol *makeSymbol(char *,struct Symbol *);
+static struct Hash *makeHash(char *,void *,struct Symbol *,struct Hash *,int);
+
+//======local variables======
+static struct Symbol *symTable[HASH_SIZE];
+
+//======main======
+
 static int hash(char *s){
 	char *t;
 	int ret = 0;

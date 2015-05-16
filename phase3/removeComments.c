@@ -1,7 +1,12 @@
 //This program removes all comments from the raw input.
 //Note that 'in/**/t' doesn't equal to 'int' but 'in t'.
 //Lines started with # will also be removed, which may be changed in the future.
+#include <string.h>
 #include "removeComments.h"
+
+//local function declaration
+static void warn(char *,const char *);
+static void deal(char *,char *);
 //flag1 - '
 //flag2 - "
 static void warn(char *s,const char *t){

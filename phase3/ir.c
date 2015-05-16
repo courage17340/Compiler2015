@@ -1,4 +1,9 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include "ir.h"
+#include "semantic.h"
+#include "parser.h"
 /*
 dest = obj op obj
 ob1    ob2 op ob3
@@ -42,37 +47,256 @@ ob1 op ob2 size
    *a = t0, 4
 op ob1  ob2 size
 
-nop
-do_nothing
+end
+func_end
+
+
 */
-static int temp,IRNum,labelNum;
-//started by 1
 enum OpType{
-	IRUNAROP,IRBINAOP,IRASSIOP,IRPARAOP,IRCALLOP,IRLABLOP,IRGOTOOP,IRITGTOP,IRIFGTOP,IRARRROP,IRARRWOP,IRPTRROP,IRPTRWOP,IRNOPPOP
+	IRUNAROP,IRBINAOP,IRASSIOP,IRPARAOP,IRCALLOP,IRLABLOP,IRGOTOOP,IRITGTOP,IRIFGTOP,IRARRROP,IRARRWOP,IRPTRROP,IRPTRWOP,IRFENDOP
 //	unary    binary   =        param    call     label    goto     ifTgoto  ifFgoto  a=b[x],4 a[x]=b,4 t0=*a,4  *a=t0,4  nop
 };
 enum ObjectType{
 	IRSTRC,IRINTC,IRNAME,IRTEMP
 };
+
+//======operator======
 struct Op{
 	int type;
-	char *s;
+	char *name;
 };
+static struct Op *getOp(int type,char *name){
+	struct Op *t = malloc(sizeof(struct Op));
+	t->type = type;
+	t->name = strdup(name);
+	return t;
+}
+static void freeOp(struct Op *t){
+	if (t == NULL) return;
+	free(t->name);
+	free(t);
+}
+//======object======
 struct Object{
-	int type,tempNum;
-	union{
-		char *str;
-		int value;
-		struct AstNode *bind;
-	}data;
+	int type,pd,size,data;//pd -- 0 pointer or 1 data
+	char *name;
 };
+static struct Object *getObject(int type,int pd,int size,int data,char *name){
+	struct Object *t = malloc(sizeof(struct Object));
+	t->type = type;
+	t->pd = pd;
+	t->size = size;
+	t->data = data;
+	t->name = strdup(name);
+	return t;
+}
+static void freeObject(struct Object *t){
+	if (t == NULL) return;
+	free(t->name);
+	free(t);
+}
+//======object list======
+struct ObjectList{
+	struct Object **e;
+	int num,cap;
+};
+static struct ObjectList *getObjectList(void){
+	struct ObjectList *t = malloc(sizeof(struct ObjectList));
+	t->e = malloc(sizeof(struct Object *));
+	t->num = 0;
+	t->cap = 1;
+	return t;
+}
+static void resizeObjectList(struct ObjectList *t){
+	int i;
+	struct Object **tmp;
+	if (t->num != t->cap) return;
+	t->cap <<= 1;
+	tmp = malloc(sizeof(struct Object *) * t->cap);
+	for (i = 0;i < t->num;++i) tmp[i] = t->e[i];
+	free(t->e);
+	t->e = tmp;
+}
+static void pushBackObject(struct ObjectList *l,struct Object *o){
+	resizeObjectList(l);
+	++l->num;
+	l->e[l->num - 1] = o;
+}
+static void freeObjectList(struct ObjectList *t){
+	int i;
+	if (t == NULL) return;
+	for (i = 0;i < t->num;++i) freeObject(t->e[i]);
+	free(t->e);
+	free(t);
+}
+//======sentence======
 struct Sentence{
-	struct Object ob1,ob2,ob3;
-	struct Op op;
+	struct Object *ob[3];
+	struct Op *op;
 	int size,num;
 };
-static struct Sentence IRList[100010];
+static struct Sentence *getSentence(void){
+	struct Sentence *t = malloc(sizeof(struct Sentence));
+	t->ob[0] = t->ob[1] = t->ob[2] = NULL;
+	t->op = NULL;
+	t->size = t->num = 0;
+	return t;
+}
+static void freeSentence(struct Sentence *t){
+	int i;
+	if (t == NULL) return;
+	freeOp(t->op);
+	for (i = 0;i < t->num;++i) freeObject(t->ob[i]);
+	free(t);
+}
+//======sentence list======
+struct SentenceList{
+	struct Sentence **e;
+	int num,cap;
+};
+static struct SentenceList *getSentenceList(void){
+	struct SentenceList *t = malloc(sizeof(struct SentenceList));
+	t->e = malloc(sizeof(struct Sentence *));
+	t->num = 0;
+	t->cap = 1;
+	return t;
+}
+static void resizeSentenceList(struct SentenceList *t){
+	int i;
+	struct Sentence **tmp;
+	if (t->num != t->cap) return;
+	t->cap <<= 1;
+	tmp = malloc(sizeof(struct Sentence *) * t->cap);
+	for (i = 0;i < t->num;++i) tmp[i] = t->e[i];
+	free(t->e);
+	t->e = tmp;
+}
+static void pushBackSentence(struct SentenceList *l,struct Sentence *s){
+	resizeSentenceList(l);
+	++l->num;
+	l->e[l->num - 1] = s;
+}
+static void freeSentenceList(struct SentenceList *t){
+	int i;
+	if (t == NULL) return;
+	for (i = 0;i < t->num;++i) freeSentence(t->e[i]);
+	free(t->e);
+	free(t);
+}
+//======function======
+struct Function{
+	char *name;
+	struct ObjectList *para,*vari;
+	struct SentenceList *body;
+};
+static struct Function *getFunction(char *name){
+	struct Function *t = malloc(sizeof(struct Function));
+	t->name = strdup(name);
+	t->para = t->vari = NULL;
+	t->body = NULL;
+	return t;
+}
+static void freeFunction(struct Function *t){
+	if (t == NULL) return;
+	free(t->name);
+	freeObjectList(t->para);
+	freeObjectList(t->vari);
+	freeSentenceList(t->body);
+	free(t);
+}
+//======function list======
+struct FunctionList{
+	struct Function **e;
+	int num,cap;
+};
+static struct FunctionList *getFunctionList(void){
+	struct FunctionList *t = malloc(sizeof(struct FunctionList));
+	t->e = malloc(sizeof(struct Function *));
+	t->num = 0;
+	t->cap = 1;
+	return t;
+}
+static void resizeFunctionList(struct FunctionList *t){
+	int i;
+	struct Function **tmp;
+	if (t->num != t->cap) return;
+	t->cap <<= 1;
+	tmp = malloc(sizeof(struct Function *) * t->cap);
+	for (i = 0;i < t->num;++i) tmp[i] = t->e[i];
+	free(t->e);
+	t->e = tmp;
+}
+static void pushBackFunction(struct FunctionList *l,struct Function *f){
+	resizeFunctionList(l);
+	++l->num;
+	l->e[l->num - 1] = f;
+}
+static void freeFunctionList(struct FunctionList *t){
+	int i;
+	if (t == NULL) return;
+	for (i = 0;i < t->num;++i)
+		freeFunction(t->e[i]);
+	free(t->e);
+	free(t);
+}
+//======static variables======
+static struct FunctionList *funcList;
+static int registerNum,labelNum;
+//======registers======
+static char *toString(int t){
+	int f[33],p = 0,i;
+	char *s;
+	if (!t){
+		f[++p] = 0;
+	}
+	while (t){
+		f[++p] = t % 10;
+		t /= 10;
+	}
+	s = malloc(sizeof(char) * (p + 2));
+	s[0] = '$';
+	for (i = p;i >= 1;--i) s[p + 1 - i] = f[p] + '0';
+	s[p + 1] = 0;
+	return s;
+}
+static struct Object *getRegister(void){
+	++registerNum;
+	return getObject(IRTEMP,1,4,0,toString(registerNum));
+}
+//======ir function decl======
+static void irMain(struct AstNode *ast);
+static void irFunc(struct AstNode *ast);
+static void irVari(struct AstNode *ast,struct Function *func);
 
+//======main======
+static void irMain(struct AstNode *ast){
+	struct Function *f;
+	int i;
+	funcList = getFunctionList();
+	f = getFunction("$start$");
+	pushBackFunction(funcList,f);
+	f = getFunction("getchar");
+	pushBackFunction(funcList,f);
+	f = getFunction("malloc");
+	pushBackFunction(funcList,f);
+	f = getFunction("printf");
+	pushBackFunction(funcList,f);
+	for (i = 0;i < ast->num;++i)
+		if (ast->c[i].type == FUNCDECL)
+			irFunc(&ast->c[i]);
+		else if (ast->c[i].type == VARIDECL)
+			irVari(&ast->c[i],funcList->e[0]);
+		else{
+			//nop
+		}
+}
+static void irFunc(struct AstNode *ast){
+	//TODO
+}
+static void irVari(struct AstNode *ast,struct Function *func){
+	//TODO
+}
+//======others======
 static void readInput(char *s){
 	int t = -1,c;
 	c = getchar();
@@ -82,227 +306,20 @@ static void readInput(char *s){
 	}
 	s[++t] = 0;
 }
-static void pushSentence(struct Sentence *x){
-	++IRNum;
-	IRList[IRNum] = *x;
-}
-static struct Object addIntc(int x){
-	struct Object t;
-	t.type = IRINTC;
-	t.data.value = x;
-	return t;
-}
-static struct Object addExpr(struct AstNode *ast){
-	//TODO
-}
-static void addItgt(struct AstNode *ast,int label){
-	struct Object t = addExpr(ast);
-	struct Sentence tmp;
-	tmp.op.type = IRITGTOP;
-	tmp.ob1 = t;
-	tmp.ob2 = addIntc(label);
-	tmp.num = 2;
-	pushSentence(&tmp);
-}
-static void addIfgt(struct AstNode *ast,int label){
-	struct Object t = addExpr(ast);
-	struct Sentence tmp;
-	tmp.op.type = IRIFGTOP;
-	tmp.ob1 = t;
-	tmp.ob2 = addIntc(label);
-	tmp.num = 2;
-	pushSentence(&tmp);
-}
-static void addGoto(int label){
-	struct Sentence tmp;
-	tmp.op.type = IRGOTOOP;
-	tmp.ob1 = addIntc(label);
-	tmp.num = 1;
-	pushSentence(&tmp);
-}
-static void addLabl(int label){
-	struct Sentence tmp;
-	tmp.op.type = IRLABLOP;
-	tmp.ob1 = addIntc(label);
-	tmp.num = 1;
-	pushSentence(&tmp);
-}
 
-static void addStmt(struct AstNode *ast,int beginLabel,int endLabel,int returnLabel);
-static void addIfteStmt(struct AstNode *ast,int beginLabel,int endLabel,int returnLabel){
-/*
-if (cond)
-	thenStmt
-------------
-if (cond)
-	thenStmt
-else
-	elseStmt
-************
-two labels:
-begin
-end
-------------
-ifTrue(cond) goto next
-(optional) elseStmt
-goto end
-label next
-thenStmt
-label end
-*/
-	int t;
-	labelNum += 2;
-	t = labelNum;//labelNum may be modified by other functions, backup for correctness
-	addItgt(&ast->c[0],t - 1);
-	if (ast->num > 2) addStmt(&ast->c[2],beginLabel,endLabel,returnLabel);
-	addGoto(t);
-	addLabl(t - 1);
-	addStmt(&ast->c[1],beginLabel,endLabel,returnLabel);
-	addLabl(t);
-}
-static void addForLoop(struct AstNode *ast,int beginLabel,int endLabel,int returnLabel){
-/*
-for (init;cond;modi)
-	stmt
-************
-three labels:
-begin
-main
-end
-------------
-init
-goto main
-label begin
-modi
-label main
-ifFalse(cond) goto end
-stmt
-goto begin
-label end
-*/
-	int t;
-	labelNum += 3;
-	t = labelNum;
-	addExpr(&ast->c[0]);
-	addGoto(t - 1);
-	addLabl(t - 2);
-	addExpr(&ast->c[2]);
-	addLabl(t - 1);
-	addIfgt(&ast->c[1],t);
-	addStmt(&ast->c[3],t - 2,t,returnLabel);
-	addGoto(t - 2);
-	addLabl(t);
-}
-static void addWhileLoop(struct AstNode *ast,int beginLabel,int endLabel,int returnLabel){
-/*
-while (cond)
-	stmt
-************
-two labels:
-begin
-end
-------------
-label begin
-ifFalse(cond) goto end
-stmt
-goto begin
-label end
-*/
-	int t;
-	labelNum += 2;
-	t = labelNum;
-	addLabl(t - 1);
-	addIfgt(&ast->c[0],t);
-	addStmt(&ast->c[1],t - 1,t,returnLabel);
-	addGoto(t - 1);
-	addLabl(t);
-}
-static void addBreakStmt(int label){
-	addGoto(label);
-}
-static void addContStmt(int label){
-	addGoto(label);
-}
-static void addExprStmt(struct AstNode *ast){
-	addExpr(&ast->c[0]);
-}
-static void addReturnStmt(struct AstNode *ast,int label){
-	//TODO
-}
-static void addCompStmt(struct AstNode *ast,int beginLabel,int endLabel,int returnLabel){
-	int i;
-	for (i = 0;i < ast->num;++i) addStmt(&ast->c[i],beginLabel,endLabel,returnLabel);
-}
-
-static void addStmt(struct AstNode *ast,int beginLabel,int endLabel,int returnLabel){
-	int i;
-	if (ast->type == BREASTMT){
-		addBreakStmt(endLabel);
-	}else if (ast->type == CONTSTMT){
-		addContStmt(beginLabel);
-	}else if (ast->type == IFTESTMT){
-		addIfteStmt(ast,beginLabel,endLabel,returnLabel);
-	}else if (ast->type == FORRLOOP){
-		addForLoop(ast,beginLabel,endLabel,returnLabel);
-	}else if (ast->type == WHILLOOP){
-		addWhileLoop(ast,beginLabel,endLabel,returnLabel);
-	}else if (ast->type == EXPRSTMT){
-		addExprStmt(ast);
-	}else if (ast->type == RETNSTMT){
-		addReturnStmt(ast,returnLabel);
-	}else if (ast->type == COMPSTMT){
-		addCompStmt(ast,beginLabel,endLabel,returnLabel);
-	}else{
-		//never
-	}
-}
-
-
-static void addFunc(struct AstNode *ast){
-	//TODO
-}
-static void addVari(struct AstNode *ast,int beginLabel,int endLabel,int returnLabel){
-	//TODO
-}
-
-static void irMain(struct AstNode *ast){
-	int i;
-	if (ast->type == ROOT){
-		for (i = 0;i < ast->num;++i) irMain(&ast->c[i]);
-	}else if (ast->type == DECL){
-		for (i = 0;i < ast->num;++i) addVari(&ast->c[i],0,0,0);
-	}else if (ast->type == FUNCDECL){
-		addFunc(ast);
-		if (strcmp(ast->c[1].data,"main") == 0){
-			//TODO
-		}
-	}else if (ast->type == STRUDECL){
-		//never
-	}else if (ast->type == UNIODECL){
-		//never
-	}else if (ast->type == VARIDECL){
-		for (i = 1;i < ast->num;++i) addVari(&ast->c[i],0,0,0);
-	}else{
-		//never
-	}
-}
-static void printSentence(struct Sentence *s){
-	
-}
 int main(void){
 	char *s = (char *)malloc(1000010);
-	int i;
+//	int i;
 	
 	readInput(s);
 	semanticCheck(s);
-	astPrint(NULL,ast,0);
+//	astPrint(NULL,ast,0);
 	
-	IRNum = 0;
-	temp = 0;
-	labelNum = 0;
+	registerNum = labelNum = 0;
 	irMain(ast);
 	
-	for (i = 1;i <= IRNum;++i) printSentence(IRList + i);
+	freeFunctionList(funcList);
+//	for (i = 1;i <= IRNum;++i) printSentence(IRList + i);
 	
 	astDel(ast);
 	free(ast);
