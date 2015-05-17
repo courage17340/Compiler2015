@@ -47,14 +47,13 @@ ob1 op ob2 size
    *a = t0, 4
 op ob1  ob2 size
 
-end
-func_end
-
+ret (xxx)
+op  (ob1)
 
 */
 enum OpType{
-	IRUNAROP,IRBINAOP,IRASSIOP,IRPARAOP,IRCALLOP,IRLABLOP,IRGOTOOP,IRITGTOP,IRIFGTOP,IRARRROP,IRARRWOP,IRPTRROP,IRPTRWOP,IRFENDOP
-//	unary    binary   =        param    call     label    goto     ifTgoto  ifFgoto  a=b[x],4 a[x]=b,4 t0=*a,4  *a=t0,4  nop
+	IRUNAROP,IRBINAOP,IRASSIOP,IRPARAOP,IRCALLOP,IRLABLOP,IRGOTOOP,IRITGTOP,IRIFGTOP,IRARRROP,IRARRWOP,IRPTRROP,IRPTRWOP,IRFENDOP,IRRETNOP
+//	unary    binary   =        param    call     label    goto     ifTgoto  ifFgoto  a=b[x],4 a[x]=b,4 t0=*a,4  *a=t0,4  nop      ret
 };
 enum ObjectType{
 	IRSTRC,IRINTC,IRNAME,IRTEMP
@@ -94,6 +93,9 @@ static void freeObject(struct Object *t){
 	if (t == NULL) return;
 	free(t->name);
 	free(t);
+}
+static struct Object *dupeObject(struct Object *ob){
+	return getObject(ob->type,ob->pd,ob->size,ob->data,ob->name);
 }
 //======object list======
 struct ObjectList{
@@ -261,7 +263,7 @@ static char *toString(int t){
 }
 static struct Object *getRegister(void){
 	++registerNum;
-	return getObject(IRTEMP,1,4,0,toString(registerNum));
+	return getObject(IRTEMP,1,4,registerNum,toString(registerNum));
 }
 //======local function decl======
 static void irMain(struct AstNode *ast);
@@ -281,6 +283,8 @@ static void makeGoto(struct Function *func,int label);
 static void makeLabl(struct Function *func,int label);
 static void makeItgt(struct AstNode *ast,struct Function *func,int label);
 static void makeIfgt(struct AstNode *ast,struct Function *func,int label);
+static struct Object *makeExpr(struct AstNode *ast,struct Function *func,int *mode);//mode 1-used 0-not used
+static struct Object *makeIntc(int value);
 
 //======main======
 static void irMain(struct AstNode *ast){
@@ -306,10 +310,12 @@ static void irMain(struct AstNode *ast){
 }
 static void irFunc(struct AstNode *ast){
 	struct Function *tmp = getFunction(ast->c[1].data);
-	struct Object *ob;
 	struct AstNode *atmp;
 	int i;
 	pushBackFunction(funcList,tmp);
+	tmp->para = getObjectList();
+	tmp->vari = getObjectList();
+	tmp->body = getSentenceList();
 	irVari(&ast->c[0],ast->c[1].data,tmp->para);
 	atmp = &ast->c[2];
 	for (i = 0;i < atmp->num;++i) irVari(&atmp->c[i].c[0],atmp->c[i].c[1].data,tmp->para);
@@ -425,7 +431,11 @@ label end
 	makeLabl(func,t - 2);
 	irExprStmt(&ast->c[2],func);
 	makeLabl(func,t - 1);
-	makeIfgt(&ast->c[1],func,t);
+	if (ast->c[1].type == EMPTEXPR){
+		//nop
+	}else{
+		makeIfgt(&ast->c[1],func,t);
+	}
 	irStmt(&ast->c[3],func,t - 2,t);
 	makeGoto(func,t - 2);
 	makeLabl(func,t);
@@ -455,24 +465,399 @@ label end
 	makeLabl(func,t);
 }
 static void irExprStmt(struct AstNode *ast,struct Function *func){
-	//TODO
+	int mode = 0;
+	struct Object *ob = makeExpr(&ast->c[0],func,&mode);
+	if (!mode) freeObject(ob);
 }
 static void irRetnStmt(struct AstNode *ast,struct Function * func){
-	//TODO
+	struct Sentence *s = getSentence();
+	s->op = getOp(IRRETNOP,"return");
+	ast = &ast->c[0];
+	if (ast->c[0].type == EMPTEXPR){
+		s->num = 0;
+	}else{
+		int mode = 0;
+		struct Object *ob = makeExpr(ast,func,&mode);
+		s->num = 1;
+		if (mode) s->ob[0] = dupeObject(ob);else s->ob[0] = ob;
+	}
+	pushBackSentence(func->body,s);
 }
 static void makeGoto(struct Function *func,int label){
-	
+	struct Op *op = getOp(IRGOTOOP,"goto");
+	struct Sentence *s = getSentence();
+	s->op = op;
+	s->ob[0] = makeIntc(label);
+	s->num = 1;
+	pushBackSentence(func->body,s);
 }
 static void makeLabl(struct Function *func,int label){
-
+	struct Op *op = getOp(IRLABLOP,"label");
+	struct Sentence *s = getSentence();
+	s->op = op;
+	s->ob[0] = makeIntc(label);
+	s->num = 1;
+	pushBackSentence(func->body,s);
 }
 static void makeItgt(struct AstNode *ast,struct Function *func,int label){
-
+	int mode = 0;
+	struct Op *op = getOp(IRITGTOP,"ifTrueGoto");
+	struct Object *ob = makeExpr(ast,func,&mode);
+	struct Sentence *s = getSentence();
+	s->op = op;
+	if (mode) s->ob[0] = dupeObject(ob);else s->ob[0] = ob;
+	s->ob[1] = makeIntc(label);
+	s->num = 2;
+	pushBackSentence(func->body,s);
 }
 static void makeIfgt(struct AstNode *ast,struct Function *func,int label){
-
+	int mode = 0;
+	struct Op *op = getOp(IRIFGTOP,"ifFalseGoto");
+	struct Object *ob = makeExpr(ast,func,&mode);
+	struct Sentence *s = getSentence();
+	s->op = op;
+	if (mode) s->ob[0] = dupeObject(ob);else s->ob[0] = ob;
+	s->ob[1] = makeIntc(label);
+	s->num = 2;
+	pushBackSentence(func->body,s);
 }
-
+static struct Object *makeExpr(struct AstNode *ast,struct Function *func,int *mode){
+	struct Object *ob,*ob1,*ob2,*ob3;
+	if (ast->type == EMPTEXPR){
+		//nop
+	}else if (ast->type == BINAEXPR){
+		//TODO
+		if (strcmp(ast->data,"&&") == 0){
+			//TODO
+			return NULL;
+		}else if (strcmp(ast->data,"||") == 0){
+			//TODO
+			return NULL;
+		}
+		int m1 = 0,m2 = 0;
+		struct Sentence *s = getSentence();
+		ob1 = makeExpr(&ast->c[0],func,&m1);
+		if (m1) ob1 = dupeObject(ob1);
+		ob2 = makeExpr(&ast->c[1],func,&m2);
+		if (m2) ob2 = dupeObject(ob2);
+		*mode = 1;
+		if (strcmp(ast->data,",") == 0){
+			*mode = 0;
+			freeObject(ob1);
+			freeSentence(s);
+			return ob2;
+		}else if (strcmp(ast->data,"=") == 0){
+			s->op = getOp(IRASSIOP,"=");
+			s->ob[0] = ob1;
+			s->ob[1] = ob2;
+			s->num = 2;
+			pushBackSentence(func->body,s);
+			return ob1;
+		}else if (strcmp(ast->data,"|") == 0){
+			s->op = getOp(IRBINAOP,"|");
+			s->ob[0] = getRegister();
+			s->ob[1] = ob1;
+			s->ob[2] = ob2;
+			s->num = 3;
+			pushBackSentence(func->body,s);
+			return s->ob[0];
+		}else if (strcmp(ast->data,"^") == 0){
+			s->op = getOp(IRBINAOP,"^");
+			s->ob[0] = getRegister();
+			s->ob[1] = ob1;
+			s->ob[2] = ob2;
+			s->num = 3;
+			pushBackSentence(func->body,s);
+			return s->ob[0];
+		}else if (strcmp(ast->data,"&") == 0){
+			s->op = getOp(IRBINAOP,"&");
+			s->ob[0] = getRegister();
+			s->ob[1] = ob1;
+			s->ob[2] = ob2;
+			s->num = 3;
+			pushBackSentence(func->body,s);
+			return s->ob[0];
+		}else if (strcmp(ast->data,"<") == 0){
+			s->op = getOp(IRBINAOP,"<");
+			s->ob[0] = getRegister();
+			s->ob[1] = ob1;
+			s->ob[2] = ob2;
+			s->num = 3;
+			pushBackSentence(func->body,s);
+			return s->ob[0];
+		}else if (strcmp(ast->data,">") == 0){
+			s->op = getOp(IRBINAOP,">");
+			s->ob[0] = getRegister();
+			s->ob[1] = ob1;
+			s->ob[2] = ob2;
+			s->num = 3;
+			pushBackSentence(func->body,s);
+			return s->ob[0];
+		}else if (strcmp(ast->data,"+") == 0){
+			s->op = getOp(IRBINAOP,"+");
+			s->ob[0] = getRegister();
+			s->ob[1] = ob1;
+			s->ob[2] = ob2;
+			s->num = 3;
+			pushBackSentence(func->body,s);
+			return s->ob[0];
+		}else if (strcmp(ast->data,"-") == 0){
+			s->op = getOp(IRBINAOP,"-");
+			s->ob[0] = getRegister();
+			s->ob[1] = ob1;
+			s->ob[2] = ob2;
+			s->num = 3;
+			pushBackSentence(func->body,s);
+			return s->ob[0];
+		}else if (strcmp(ast->data,"*") == 0){
+			s->op = getOp(IRBINAOP,"*");
+			s->ob[0] = getRegister();
+			s->ob[1] = ob1;
+			s->ob[2] = ob2;
+			s->num = 3;
+			pushBackSentence(func->body,s);
+			return s->ob[0];
+		}else if (strcmp(ast->data,"/") == 0){
+			s->op = getOp(IRBINAOP,"/");
+			s->ob[0] = getRegister();
+			s->ob[1] = ob1;
+			s->ob[2] = ob2;
+			s->num = 3;
+			pushBackSentence(func->body,s);
+			return s->ob[0];
+		}else if (strcmp(ast->data,"%") == 0){
+			s->op = getOp(IRBINAOP,"%");
+			s->ob[0] = getRegister();
+			s->ob[1] = ob1;
+			s->ob[2] = ob2;
+			s->num = 3;
+			pushBackSentence(func->body,s);
+			return s->ob[0];
+		}else if (strcmp(ast->data,"==") == 0){
+			s->op = getOp(IRBINAOP,"==");
+			s->ob[0] = getRegister();
+			s->ob[1] = ob1;
+			s->ob[2] = ob2;
+			s->num = 3;
+			pushBackSentence(func->body,s);
+			return s->ob[0];
+		}else if (strcmp(ast->data,"!=") == 0){
+			s->op = getOp(IRBINAOP,"!=");
+			s->ob[0] = getRegister();
+			s->ob[1] = ob1;
+			s->ob[2] = ob2;
+			s->num = 3;
+			pushBackSentence(func->body,s);
+			return s->ob[0];
+		}else if (strcmp(ast->data,"<=") == 0){
+			s->op = getOp(IRBINAOP,"<=");
+			s->ob[0] = getRegister();
+			s->ob[1] = ob1;
+			s->ob[2] = ob2;
+			s->num = 3;
+			pushBackSentence(func->body,s);
+			return s->ob[0];
+		}else if (strcmp(ast->data,">=") == 0){
+			s->op = getOp(IRBINAOP,">=");
+			s->ob[0] = getRegister();
+			s->ob[1] = ob1;
+			s->ob[2] = ob2;
+			s->num = 3;
+			pushBackSentence(func->body,s);
+			return s->ob[0];
+		}else if (strcmp(ast->data,"<<") == 0){
+			s->op = getOp(IRBINAOP,"<<");
+			s->ob[0] = getRegister();
+			s->ob[1] = ob1;
+			s->ob[2] = ob2;
+			s->num = 3;
+			pushBackSentence(func->body,s);
+			return s->ob[0];
+		}else if (strcmp(ast->data,">>") == 0){
+			s->op = getOp(IRBINAOP,">>");
+			s->ob[0] = getRegister();
+			s->ob[1] = ob1;
+			s->ob[2] = ob2;
+			s->num = 3;
+			pushBackSentence(func->body,s);
+			return s->ob[0];
+		}else if (strcmp(ast->data,"*=") == 0){
+			s->op = getOp(IRBINAOP,"*");
+			s->ob[0] = dupeObject(ob1);
+			s->ob[1] = ob1;
+			s->ob[2] = ob2;
+			s->num = 3;
+			pushBackSentence(func->body,s);
+			return s->ob[0];
+		}else if (strcmp(ast->data,"/=") == 0){
+			s->op = getOp(IRBINAOP,"/");
+			s->ob[0] = dupeObject(ob1);
+			s->ob[1] = ob1;
+			s->ob[2] = ob2;
+			s->num = 3;
+			pushBackSentence(func->body,s);
+			return s->ob[0];
+		}else if (strcmp(ast->data,"%=") == 0){
+			s->op = getOp(IRBINAOP,"%");
+			s->ob[0] = dupeObject(ob1);
+			s->ob[1] = ob1;
+			s->ob[2] = ob2;
+			s->num = 3;
+			pushBackSentence(func->body,s);
+			return s->ob[0];
+		}else if (strcmp(ast->data,"<<=") == 0){
+			s->op = getOp(IRBINAOP,"<<");
+			s->ob[0] = dupeObject(ob1);
+			s->ob[1] = ob1;
+			s->ob[2] = ob2;
+			s->num = 3;
+			pushBackSentence(func->body,s);
+			return s->ob[0];
+		}else if (strcmp(ast->data,">>=") == 0){
+			s->op = getOp(IRBINAOP,">>");
+			s->ob[0] = dupeObject(ob1);
+			s->ob[1] = ob1;
+			s->ob[2] = ob2;
+			s->num = 3;
+			pushBackSentence(func->body,s);
+			return s->ob[0];
+		}else if (strcmp(ast->data,"&=") == 0){
+			s->op = getOp(IRBINAOP,"&");
+			s->ob[0] = dupeObject(ob1);
+			s->ob[1] = ob1;
+			s->ob[2] = ob2;
+			s->num = 3;
+			pushBackSentence(func->body,s);
+			return s->ob[0];
+		}else if (strcmp(ast->data,"|=") == 0){
+			s->op = getOp(IRBINAOP,"|");
+			s->ob[0] = dupeObject(ob1);
+			s->ob[1] = ob1;
+			s->ob[2] = ob2;
+			s->num = 3;
+			pushBackSentence(func->body,s);
+			return s->ob[0];
+		}else if (strcmp(ast->data,"^=") == 0){
+			s->op = getOp(IRBINAOP,"^");
+			s->ob[0] = dupeObject(ob1);
+			s->ob[1] = ob1;
+			s->ob[2] = ob2;
+			s->num = 3;
+			pushBackSentence(func->body,s);
+			return s->ob[0];
+		}else if (strcmp(ast->data,"+=") == 0){
+			s->op = getOp(IRBINAOP,"+");
+			s->ob[0] = dupeObject(ob1);
+			s->ob[1] = ob1;
+			s->ob[2] = ob2;
+			s->num = 3;
+			pushBackSentence(func->body,s);
+			return s->ob[0];
+		}else if (strcmp(ast->data,"-=") == 0){
+			s->op = getOp(IRBINAOP,"-");
+			s->ob[0] = dupeObject(ob1);
+			s->ob[1] = ob1;
+			s->ob[2] = ob2;
+			s->num = 3;
+			pushBackSentence(func->body,s);
+			return s->ob[0];
+		}else{
+			//never
+		}
+	}else if (ast->type == UNAREXPR){
+		int m = 0;
+		struct Sentence *s = getSentence();
+		*mode = 1;
+		ob1 = makeExpr(&ast->c[0],func,&m);
+		if (m) ob1 = dupeObject(ob1);
+		if (strcmp(ast->data,"&") == 0){
+			s->op = getOp(IRUNAROP,"&");
+			ob = getRegister();
+			ob->pd = 0;
+			s->ob[0] = ob;
+			s->ob[1] = ob1;
+			pushBackSentence(func->body,s);
+			return ob;
+		}else if (strcmp(ast->data,"*") == 0){
+			//TODO
+		}else if (strcmp(ast->data,"+") == 0){
+			s->op = getOp(IRUNAROP,"+");
+			s->ob[0] = getRegister();
+			s->ob[1] = ob1;
+			s->num = 2;
+			pushBackSentence(func->body,s);
+			return s->ob[0];
+		}else if (strcmp(ast->data,"-") == 0){
+			s->op = getOp(IRUNAROP,"-");
+			s->ob[0] = getRegister();
+			s->ob[1] = ob1;
+			s->num = 2;
+			pushBackSentence(func->body,s);
+			return s->ob[0];
+		}else if (strcmp(ast->data,"~") == 0){
+			s->op = getOp(IRUNAROP,"~");
+			s->ob[0] = getRegister();
+			s->ob[1] = ob1;
+			s->num = 2;
+			pushBackSentence(func->body,s);
+			return s->ob[0];
+		}else if (strcmp(ast->data,"!") == 0){
+			s->op = getOp(IRUNAROP,"!");
+			s->ob[0] = getRegister();
+			s->ob[1] = ob1;
+			s->num = 2;
+			pushBackSentence(func->body,s);
+			return s->ob[0];
+		}else if (strcmp(ast->data,"++") == 0){
+			s->op = getOp(IRUNAROP,"+");
+			s->ob[0] = dupeObject(ob1);
+			s->ob[1] = ob1;
+			s->ob[2] = makeIntc(1);
+			s->num = 3;
+			pushBackSentence(func->body,s);
+			return s->ob[0];
+		}else if (strcmp(ast->data,"--") == 0){
+			s->op = getOp(IRUNAROP,"-");
+			s->ob[0] = dupeObject(ob1);
+			s->ob[1] = ob1;
+			s->ob[2] = makeIntc(1);
+			s->num = 3;
+			pushBackSentence(func->body,s);
+			return s->ob[0];
+		}else{
+			//never
+		}
+	}else if (ast->type == SZOFEXPR){
+		//TODO
+	}else if (ast->type == CASTEXPR){
+		//TODO
+	}else if (ast->type == PTERACSS){
+		//TODO
+	}else if (ast->type == RECOACSS){
+		//TODO
+	}else if (ast->type == SELFINCR){
+		//TODO
+	}else if (ast->type == SELFDECR){
+		//TODO
+	}else if (ast->type == ARRAACSS){
+		//TODO
+	}else if (ast->type == FUNCCALL){
+		//TODO
+	}else if (ast->type == IDEN){
+		//TODO
+	}else if (ast->type == INTECONS){
+		//TODO
+	}else if (ast->type == CHARCONS){
+		//TODO
+	}else if (ast->type == STRICONS){
+		//TODO
+	}else{
+		//never
+	}
+}
+static struct Object *makeIntc(int value){
+	return getObject(IRINTC,1,4,value,"");
+}
 //======others======
 static void readInput(char *s){
 	int t = -1,c;
