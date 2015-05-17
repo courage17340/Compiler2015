@@ -263,10 +263,24 @@ static struct Object *getRegister(void){
 	++registerNum;
 	return getObject(IRTEMP,1,4,0,toString(registerNum));
 }
-//======ir function decl======
+//======local function decl======
 static void irMain(struct AstNode *ast);
 static void irFunc(struct AstNode *ast);
-static void irVari(struct AstNode *ast,struct Function *func);
+static void irVariList(struct AstNode *ast,struct ObjectList *list,struct Function *func);
+static void irVari(struct AstNode *type,char *name,struct ObjectList *list);
+static void irCompStmt(struct AstNode *ast,struct Function *func,int beginLabel,int endLabel);
+static void irStmt(struct AstNode *ast,struct Function *func,int beginLabel,int endLabel);
+static void irBreaStmt(struct Function *func,int label);
+static void irContStmt(struct Function *func,int label);
+static void irIfteStmt(struct AstNode *ast,struct Function *func,int beginLabel,int endLabel);
+static void irForLoop(struct AstNode *ast,struct Function *func,int beginLabel,int endLabel);
+static void irWhileLoop(struct AstNode *ast,struct Function *func,int beginLabel,int endLabel);
+static void irExprStmt(struct AstNode *ast,struct Function *func);
+static void irRetnStmt(struct AstNode *ast,struct Function * func);
+static void makeGoto(struct Function *func,int label);
+static void makeLabl(struct Function *func,int label);
+static void makeItgt(struct AstNode *ast,struct Function *func,int label);
+static void makeIfgt(struct AstNode *ast,struct Function *func,int label);
 
 //======main======
 static void irMain(struct AstNode *ast){
@@ -285,17 +299,180 @@ static void irMain(struct AstNode *ast){
 		if (ast->c[i].type == FUNCDECL)
 			irFunc(&ast->c[i]);
 		else if (ast->c[i].type == VARIDECL)
-			irVari(&ast->c[i],funcList->e[0]);
+			irVariList(&ast->c[i],funcList->e[0]->vari,funcList->e[0]);
 		else{
 			//nop
 		}
 }
 static void irFunc(struct AstNode *ast){
+	struct Function *tmp = getFunction(ast->c[1].data);
+	struct Object *ob;
+	struct AstNode *atmp;
+	int i;
+	pushBackFunction(funcList,tmp);
+	irVari(&ast->c[0],ast->c[1].data,tmp->para);
+	atmp = &ast->c[2];
+	for (i = 0;i < atmp->num;++i) irVari(&atmp->c[i].c[0],atmp->c[i].c[1].data,tmp->para);
+	irCompStmt(&ast->c[3],tmp,0,0);
+}
+static void irVariList(struct AstNode *ast,struct ObjectList *list,struct Function *func){
+	int i;
+	for (i = 1;i < ast->num;++i){
+		irVari(&ast->c[i].c[0],ast->c[i].c[1].data,list);
+		if (ast->c[i].num > 2){
+			//TODO INIT
+		}
+	}
+}
+static void irVari(struct AstNode *type,char *name,struct ObjectList *list){
+	struct Object *t;
+	int pd;
+	if (type->type == ARRATYPE || type->type == PTERTYPE) pd = 0;else pd = 1;
+	t = getObject(IRNAME,pd,type->size,0,name);
+	pushBackObject(list,t);
+}
+static void irCompStmt(struct AstNode *ast,struct Function *func,int beginLabel,int endLabel){
+	int i;
+	for (i = 0;i < ast->num;++i) if (ast->c[i].type == VARIDECL){
+		irVariList(&ast->c[i],func->vari,func);
+	}else{
+		irStmt(&ast->c[i],func,beginLabel,endLabel);
+	}
+}
+static void irStmt(struct AstNode *ast,struct Function *func,int beginLabel,int endLabel){
+	if (ast->type == BREASTMT){
+		irBreaStmt(func,endLabel);
+	}else if (ast->type == CONTSTMT){
+		irContStmt(func,beginLabel);
+	}else if (ast->type == IFTESTMT){
+		irIfteStmt(ast,func,beginLabel,endLabel);
+	}else if (ast->type == FORRLOOP){
+		irForLoop(ast,func,beginLabel,endLabel);
+	}else if (ast->type == WHILLOOP){
+		irWhileLoop(ast,func,beginLabel,endLabel);
+	}else if (ast->type == EXPRSTMT){
+		irExprStmt(ast,func);
+	}else if (ast->type == RETNSTMT){
+		irRetnStmt(ast,func);
+	}else if (ast->type == COMPSTMT){
+		irCompStmt(ast,func,beginLabel,endLabel);
+	}else{
+		//never
+	}
+}
+static void irBreaStmt(struct Function *func,int label){
+	makeGoto(func,label);
+}
+static void irContStmt(struct Function *func,int label){
+	makeGoto(func,label);
+}
+static void irIfteStmt(struct AstNode *ast,struct Function *func,int beginLabel,int endLabel){
+/*
+if (cond)
+	thenStmt
+------------
+if (cond)
+	thenStmt
+else
+	elseStmt
+************
+two labels:
+begin
+end
+------------
+ifTrue(cond) goto next
+(optional) elseStmt
+goto end
+label next
+thenStmt
+label end
+*/
+	int t;
+	labelNum += 2;
+	t = labelNum;
+	makeItgt(&ast->c[0],func,t - 1);
+	if (ast->num > 2) irStmt(&ast->c[2],func,beginLabel,endLabel);
+	makeGoto(func,t);
+	makeLabl(func,t - 1);
+	irStmt(&ast->c[2],func,beginLabel,endLabel);
+	makeLabl(func,t);
+}
+static void irForLoop(struct AstNode *ast,struct Function *func,int beginLabel,int endLabel){
+/*
+for (init;cond;modi)
+	stmt
+************
+three labels:
+begin
+main
+end
+------------
+init
+goto main
+label begin
+modi
+label main
+ifFalse(cond) goto end
+stmt
+goto begin
+label end
+*/
+	int t;
+	labelNum += 3;
+	t = labelNum;
+	irExprStmt(&ast->c[0],func);
+	makeGoto(func,t - 1);
+	makeLabl(func,t - 2);
+	irExprStmt(&ast->c[2],func);
+	makeLabl(func,t - 1);
+	makeIfgt(&ast->c[1],func,t);
+	irStmt(&ast->c[3],func,t - 2,t);
+	makeGoto(func,t - 2);
+	makeLabl(func,t);
+}
+static void irWhileLoop(struct AstNode *ast,struct Function *func,int beginLabel,int endLabel){
+/*
+while (cond)
+	stmt
+************
+two labels:
+begin
+end
+------------
+label begin
+ifFalse(cond) goto end
+stmt
+goto begin
+label end
+*/
+	int t;
+	labelNum += 2;
+	t = labelNum;
+	makeLabl(func,t - 1);
+	makeIfgt(&ast->c[0],func,t);
+	irStmt(&ast->c[1],func,t - 1,t);
+	makeGoto(func,t - 1);
+	makeLabl(func,t);
+}
+static void irExprStmt(struct AstNode *ast,struct Function *func){
 	//TODO
 }
-static void irVari(struct AstNode *ast,struct Function *func){
+static void irRetnStmt(struct AstNode *ast,struct Function * func){
 	//TODO
 }
+static void makeGoto(struct Function *func,int label){
+	
+}
+static void makeLabl(struct Function *func,int label){
+
+}
+static void makeItgt(struct AstNode *ast,struct Function *func,int label){
+
+}
+static void makeIfgt(struct AstNode *ast,struct Function *func,int label){
+
+}
+
 //======others======
 static void readInput(char *s){
 	int t = -1,c;
