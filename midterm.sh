@@ -10,7 +10,7 @@
 
 for source in `ls data/*/*/*.c`; do
   cp $source test.c
-  ./semantic < test.c
+  ./ir < test.c
   echo $? $source
 done
 

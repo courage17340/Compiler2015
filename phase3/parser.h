@@ -27,7 +27,8 @@ struct AstNode{
 	struct AstNode *c;
 	//following are added for semantic check
 	int lValue,constant,value,size,pos;
-	void *retType;
+	struct AstNode *retType;
+	struct AstNode *bind;
 };
 void cstDel(struct node *);
 void doubleSpace(struct AstNode *);

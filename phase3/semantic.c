@@ -814,7 +814,7 @@ static void astCheck(struct AstNode *ast,int isInLoop,void *retType){
 		if (tmp->type == VOIDTYPE) halt();
 		ast->constant = 1;
 		makeInt(ast);
-		ast->size = ast->c[0].size;
+		ast->value = ast->c[0].size;
 	}else if (ast->type == CASTEXPR){
 		astCheck(&ast->c[0],isInLoop,retType);
 		if (ast->c[0].type < TYPE || ast->c[0].type > ARRATYPE) halt();
@@ -895,6 +895,7 @@ static void astCheck(struct AstNode *ast,int isInLoop,void *retType){
 		ast->size = tmp->c[0].size;
 	}else if (ast->type == FUNCCALL){
 		struct AstNode *tmp = getNameHash(ast->c[0].data);
+		ast->bind = tmp;
 		astCheck(&ast->c[1],isInLoop,retType);
 		if (strcmp(ast->c[0].data,"printf") == 0){
 			if (tmp != NULL) halt();
@@ -944,6 +945,7 @@ static void astCheck(struct AstNode *ast,int isInLoop,void *retType){
 		struct AstNode *tmp = getNameHash(ast->data);
 		if (tmp == NULL) halt();
 		if (tmp->type == FUNCDECL) halt();
+		ast->bind = tmp;
 		ast->retType = &tmp->c[0];
 		if (tmp->c[0].type != ARRATYPE) ast->lValue = 1;
 		ast->size = tmp->c[0].size;
@@ -1065,7 +1067,16 @@ static void astCheck(struct AstNode *ast,int isInLoop,void *retType){
 //			
 //			}
 			if (t->num == 3 && ast->num == 3) halt();
-			if (t->num == 2) addName(ast->c[1].data,(void *)ast,flag);
+			if (t->num == 2 && ast->num == 3){
+//				addName(ast->c[1].data,(void *)ast,flag);
+				if (t->num == t->cap) doubleSpace(t);
+				++t->num;
+				t->c[2] = ast->c[2];
+				--ast->num;
+				astCheck(&ast->c[2],isInLoop,retType);
+				checkInit(&ast->c[0],&ast->c[2]);
+				return;
+			}
 		}else{
 			addName(ast->c[1].data,(void *)ast,flag);
 		}
