@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 #include "parser.h"
 #include "hash.h"
 #include "semantic.h"
@@ -126,6 +127,10 @@ static int charToInt(char c){
 
 static void conToChar(char *s){
 	int ret = 0,l = strlen(s),i = 0;
+	for (i = 0;i < l - 2;++i) s[i] = s[i + 1];
+	s[l - 2] = 0;
+	l -= 2;
+	i = 0;
 	while (i < l){
 		ret = 0;
 		if (s[i] != '\\'){
@@ -182,6 +187,10 @@ static void conToChar(char *s){
 
 static void conToStr(char *s){
 	int ret = 0,l = strlen(s),i = 0,t = -1;
+	for (i = 0;i < l - 2;++i) s[i] = s[i + 1];
+	s[l - 2] = 0;
+	l -= 2;
+	i = 0;
 	while (i < l){
 		ret = 0;
 		if (s[i] != '\\'){
@@ -255,6 +264,7 @@ static void makeInt(struct AstNode *ast){
 	ast->c[ast->num - 1].c = NULL;
 	ast->c[ast->num - 1].num = 0;
 	ast->c[ast->num - 1].cap = 0;
+	ast->c[ast->num - 1].size = 4;
 	ast->retType = &ast->c[ast->num - 1];
 }
 
@@ -914,6 +924,7 @@ static void astCheck(struct AstNode *ast,int isInLoop,void *retType){
 			if (tmp != NULL) halt();
 			if (ast->c[1].type == EMPTEXPR) halt();
 			if (ast->c[1].type != FUNCPARA || ast->c[1].num > 1 || !canConvert(ast->c[1].c[0].retType,(void *)&intType)) halt();
+			/*
 			if (ast->num == ast->cap) doubleSpace(ast);
 			++ast->num;
 			ast->c[ast->num - 1].type = PTERTYPE;
@@ -927,6 +938,8 @@ static void astCheck(struct AstNode *ast,int isInLoop,void *retType){
 			ast->c[ast->num - 1].num = 1;
 			ast->c[ast->num - 1].cap = 1;
 			ast->retType = (void *)&ast->c[ast->num - 1];
+			*/
+			makeInt(ast);
 			ast->size = 4;
 			return;
 		}

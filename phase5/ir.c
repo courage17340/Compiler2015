@@ -52,20 +52,10 @@ op  (ob1)
 
 */
 
-static int registerNum,labelNum;
-enum OpType{
-	IRUNAROP,IRBINAOP,IRASSIOP,IRPARAOP,IRCALLOP,IRLABLOP,IRGOTOOP,IRITGTOP,IRIFGTOP,IRARRROP,IRARRWOP,IRPTRROP,IRPTRWOP,IRFENDOP,IRRETNOP
-//	unary    binary   =        param    call     label    goto     ifTgoto  ifFgoto  a=b[x],4 a[x]=b,4 t0=*a,4  *a=t0,4  nop      ret
-};
-enum ObjectType{
-	IRSTRC,IRINTC,IRNAME,IRTEMP
-};
+
 
 //======operator======
-struct Op{
-	int type;
-	char *name;
-};
+
 static struct Op *getOp(int type,char *name){
 	struct Op *t = malloc(sizeof(struct Op));
 	t->type = type;
@@ -78,10 +68,7 @@ static void freeOp(struct Op *t){
 	free(t);
 }
 //======object======
-struct Object{
-	int type,pd,size,data;//pd -- 0 data, 1 pointer, 2 memblock
-	char *name;
-};
+
 static struct Object *getObject(int type,int pd,int size,int data,char *name){
 	struct Object *t = malloc(sizeof(struct Object));
 	t->type = type;
@@ -96,11 +83,7 @@ static void freeObject(struct Object *t){
 	free(t->name);
 	free(t);
 }
-/*
-static struct Object *dupeObject(struct Object *ob){
-	return getObject(ob->type,ob->pd,ob->size,ob->data,ob->name);
-}
-*/
+
 //======registers======
 static char *toString(int t){
 	int f[33],p = 0,i;
@@ -112,16 +95,13 @@ static char *toString(int t){
 		f[++p] = t % 10;
 		t /= 10;
 	}
-	s = malloc(sizeof(char) * (p + 2));
-	s[0] = '$';
-	for (i = p;i >= 1;--i) s[p + 1 - i] = f[p] + '0';
-	s[p + 1] = 0;
+	s = malloc(sizeof(char) * (p + 3));
+	s[0] = '_';
+	s[1] = '_';
+	for (i = p;i >= 1;--i) s[p + 2 - i] = f[i] + '0';
+	s[p + 2] = 0;
 	return s;
 }
-struct RegisterList{
-	struct Object **e;
-	int cap;
-};
 static struct RegisterList *getRegisterList(void){
 	struct RegisterList *t = malloc(sizeof(struct Object));
 	t->e = malloc(sizeof(struct Object *) * 2);
@@ -139,24 +119,19 @@ static void resizeRegisterList(struct RegisterList *t){
 	t->e = tmp;
 	
 }
-static struct RegisterList *registers;
 static struct Object *getRegister(void){
 	resizeRegisterList(registers);
 	++registerNum;
-	return registers->e[registerNum] = getObject(IRTEMP,0,4,registerNum,toString(registerNum));
+	return registers->e[registerNum] = getObject(IRTEMP,2,4,registerNum,toString(registerNum));
 }
-static void freeRegisterList(struct RegisterList *t){
+void freeRegisterList(struct RegisterList *t){
 	int i;
 	for (i = 1;i <= registerNum;++i) freeObject(t->e[i]);
 	free(t->e);
 	free(t);
 }
 //======object list======
-struct ObjectList{
-	struct Object **e;
-	int *link;
-	int num,cap;
-};
+
 static struct ObjectList *getObjectList(void){
 	struct ObjectList *t = malloc(sizeof(struct ObjectList));
 	t->e = malloc(sizeof(struct Object *));
@@ -195,11 +170,7 @@ static void freeObjectList(struct ObjectList *t){
 	free(t);
 }
 //======sentence======
-struct Sentence{
-	struct Object *ob[3];
-	struct Op *op;
-	int size,num;
-};
+
 static struct Sentence *getSentence(void){
 	struct Sentence *t = malloc(sizeof(struct Sentence));
 	t->ob[0] = t->ob[1] = t->ob[2] = NULL;
@@ -215,10 +186,7 @@ static void freeSentence(struct Sentence *t){
 	free(t);
 }
 //======sentence list======
-struct SentenceList{
-	struct Sentence **e;
-	int num,cap;
-};
+
 static struct SentenceList *getSentenceList(void){
 	struct SentenceList *t = malloc(sizeof(struct SentenceList));
 	t->e = malloc(sizeof(struct Sentence *));
@@ -249,16 +217,13 @@ static void freeSentenceList(struct SentenceList *t){
 	free(t);
 }
 //======function======
-struct Function{
-	char *name;
-	struct ObjectList *para,*vari;
-	struct SentenceList *body;
-};
+
 static struct Function *getFunction(char *name){
 	struct Function *t = malloc(sizeof(struct Function));
 	t->name = strdup(name);
 	t->para = t->vari = NULL;
 	t->body = NULL;
+	t->mainSpace = t->retnStat = 0;
 	return t;
 }
 static void freeFunction(struct Function *t){
@@ -270,10 +235,7 @@ static void freeFunction(struct Function *t){
 	free(t);
 }
 //======function list======
-struct FunctionList{
-	struct Function **e;
-	int num,cap;
-};
+
 static struct FunctionList *getFunctionList(void){
 	struct FunctionList *t = malloc(sizeof(struct FunctionList));
 	t->e = malloc(sizeof(struct Function *));
@@ -296,7 +258,7 @@ static void pushBackFunction(struct FunctionList *l,struct Function *f){
 	++l->num;
 	l->e[l->num - 1] = f;
 }
-static void freeFunctionList(struct FunctionList *t){
+void freeFunctionList(struct FunctionList *t){
 	int i;
 	if (t == NULL) return;
 	for (i = 0;i < t->num;++i)
@@ -304,8 +266,6 @@ static void freeFunctionList(struct FunctionList *t){
 	free(t->e);
 	free(t);
 }
-//======static variables======
-static struct FunctionList *funcList;
 
 //======local function decl======
 static void irMain(struct AstNode *ast);
@@ -351,10 +311,16 @@ static void irMain(struct AstNode *ast){
 			//nop
 		}
 }
+/*
+	local variables
+	$ra
+	arguments for next function
+sp->	
+*/
 static void irFunc(struct AstNode *ast){
 	struct Function *tmp = getFunction(ast->c[1].data);
 	struct AstNode *atmp;
-	int i;
+	int i,cur;
 	pushBackFunction(funcList,tmp);
 	tmp->para = getObjectList();
 	tmp->vari = getObjectList();
@@ -363,11 +329,39 @@ static void irFunc(struct AstNode *ast){
 	atmp = &ast->c[2];
 	for (i = 0;i < atmp->num;++i) irVari(&atmp->c[i].c[0],atmp->c[i].c[1].data,tmp->para);
 	irCompStmt(&ast->c[3],tmp,0,0);
+	cur = tmp->mainSpace;
+	if (cur & 3){
+		cur = ((cur >> 2) + 1) << 2;
+		tmp->mainSpace = cur;
+	}
+	tmp->retnStat = cur;
+	cur += 4;
+	for (i = 0;i < tmp->vari->num;++i){
+		registers->e[tmp->vari->link[i]]->data = cur;
+		cur += tmp->vari->e[i]->size;
+		if (cur & 3) cur = ((cur >> 2) + 1) << 2;
+	}
+	tmp->mainSpace = cur;
+//	cur = 0;
+	if (ast->c[0].type != VOIDTYPE){
+		registers->e[tmp->para->link[0]]->data = cur;
+		cur += tmp->para->e[0]->size;
+		if (cur & 3) cur = ((cur >> 2) + 1) << 2;
+	}
+	for (i = 1;i < tmp->para->num;++i){
+		registers->e[tmp->para->link[i]]->data = cur;
+		cur += tmp->para->e[i]->size;
+		if (cur & 3) cur = ((cur >> 2) + 1) << 2;
+	}
 }
 static void irVariList(struct AstNode *ast,struct ObjectList *list,struct Function *func){
 	int i;
 	for (i = 1;i < ast->num;++i){
 		irVari(&ast->c[i].c[0],ast->c[i].c[1].data,list);
+		if (list == func->para && ast->c[i].c[0].type == ARRATYPE){
+			list->e[list->num - 1]->size = 4;
+			registers->e[list->link[list->num - 1]]->size = 4;
+		}
 		if (ast->c[i].num > 2){
 			//TODO INIT
 		}
@@ -375,17 +369,21 @@ static void irVariList(struct AstNode *ast,struct ObjectList *list,struct Functi
 }
 static void irVari(struct AstNode *type,char *name,struct ObjectList *list){
 	struct Object *t,*r;
-	int i;
+	int i,pd;
+	if (type->type == VOIDTYPE){
+		pushBackObject(list,NULL,0);
+		return;
+	}
 	if (list == funcList->e[0]->vari){
 		for (i = 0;i < list->num;++i) if (strcmp(name,list->e[i]->name) == 0) return;
 	}
-	int pd;
-	if (type->type == ARRATYPE || type->type == PTERTYPE) pd = 1;else pd = 2;
+	pd = 2;
 	t = getObject(IRNAME,pd,type->size,0,name);
 	r = getRegister();
 	r->pd = pd;
 	r->size = type->size;
 	pushBackObject(list,t,r->data);
+	if (list == funcList->e[0]->vari) r->data = -1;
 }
 static void irCompStmt(struct AstNode *ast,struct Function *func,int beginLabel,int endLabel){
 	int i;
@@ -450,7 +448,7 @@ label end
 	if (ast->num > 2) irStmt(&ast->c[2],func,beginLabel,endLabel);
 	makeGoto(func,t);
 	makeLabl(func,t - 1);
-	irStmt(&ast->c[2],func,beginLabel,endLabel);
+	irStmt(&ast->c[1],func,beginLabel,endLabel);
 	makeLabl(func,t);
 }
 static void irForLoop(struct AstNode *ast,struct Function *func,int beginLabel,int endLabel){
@@ -476,10 +474,10 @@ label end
 	int t;
 	labelNum += 3;
 	t = labelNum;
-	irExprStmt(&ast->c[0],func);
+	makeExpr(&ast->c[0],func);
 	makeGoto(func,t - 1);
 	makeLabl(func,t - 2);
-	irExprStmt(&ast->c[2],func);
+	makeExpr(&ast->c[2],func);
 	makeLabl(func,t - 1);
 	if (ast->c[1].type == EMPTEXPR){
 		//nop
@@ -522,7 +520,7 @@ static void irRetnStmt(struct AstNode *ast,struct Function * func){
 	struct Sentence *s = getSentence();
 	s->op = getOp(IRRETNOP,"return");
 	ast = &ast->c[0];
-	if (ast->c[0].type == EMPTEXPR){
+	if (ast->type == EMPTEXPR){
 		s->num = 0;
 	}else{
 		struct Object *ob = makeExpr(ast,func);
@@ -572,6 +570,7 @@ static struct Object *makeExpr(struct AstNode *ast,struct Function *func){
 	if (ast->type == EMPTEXPR){
 		return NULL;
 	}else if (ast->type == BINAEXPR){
+		struct Sentence *s;
 		if (strcmp(ast->data,"&&") == 0){
 			int t;
 			struct Sentence *s;
@@ -579,9 +578,10 @@ static struct Object *makeExpr(struct AstNode *ast,struct Function *func){
 			t = labelNum;
 			makeIfgt(&ast->c[0],func,t - 1);
 			ob1 = getRegister();
+			ob1->data = -1;
 			ob2 = makeExpr(&ast->c[1],func);
 			s = getSentence();
-			s->op = getOp(IRASSIOP,"=");
+			s->op = getOp(IRLGASOP,"=");
 			s->ob[0] = ob1;
 			s->ob[1] = ob2;
 			s->num = 2;
@@ -603,9 +603,10 @@ static struct Object *makeExpr(struct AstNode *ast,struct Function *func){
 			t = labelNum;
 			makeItgt(&ast->c[0],func,t - 1);
 			ob1 = getRegister();
+			ob1->data = -1;
 			ob2 = makeExpr(&ast->c[1],func);
 			s = getSentence();
-			s->op = getOp(IRASSIOP,"=");
+			s->op = getOp(IRLGASOP,"=");
 			s->ob[0] = ob1;
 			s->ob[1] = ob2;
 			s->num = 2;
@@ -621,90 +622,54 @@ static struct Object *makeExpr(struct AstNode *ast,struct Function *func){
 			makeLabl(func,t);
 			return ob1;
 		}
-		struct Sentence *s = getSentence();
+		s = getSentence();
 		ob1 = makeExpr(&ast->c[0],func);
 		ob2 = makeExpr(&ast->c[1],func);
 		if (strcmp(ast->data,",") == 0){
 			return ob2;
 		}else if (strcmp(ast->data,"=") == 0){
 			if (ast->c[0].retType->type == INTETYPE){
-				s->op = getOp(IRARRWOP,"[]");
+				s->op = getOp(IRASSIOP,"=");
 				s->ob[0] = ob1;
-				s->ob[1] = makeIntc(0);
-				s->ob[2] = ob2;
+				s->ob[1] = ob2;
 				s->size = 4;
-				s->num = 3;
+				s->num = 2;
 				pushBackSentence(func->body,s);
 				return ob1;
 			}else if (ast->c[0].retType->type == CHARTYPE){
-				s->op = getOp(IRARRWOP,"[]");
+				s->op = getOp(IRASSIOP,"=");
 				s->ob[0] = ob1;
-				s->ob[1] = makeIntc(0);
-				s->ob[2] = ob2;
+				s->ob[1] = ob2;
 				s->size = 1;
-				s->num = 3;
+				s->num = 2;
 				pushBackSentence(func->body,s);
 				return ob1;
 			}else if (ast->c[0].retType->type == PTERTYPE){
-				s->op = getOp(IRARRWOP,"[]");
+				s->op = getOp(IRASSIOP,"=");
 				s->ob[0] = ob1;
-				s->ob[1] = makeIntc(0);
-				s->ob[2] = ob2;
+				s->ob[1] = ob2;
 				s->size = 4;
-				s->num = 3;
+				s->num = 2;
 				pushBackSentence(func->body,s);
 				return ob1;
 			}else if (ast->c[0].retType->type == ARRATYPE){
 				//never
 				return NULL;
 			}else if (ast->c[0].retType->type == STRUTYPE){
-				int k;
-				freeSentence(s);
-				k = 0;
-				while (k < ast->c[0].size){
-					struct Object *r = getRegister();
-					s = getSentence();
-					s->op = getOp(IRARRROP,"[]");
-					s->ob[0] = r;
-					s->ob[1] = ob2;
-					s->ob[2] = makeIntc(k);
-					s->num = 3;
-					s->size = 4;
-					pushBackSentence(func->body,s);
-					s = getSentence();
-					s->op = getOp(IRARRWOP,"[]");
-					s->ob[0] = ob1;
-					s->ob[1] = makeIntc(k);
-					s->ob[2] = r;
-					s->num = 3;
-					s->size = 4;
-					pushBackSentence(func->body,s);
-					k += 4;
-				}
+				s->op = getOp(IRASSIOP,"=");
+				s->ob[0] = ob1;
+				s->ob[1] = ob2;
+				s->size = ast->c[0].size;
+				s->num = 2;
+				pushBackSentence(func->body,s);
 				return ob1;
 			}else if (ast->c[0].retType->type == UNIOTYPE){
-				int k = 0;
-				freeSentence(s);
-				while (k < ast->c[0].size){
-					struct Object *r = getRegister();
-					s = getSentence();
-					s->op = getOp(IRARRROP,"[]");
-					s->ob[0] = r;
-					s->ob[1] = ob2;
-					s->ob[2] = makeIntc(k);
-					s->num = 3;
-					s->size = 4;
-					pushBackSentence(func->body,s);
-					s = getSentence();
-					s->op = getOp(IRARRWOP,"[]");
-					s->ob[0] = ob1;
-					s->ob[1] = makeIntc(k);
-					s->ob[2] = r;
-					s->num = 3;
-					s->size = 4;
-					pushBackSentence(func->body,s);
-					k += 4;
-				}
+				s->op = getOp(IRASSIOP,"=");
+				s->ob[0] = ob1;
+				s->ob[1] = ob2;
+				s->size = ast->c[0].size;
+				s->num = 2;
+				pushBackSentence(func->body,s);
 				return ob1;
 			}else{
 				//never
@@ -713,6 +678,7 @@ static struct Object *makeExpr(struct AstNode *ast,struct Function *func){
 		}else if (strcmp(ast->data,"|") == 0){
 			s->op = getOp(IRBINAOP,"|");
 			s->ob[0] = getRegister();
+			s->ob[0]->data = -1;
 			s->ob[1] = ob1;
 			s->ob[2] = ob2;
 			s->num = 3;
@@ -721,6 +687,7 @@ static struct Object *makeExpr(struct AstNode *ast,struct Function *func){
 		}else if (strcmp(ast->data,"^") == 0){
 			s->op = getOp(IRBINAOP,"^");
 			s->ob[0] = getRegister();
+			s->ob[0]->data = -1;
 			s->ob[1] = ob1;
 			s->ob[2] = ob2;
 			s->num = 3;
@@ -729,6 +696,7 @@ static struct Object *makeExpr(struct AstNode *ast,struct Function *func){
 		}else if (strcmp(ast->data,"&") == 0){
 			s->op = getOp(IRBINAOP,"&");
 			s->ob[0] = getRegister();
+			s->ob[0]->data = -1;
 			s->ob[1] = ob1;
 			s->ob[2] = ob2;
 			s->num = 3;
@@ -737,6 +705,7 @@ static struct Object *makeExpr(struct AstNode *ast,struct Function *func){
 		}else if (strcmp(ast->data,"<") == 0){
 			s->op = getOp(IRBINAOP,"<");
 			s->ob[0] = getRegister();
+			s->ob[0]->data = -1;
 			s->ob[1] = ob1;
 			s->ob[2] = ob2;
 			s->num = 3;
@@ -745,6 +714,7 @@ static struct Object *makeExpr(struct AstNode *ast,struct Function *func){
 		}else if (strcmp(ast->data,">") == 0){
 			s->op = getOp(IRBINAOP,">");
 			s->ob[0] = getRegister();
+			s->ob[0]->data = -1;
 			s->ob[1] = ob1;
 			s->ob[2] = ob2;
 			s->num = 3;
@@ -753,30 +723,33 @@ static struct Object *makeExpr(struct AstNode *ast,struct Function *func){
 		}else if (strcmp(ast->data,"+") == 0){
 			s->op = getOp(IRBINAOP,"+");
 			s->ob[0] = getRegister();
+			s->ob[0]->data = -1;
 			s->ob[1] = ob1;
 			s->ob[2] = ob2;
 			if (ast->c[0].retType->type == ARRATYPE || ast->c[0].retType->type == PTERTYPE){
 				struct Sentence *tmp = getSentence();
 				tmp->op = getOp(IRBINAOP,"*");
 				tmp->ob[0] = getRegister();
+				tmp->ob[0]->data = -1;
 				tmp->ob[1] = ob2;
 				tmp->ob[2] = makeIntc(ast->retType->c[0].size);
 				tmp->num = 3;
 				pushBackSentence(func->body,tmp);
 				s->ob[2] = tmp->ob[0];
-				s->ob[0]->pd = 1;
+				s->ob[0]->pd = 2;
 				s->ob[0]->size = ast->size;
 			}else if (ast->c[1].retType->type == ARRATYPE || ast->c[1].retType->type == PTERTYPE){
 				struct Sentence *tmp = getSentence();
 				tmp->op = getOp(IRBINAOP,"*");
 				tmp->ob[0] = getRegister();
+				tmp->ob[0]->data = -1;
 				tmp->ob[1] = ob1;
 				tmp->ob[2] = makeIntc(ast->retType->c[0].size);
 				tmp->num = 3;
 				pushBackSentence(func->body,tmp);
 				s->ob[1] = ob2;
 				s->ob[2] = tmp->ob[0];
-				s->ob[0]->pd = 1;
+				s->ob[0]->pd = 2;
 				s->ob[0]->size = ast->size;
 			}
 			s->num = 3;
@@ -785,6 +758,7 @@ static struct Object *makeExpr(struct AstNode *ast,struct Function *func){
 		}else if (strcmp(ast->data,"-") == 0){
 			s->op = getOp(IRBINAOP,"-");
 			s->ob[0] = getRegister();
+			s->ob[0]->data = -1;
 			s->ob[1] = ob1;
 			s->ob[2] = ob2;
 			if (ast->c[0].retType->type == ARRATYPE || ast->c[0].retType->type == PTERTYPE){
@@ -792,6 +766,7 @@ static struct Object *makeExpr(struct AstNode *ast,struct Function *func){
 					s->num = 3;
 					pushBackSentence(func->body,s);
 					ob1 = getRegister();
+					ob1->data = -1;
 					ob2 = s->ob[0];
 					s = getSentence();
 					s->op = getOp(IRBINAOP,"/");
@@ -805,12 +780,13 @@ static struct Object *makeExpr(struct AstNode *ast,struct Function *func){
 					struct Sentence *tmp = getSentence();
 					tmp->op = getOp(IRBINAOP,"*");
 					tmp->ob[0] = getRegister();
+					tmp->ob[0]->data = -1;
 					tmp->ob[1] = ob2;
 					tmp->ob[2] = makeIntc(ast->retType->c[0].size);
 					tmp->num = 3;
 					pushBackSentence(func->body,s);
 					s->ob[2] = tmp->ob[0];
-					s->ob[0]->pd = 1;
+					s->ob[0]->pd = 2;
 					s->ob[0]->size = ast->size;
 					s->num = 3;
 					pushBackSentence(func->body,s);
@@ -823,6 +799,7 @@ static struct Object *makeExpr(struct AstNode *ast,struct Function *func){
 		}else if (strcmp(ast->data,"*") == 0){
 			s->op = getOp(IRBINAOP,"*");
 			s->ob[0] = getRegister();
+			s->ob[0]->data = -1;
 			s->ob[1] = ob1;
 			s->ob[2] = ob2;
 			s->num = 3;
@@ -831,6 +808,7 @@ static struct Object *makeExpr(struct AstNode *ast,struct Function *func){
 		}else if (strcmp(ast->data,"/") == 0){
 			s->op = getOp(IRBINAOP,"/");
 			s->ob[0] = getRegister();
+			s->ob[0]->data = -1;
 			s->ob[1] = ob1;
 			s->ob[2] = ob2;
 			s->num = 3;
@@ -839,6 +817,7 @@ static struct Object *makeExpr(struct AstNode *ast,struct Function *func){
 		}else if (strcmp(ast->data,"%") == 0){
 			s->op = getOp(IRBINAOP,"%");
 			s->ob[0] = getRegister();
+			s->ob[0]->data = -1;
 			s->ob[1] = ob1;
 			s->ob[2] = ob2;
 			s->num = 3;
@@ -847,6 +826,7 @@ static struct Object *makeExpr(struct AstNode *ast,struct Function *func){
 		}else if (strcmp(ast->data,"==") == 0){
 			s->op = getOp(IRBINAOP,"==");
 			s->ob[0] = getRegister();
+			s->ob[0]->data = -1;
 			s->ob[1] = ob1;
 			s->ob[2] = ob2;
 			s->num = 3;
@@ -855,6 +835,7 @@ static struct Object *makeExpr(struct AstNode *ast,struct Function *func){
 		}else if (strcmp(ast->data,"!=") == 0){
 			s->op = getOp(IRBINAOP,"!=");
 			s->ob[0] = getRegister();
+			s->ob[0]->data = -1;
 			s->ob[1] = ob1;
 			s->ob[2] = ob2;
 			s->num = 3;
@@ -863,6 +844,7 @@ static struct Object *makeExpr(struct AstNode *ast,struct Function *func){
 		}else if (strcmp(ast->data,"<=") == 0){
 			s->op = getOp(IRBINAOP,"<=");
 			s->ob[0] = getRegister();
+			s->ob[0]->data = -1;
 			s->ob[1] = ob1;
 			s->ob[2] = ob2;
 			s->num = 3;
@@ -871,6 +853,7 @@ static struct Object *makeExpr(struct AstNode *ast,struct Function *func){
 		}else if (strcmp(ast->data,">=") == 0){
 			s->op = getOp(IRBINAOP,">=");
 			s->ob[0] = getRegister();
+			s->ob[0]->data = -1;
 			s->ob[1] = ob1;
 			s->ob[2] = ob2;
 			s->num = 3;
@@ -879,6 +862,7 @@ static struct Object *makeExpr(struct AstNode *ast,struct Function *func){
 		}else if (strcmp(ast->data,"<<") == 0){
 			s->op = getOp(IRBINAOP,"<<");
 			s->ob[0] = getRegister();
+			s->ob[0]->data = -1;
 			s->ob[1] = ob1;
 			s->ob[2] = ob2;
 			s->num = 3;
@@ -887,6 +871,7 @@ static struct Object *makeExpr(struct AstNode *ast,struct Function *func){
 		}else if (strcmp(ast->data,">>") == 0){
 			s->op = getOp(IRBINAOP,">>");
 			s->ob[0] = getRegister();
+			s->ob[0]->data = -1;
 			s->ob[1] = ob1;
 			s->ob[2] = ob2;
 			s->num = 3;
@@ -1004,17 +989,21 @@ static struct Object *makeExpr(struct AstNode *ast,struct Function *func){
 		if (strcmp(ast->data,"&") == 0){
 			s->op = getOp(IRUNAROP,"&");
 			ob = getRegister();
-			ob->pd = 1;
+			ob->pd = 2;
+			ob->size = ob1->size;
+			ob->data = -1;
 			s->ob[0] = ob;
 			s->ob[1] = ob1;
 			s->num = 2;
 			pushBackSentence(func->body,s);
 			return ob;
 		}else if (strcmp(ast->data,"*") == 0){
-			s->op = getOp(IRPTRROP,"*");
+			s->op = getOp(IRUNAROP,"*");
 			ob = getRegister();
-			ob->pd = 2;
-			if (ast->retType->type == ARRATYPE || ast->retType->type == PTERTYPE) ob->pd = 1;
+			ob->pd = 1;
+			ob->size = ast->size;
+			ob->data = -1;
+//			if (ast->retType->type == ARRATYPE || ast->retType->type == PTERTYPE) ob->pd = 1;
 			ob->size = ast->size;
 			s->ob[0] = ob;
 			s->ob[1] = ob1;
@@ -1024,6 +1013,7 @@ static struct Object *makeExpr(struct AstNode *ast,struct Function *func){
 		}else if (strcmp(ast->data,"+") == 0){
 			s->op = getOp(IRUNAROP,"+");
 			s->ob[0] = getRegister();
+			s->ob[0]->data = -1;
 			s->ob[1] = ob1;
 			s->num = 2;
 			pushBackSentence(func->body,s);
@@ -1031,6 +1021,7 @@ static struct Object *makeExpr(struct AstNode *ast,struct Function *func){
 		}else if (strcmp(ast->data,"-") == 0){
 			s->op = getOp(IRUNAROP,"-");
 			s->ob[0] = getRegister();
+			s->ob[0]->data = -1;
 			s->ob[1] = ob1;
 			s->num = 2;
 			pushBackSentence(func->body,s);
@@ -1038,6 +1029,7 @@ static struct Object *makeExpr(struct AstNode *ast,struct Function *func){
 		}else if (strcmp(ast->data,"~") == 0){
 			s->op = getOp(IRUNAROP,"~");
 			s->ob[0] = getRegister();
+			s->ob[0]->data = -1;
 			s->ob[1] = ob1;
 			s->num = 2;
 			pushBackSentence(func->body,s);
@@ -1045,12 +1037,13 @@ static struct Object *makeExpr(struct AstNode *ast,struct Function *func){
 		}else if (strcmp(ast->data,"!") == 0){
 			s->op = getOp(IRUNAROP,"!");
 			s->ob[0] = getRegister();
+			s->ob[0]->data = -1;
 			s->ob[1] = ob1;
 			s->num = 2;
 			pushBackSentence(func->body,s);
 			return s->ob[0];
 		}else if (strcmp(ast->data,"++") == 0){
-			s->op = getOp(IRUNAROP,"+");
+			s->op = getOp(IRBINAOP,"+");
 			s->ob[0] = ob1;
 			s->ob[1] = ob1;
 			if (ast->retType->type == PTERTYPE)
@@ -1061,7 +1054,7 @@ static struct Object *makeExpr(struct AstNode *ast,struct Function *func){
 			pushBackSentence(func->body,s);
 			return s->ob[0];
 		}else if (strcmp(ast->data,"--") == 0){
-			s->op = getOp(IRUNAROP,"-");
+			s->op = getOp(IRBINAOP,"-");
 			s->ob[0] = ob1;
 			s->ob[1] = ob1;
 			if (ast->retType->type == PTERTYPE)
@@ -1079,11 +1072,13 @@ static struct Object *makeExpr(struct AstNode *ast,struct Function *func){
 		ob1 = makeExpr(&ast->c[0],func);
 		return makeIntc(ast->value);
 	}else if (ast->type == CASTEXPR){
+		//TODO
 		struct Sentence *s = getSentence();
 		ob = getRegister();
+		ob->data = -1;
 		ob->size = ast->size;
 		ob->pd = 2;
-		if (ast->retType->type == PTERTYPE) ob->pd = 1;
+//		if (ast->retType->type == PTERTYPE) ob->pd = 1;
 		s->op = getOp(IRASSIOP,"=");
 		s->ob[0] = ob;
 		ob1 = makeExpr(&ast->c[1],func);
@@ -1094,10 +1089,11 @@ static struct Object *makeExpr(struct AstNode *ast,struct Function *func){
 	}else if (ast->type == PTERACSS){
 		struct Sentence *s = getSentence();
 		ob = getRegister();
+		ob->data = -1;
 		ob->size = ast->size;
-		ob->pd = 2;
-		if (ast->retType->type == ARRATYPE || ast->retType->type == PTERTYPE) ob->pd = 1;
-		s->op = getOp(IRPTRROP,"[]");
+		ob->pd = 1;
+//		if (ast->retType->type == ARRATYPE || ast->retType->type == PTERTYPE) ob->pd = 1;
+		s->op = getOp(IRARRROP,"[]");
 		s->ob[0] = ob;
 		s->ob[1] = makeExpr(&ast->c[0],func);
 		s->ob[2] = makeIntc(ast->pos);
@@ -1107,9 +1103,10 @@ static struct Object *makeExpr(struct AstNode *ast,struct Function *func){
 	}else if (ast->type == RECOACSS){
 		struct Sentence *s = getSentence();
 		ob = getRegister();
+		ob->data = -1;
 		ob->size = ast->size;
-		ob->pd = 2;
-		if (ast->retType->type == ARRATYPE || ast->retType->type == PTERTYPE) ob->pd = 1;
+		ob->pd = 1;
+//		if (ast->retType->type == ARRATYPE || ast->retType->type == PTERTYPE) ob->pd = 1;
 		s->op = getOp(IRARRROP,"[]");
 		s->ob[0] = ob;
 		s->ob[1] = makeExpr(&ast->c[0],func);
@@ -1122,6 +1119,7 @@ static struct Object *makeExpr(struct AstNode *ast,struct Function *func){
 		ob1 = makeExpr(&ast->c[0],func);
 		ob2 = ob1;
 		ob3 = getRegister();
+		ob3->data = -1;
 		ob3->pd = ob1->pd;
 		ob3->size = ob1->size;
 		s = getSentence();
@@ -1146,6 +1144,7 @@ static struct Object *makeExpr(struct AstNode *ast,struct Function *func){
 		ob1 = makeExpr(&ast->c[0],func);
 		ob2 = ob1;
 		ob3 = getRegister();
+		ob3->data = -1;
 		ob3->pd = ob1->pd;
 		ob3->size = ob1->size;
 		s = getSentence();
@@ -1168,6 +1167,8 @@ static struct Object *makeExpr(struct AstNode *ast,struct Function *func){
 	}else if (ast->type == ARRAACSS){
 		struct Sentence *s = getSentence();
 		ob = getRegister();
+		ob->data = -1;
+		ob->pd = 2;
 		s->op = getOp(IRBINAOP,"*");
 		s->ob[0] = ob;
 		s->ob[1] = makeExpr(&ast->c[1],func);
@@ -1175,32 +1176,53 @@ static struct Object *makeExpr(struct AstNode *ast,struct Function *func){
 		s->num = 3;
 		pushBackSentence(func->body,s);
 		s = getSentence();
-		s->op = getOp(IRPTRROP,"[]");
+		s->op = getOp(IRARRROP,"[]");
 		ob1 = getRegister();
+		ob1->data = -1;
 		ob1->size = ast->size;
-		ob1->pd = 2;
-		if (ast->retType->type == ARRATYPE || ast->retType->type == PTERTYPE) ob1->pd = 1;
+		ob1->pd = 1;
+//		if (ast->retType->type == ARRATYPE || ast->retType->type == PTERTYPE) ob1->pd = 1;
 		s->ob[0] = ob1;
 		s->ob[1] = makeExpr(&ast->c[0],func);
 		s->ob[2] = ob;
 		s->num = 3;
 		pushBackSentence(func->body,s);
+		return ob1;
+//TODO
 	}else if (ast->type == FUNCCALL){
 		struct Sentence *s;
 		struct AstNode *tmp = &ast->c[1];
-		struct Object **f = malloc(sizeof(struct Object *) * tmp->num);
-		int i;
-		for (i = 0;i < tmp->num;++i){
-			f[i] = makeExpr(&tmp->c[i],func);
+		struct Object **f;
+		int i, cur = 0,num;
+		if (tmp->type != EMPTEXPR){
+			f = malloc(sizeof(struct Object *) * tmp->num);
+			num = tmp->num;
+		}else{
+			f = NULL;
+			num = 0;
 		}
-		for (i = 0;i < tmp->num;++i){
+		for (i = 0;i < num;++i){
+			f[i] = makeExpr(&tmp->c[i],func);
+			if (tmp->c[i].retType->type == ARRATYPE) f[i]->size = 4;
+		}
+		if (ast->retType->type != VOIDTYPE){
+			s = getSentence();
+			s->op = getOp(IRRTSZOP,"");
+			s->ob[0] = makeIntc(ast->retType->size);
+			s->num = 1;
+			pushBackSentence(func->body,s);
+		}
+		for (i = 0;i < num;++i){
 			s = getSentence();
 			s->op = getOp(IRPARAOP,"param");
 			s->ob[0] = f[i];
 			s->num = 1;
 			pushBackSentence(func->body,s);
+			/*if (f[i]->pd == 1) cur += 4;else */cur += f[i]->size;
+			if (cur & 3) cur = ((cur >> 2) + 1) << 2;
+			s->size = f[i]->size;
 		}
-		free(f);
+		if (f != NULL) free(f);
 		if (ast->retType->type == VOIDTYPE){
 			int i,number;
 			s = getSentence();
@@ -1213,13 +1235,15 @@ static struct Object *makeExpr(struct AstNode *ast,struct Function *func){
 			s->ob[1] = makeIntc(tmp->num);
 			s->num = 2;
 			pushBackSentence(func->body,s);
+			if (func->mainSpace < cur) func->mainSpace = cur;
 			return NULL;
 		}else{
 			int i,number;
 			ob = getRegister();
+			ob->data = -1;
 			ob->size = ast->size;
-			ob->pd = 2;
-			if (ast->retType->type == PTERTYPE) ob->pd = 1;
+			ob->pd = 1;
+//			if (ast->retType->type == PTERTYPE) ob->pd = 1;
 			s = getSentence();
 			s->op = getOp(IRCALLOP,"call");
 			for (i = 0;i < funcList->num;++i) if (strcmp(ast->c[0].data,funcList->e[i]->name) == 0){
@@ -1231,6 +1255,9 @@ static struct Object *makeExpr(struct AstNode *ast,struct Function *func){
 			s->ob[2] = makeIntc(tmp->num);
 			s->num = 3;
 			pushBackSentence(func->body,s);
+			if (funcList->e[number]->para != NULL) cur += funcList->e[number]->para->e[0]->size;else cur += 4;
+			if (cur & 3) cur = ((cur >> 2) + 1) << 2;
+			if (func->mainSpace < cur) func->mainSpace = cur;
 			return s->ob[0];
 		}
 	}else if (ast->type == IDEN){
@@ -1241,7 +1268,10 @@ static struct Object *makeExpr(struct AstNode *ast,struct Function *func){
 		l = func->vari;
 		for (i = 0;i < l->num;++i) if (strcmp(ast->data,l->e[i]->name) == 0) return registers->e[l->link[i]];
 		l = funcList->e[0]->vari;
-		for (i = 0;i < l->num;++i) if (strcmp(ast->data,l->e[i]->name) == 0) return registers->e[l->link[i]];
+		for (i = 0;i < l->num;++i) if (strcmp(ast->data,l->e[i]->name) == 0){
+//			registers->e[l->link[i]]->data = -1;
+			return registers->e[l->link[i]];
+		}
 	}else if (ast->type == INTECONS){
 		return makeIntc(ast->value);
 	}else if (ast->type == CHARCONS){
@@ -1267,7 +1297,7 @@ static void readInput(char *s){
 	s[++t] = 0;
 }
 
-int main(void){
+void ir(void){
 	char *s = (char *)malloc(1000010);
 //	int i;
 	
@@ -1279,12 +1309,11 @@ int main(void){
 	registers = getRegisterList();
 	irMain(ast);
 	
-	freeFunctionList(funcList);
-	freeRegisterList(registers);
+//	freeFunctionList(funcList);
+//	freeRegisterList(registers);
 	
 	astDel(ast);
 	free(ast);
 	free(list);
 	free(s);
-	return 0;
 }
