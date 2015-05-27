@@ -103,7 +103,7 @@ static char *toString(int t){
 	return s;
 }
 static struct RegisterList *getRegisterList(void){
-	struct RegisterList *t = malloc(sizeof(struct Object));
+	struct RegisterList *t = malloc(sizeof(struct RegisterList));
 	t->e = malloc(sizeof(struct Object *) * 2);
 	t->cap = 2;
 	return t;
@@ -1307,7 +1307,7 @@ static struct Object *makeExpr(struct AstNode *ast,struct Function *func){
 		int i;
 		struct ObjectList *l;
 		l = func->para;
-		for (i = 0;i < l->num;++i) if (strcmp(ast->data,l->e[i]->name) == 0){
+		for (i = 0;i < l->num;++i) if (l->e[i] != NULL && strcmp(ast->data,l->e[i]->name) == 0){
 			if (ast->retType->type == ARRATYPE){
 				struct Object *ob = getRegister(),*tmp = registers->e[l->link[i]];
 				struct Sentence *s = getSentence();

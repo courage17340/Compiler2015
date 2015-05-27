@@ -556,7 +556,8 @@ static void printPrintf(){
 }
 static void printMalloc(){
 	printf("malloc:\n");
-	printf("\tlw $v0, 4($sp)\n");
+	printf("\tli $v0, 9\n");
+	printf("\tlw $a0, 4($sp)\n");
 	printf("\tsyscall\n");
 	printf("\tsw $v0, 0($sp)\n");
 	printf("\tj $ra\n");
