@@ -6,6 +6,6 @@ data/
 semantic
 pretty
 astPrint
-test.c
 ir
+test.*
 

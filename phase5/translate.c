@@ -35,7 +35,7 @@ static void printSentence(struct Sentence *s,int *cur,struct Function *func){
 	int i;
 	if (s->op->type == IRUNAROP){
 		if (strcmp(s->op->name,"&") == 0){
-			printf("\tlw $t0, ");
+			printf("\tla $t0, ");
 			printObject(s->ob[1]);
 			printf("\n");
 		}else if (strcmp(s->op->name,"*") == 0){
@@ -48,6 +48,7 @@ static void printSentence(struct Sentence *s,int *cur,struct Function *func){
 				printObject(s->ob[1]);
 				printf("\n");
 			}
+			printf("\tlw $t0, 0($t0)\n");
 		}else{
 			if (s->ob[1]->type == IRINTC){
 				printf("\tli $t0, %d\n",s->ob[1]->data);
@@ -156,6 +157,38 @@ static void printSentence(struct Sentence *s,int *cur,struct Function *func){
 		printf("\tsw $t2, ");
 		printObject(s->ob[0]);
 		printf("\n");
+	}else if (s->op->type == IRARASOP){
+		if (s->ob[0]->size == 1){
+			if (s->ob[0]->pd == 1){
+				printf("\tlw $t0, ");
+				printObject(s->ob[0]);
+				printf("\n");
+			}else{
+				printf("\tla $t0, ");
+				printObject(s->ob[0]);
+				printf("\n");
+			}
+			printf("\tla $t1, ");
+			printObject(s->ob[1]);
+			printf("\n");
+			printf("\tsb $t1, 0($t0)\n");
+		}else if (s->ob[0]->size == 4){
+			if (s->ob[0]->pd == 1){
+				printf("\tlw $t0, ");
+				printObject(s->ob[0]);
+				printf("\n");
+			}else{
+				printf("\tla $t0, ");
+				printObject(s->ob[0]);
+				printf("\n");
+			}
+			printf("\tla $t1, ");
+			printObject(s->ob[1]);
+			printf("\n");
+			printf("\tsw $t1, 0($t0)\n");
+		}else{
+			//never
+		}
 	}else if (s->op->type == IRASSIOP){
 		if (s->ob[0]->size == 1){
 			if (s->ob[0]->pd == 1){
@@ -178,7 +211,7 @@ static void printSentence(struct Sentence *s,int *cur,struct Function *func){
 				printObject(s->ob[1]);
 				printf("\n");
 				printf("\tsb $t1, 0($t0)\n");
-			}else{
+			}else if (s->ob[1]->pd == 1){
 				printf("\tlw $t1, ");
 				printObject(s->ob[1]);
 				printf("\n");
@@ -186,6 +219,11 @@ static void printSentence(struct Sentence *s,int *cur,struct Function *func){
 					printf("\tlb $t1, 0($t1)\n");
 				else
 					printf("\tlw $t1, 0($t1)\n");
+				printf("\tsb $t1, 0($t0)\n");
+			}else{
+				printf("la $t1, ");
+				printObject(s->ob[1]);
+				printf("\n");
 				printf("\tsb $t1, 0($t0)\n");
 			}
 		}else if (s->ob[0]->size == 4){
@@ -209,7 +247,7 @@ static void printSentence(struct Sentence *s,int *cur,struct Function *func){
 				printObject(s->ob[1]);
 				printf("\n");
 				printf("\tsw $t1, 0($t0)\n");
-			}else{
+			}else if (s->ob[1]->pd == 1){
 				printf("\tlw $t1, ");
 				printObject(s->ob[1]);
 				printf("\n");
@@ -217,6 +255,11 @@ static void printSentence(struct Sentence *s,int *cur,struct Function *func){
 					printf("\tlb $t1, 0($t1)\n");
 				else
 					printf("\tlw $t1, 0($t1)\n");
+				printf("\tsw $t1, 0($t0)\n");
+			}else{
+				printf("\tla $t1, ");
+				printObject(s->ob[1]);
+				printf("\n");
 				printf("\tsw $t1, 0($t0)\n");
 			}
 		}else{
@@ -250,11 +293,13 @@ static void printSentence(struct Sentence *s,int *cur,struct Function *func){
 				printf("\n");
 				printf("\tlb $t0, 0($t0)\n");
 				printf("\tsb $t0, %d($sp)\n",*cur);
-			}else{
+			}else if (s->ob[0]->pd == 2){
 				printf("\tlb $t0, ");
 				printObject(s->ob[0]);
 				printf("\n");
 				printf("\tsb $t0, %d($sp)\n",*cur);
+			}else{
+			
 			}
 			*cur += 4;
 		}else if (s->size == 4){
@@ -369,26 +414,31 @@ static void printSentence(struct Sentence *s,int *cur,struct Function *func){
 	}else if (s->op->type == IRARRWOP){
 		//never
 	}else if (s->op->type == IRPTRROP){
-/*
-		printf("\tlw $t0, ");
-		printObject(s->ob[1]);
-		printf("\n");
-		if (s->ob[2]->type == IRINTC){
-			printf("\tli $t1, %d\n",s->ob[2]->data);
-		}else if (s->ob[2]->pd == 1){
-			printf("\tla $t1, ");
-			printObject(s->ob[2]);
+		if (s->ob[1]->pd == 2){
+			printf("\tlw $t0, ");
+			printObject(s->ob[1]);
 			printf("\n");
 		}else{
+			printf("\tlw $t0, ");
+			printObject(s->ob[1]);
+			printf("\n");
+			printf("\tlw $t0, 0($t0)\n");
+		}
+		
+		if (s->ob[2]->type == IRINTC){
+			printf("\tli $t1, %d\n",s->ob[2]->data);
+		}else if (s->ob[2]->pd == 2){
 			printf("\tlw $t1, ");
 			printObject(s->ob[2]);
 			printf("\n");
+		}else{
+			printf("nizaidouwo\n");
 		}
-		printf("\taddu $t1, $t1, $t0\n");
+		
+		printf("\taddu $t1, $t0, $t1\n");
 		printf("\tsw $t1, ");
 		printObject(s->ob[0]);
 		printf("\n");
-*/
 	}else if (s->op->type == IRPTRWOP){
 		//never
 	}else if (s->op->type == IRRTSZOP){
