@@ -35,9 +35,15 @@ static void printSentence(struct Sentence *s,int *cur,struct Function *func){
 	int i;
 	if (s->op->type == IRUNAROP){
 		if (strcmp(s->op->name,"&") == 0){
-			printf("\tla $t0, ");
-			printObject(s->ob[1]);
-			printf("\n");
+			if (s->ob[1]->pd == 2){
+				printf("\tla $t0, ");
+				printObject(s->ob[1]);
+				printf("\n");
+			}else{
+				printf("\tlw $t0, ");
+				printObject(s->ob[1]);
+				printf("\n");
+			}
 		}else if (strcmp(s->op->name,"*") == 0){
 			if (s->ob[1]->pd == 1){
 				printf("\tlw $t0, ");
