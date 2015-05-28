@@ -334,7 +334,7 @@ static void printSentence(struct Sentence *s,int *cur,struct Function *func){
 		}
 	}else if (s->op->type == IRCALLOP){
 		*cur = 0;
-		printf("\tjal %s\n",funcList->e[s->ob[s->num - 2]->data]->name);
+		printf("\tjal _%s\n",funcList->e[s->ob[s->num - 2]->data]->name);
 		if (s->num > 2){
 			printf("\tla $t0, ");
 			printObject(s->ob[0]);
@@ -530,7 +530,10 @@ static void printSentence(struct Sentence *s,int *cur,struct Function *func){
 static void printFunc(struct Function *func){
 	int i,cur = 0;
 	struct SentenceList *l = func->body;
-	printf("%s:\n",func->name);
+	if (strcmp(func->name,"main") == 0)
+		printf("%s:\n",func->name);
+	else
+		printf("_%s:\n",func->name);
 	printf("\taddu $sp, $sp, -%d\n",func->mainSpace);
 	printf("\tsw $ra, %d($sp)\n",func->retnStat);
 	for (i = 0;i < l->num;++i){
@@ -548,14 +551,14 @@ static void printFunc(struct Function *func){
 }
 static void printPrintf(){
 //print int only currently
-	printf("printf:\n");
+	printf("_printf:\n");
 	printf("\tli $v0, 1\n");
 	printf("\tlw $a0, 4($sp)\n");
 	printf("\tsyscall\n");
 	printf("\tj $ra\n");
 }
 static void printMalloc(){
-	printf("malloc:\n");
+	printf("_malloc:\n");
 	printf("\tli $v0, 9\n");
 	printf("\tlw $a0, 4($sp)\n");
 	printf("\tsyscall\n");
@@ -563,7 +566,7 @@ static void printMalloc(){
 	printf("\tj $ra\n");
 }
 static void printGetchar(){
-	printf("getchar:\n");
+	printf("_getchar:\n");
 	printf("\tli $v0, 12\n");
 	printf("\tsyscall\n");
 	printf("\tsw $v0, 0($sp)\n");

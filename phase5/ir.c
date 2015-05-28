@@ -1067,8 +1067,11 @@ static struct Object *makeExpr(struct AstNode *ast,struct Function *func){
 			pushBackSentence(func->body,s);
 			return s->ob[0];
 		}else if (strcmp(ast->data,"++") == 0){
+			ob = getRegister();
+			ob->size = 4;
+			ob->data = -1;
 			s->op = getOp(IRBINAOP,"+");
-			s->ob[0] = ob1;
+			s->ob[0] = ob;
 			s->ob[1] = ob1;
 			if (ast->retType->type == PTERTYPE)
 				s->ob[2] = makeIntc(ast->retType->c[0].size);
@@ -1076,16 +1079,32 @@ static struct Object *makeExpr(struct AstNode *ast,struct Function *func){
 				s->ob[2] = makeIntc(1);
 			s->num = 3;
 			pushBackSentence(func->body,s);
-			return s->ob[0];
-		}else if (strcmp(ast->data,"--") == 0){
-			s->op = getOp(IRBINAOP,"-");
+			s = getSentence();
+			s->op = getOp(IRASSIOP,"=");
 			s->ob[0] = ob1;
+			s->ob[1] = ob;
+			s->num = 2;
+			pushBackSentence(func->body,s);
+			return s->ob[0];
+
+		}else if (strcmp(ast->data,"--") == 0){
+			ob = getRegister();
+			ob->size = 4;
+			ob->data = -1;
+			s->op = getOp(IRBINAOP,"-");
+			s->ob[0] = ob;
 			s->ob[1] = ob1;
 			if (ast->retType->type == PTERTYPE)
 				s->ob[2] = makeIntc(ast->retType->c[0].size);
 			else
 				s->ob[2] = makeIntc(1);
 			s->num = 3;
+			pushBackSentence(func->body,s);
+			s = getSentence();
+			s->op = getOp(IRASSIOP,"=");
+			s->ob[0] = ob1;
+			s->ob[1] = ob;
+			s->num = 2;
 			pushBackSentence(func->body,s);
 			return s->ob[0];
 		}else{
@@ -1153,53 +1172,63 @@ static struct Object *makeExpr(struct AstNode *ast,struct Function *func){
 	}else if (ast->type == SELFINCR){
 		struct Sentence *s;
 		ob1 = makeExpr(&ast->c[0],func);
-		ob2 = ob1;
+		ob2 = getRegister();
+		ob2->data = -1;
 		ob3 = getRegister();
 		ob3->data = -1;
-		ob3->pd = ob1->pd;
-		ob3->size = ob1->size;
 		s = getSentence();
 		s->op = getOp(IRASSIOP,"=");
-		s->ob[0] = ob3;
+		s->ob[0] = ob2;
 		s->ob[1] = ob1;
 		s->num = 2;
 		pushBackSentence(func->body,s);
 		s = getSentence();
 		s->op = getOp(IRBINAOP,"+");
-		s->ob[0] = ob1;
-		s->ob[1] = ob2;
+		s->ob[0] = ob3;
+		s->ob[1] = ob1;
 		if (ast->retType->type == PTERTYPE)
 			s->ob[2] = makeIntc(ast->retType->c[0].size);
 		else
 			s->ob[2] = makeIntc(1);
 		s->num = 3;
 		pushBackSentence(func->body,s);
-		return ob3;
+		s = getSentence();
+		s->op = getOp(IRASSIOP,"=");
+		s->ob[0] = ob1;
+		s->ob[1] = ob3;
+		s->num = 2;
+		pushBackSentence(func->body,s);
+		return ob2;
 	}else if (ast->type == SELFDECR){
 		struct Sentence *s;
 		ob1 = makeExpr(&ast->c[0],func);
-		ob2 = ob1;
+		ob2 = getRegister();
+		ob2->data = -1;
 		ob3 = getRegister();
 		ob3->data = -1;
-		ob3->pd = ob1->pd;
-		ob3->size = ob1->size;
 		s = getSentence();
 		s->op = getOp(IRASSIOP,"=");
-		s->ob[0] = ob3;
+		s->ob[0] = ob2;
 		s->ob[1] = ob1;
 		s->num = 2;
 		pushBackSentence(func->body,s);
 		s = getSentence();
 		s->op = getOp(IRBINAOP,"-");
-		s->ob[0] = ob1;
-		s->ob[1] = ob2;
+		s->ob[0] = ob3;
+		s->ob[1] = ob1;
 		if (ast->retType->type == PTERTYPE)
 			s->ob[2] = makeIntc(ast->retType->c[0].size);
 		else
 			s->ob[2] = makeIntc(1);
 		s->num = 3;
 		pushBackSentence(func->body,s);
-		return ob3;
+		s = getSentence();
+		s->op = getOp(IRASSIOP,"=");
+		s->ob[0] = ob1;
+		s->ob[1] = ob3;
+		s->num = 2;
+		pushBackSentence(func->body,s);
+		return ob2;
 	}else if (ast->type == ARRAACSS){
 		struct Sentence *s = getSentence();
 		ob = getRegister();
