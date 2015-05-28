@@ -3,8 +3,8 @@
 enum OpType{
 	IRUNAROP,IRBINAOP,IRASSIOP,IRPARAOP,IRCALLOP,IRLABLOP,IRGOTOOP,IRITGTOP,IRIFGTOP,IRARRROP,IRARRWOP,IRPTRROP,IRPTRWOP,IRRTSZOP,IRRETNOP,
 //	unary    binary   =        param    call     label    goto     ifTgoto  ifFgoto  a=b[x],4 a[x]=b,4 t0=*a,4  *a=t0,4  ...      ret
-	IRLGASOP,IRARASOP
-//	...      =
+	IRLGASOP,IRARASOP,IRASSCOP
+//	...      =        =
 };
 enum ObjectType{
 	IRSTRC,IRINTC,IRNAME,IRTEMP
@@ -45,13 +45,22 @@ struct FunctionList{
 	struct Function **e;
 	int num,cap;
 };
-
+struct String{
+	int size;
+	char *s;
+};
+struct StringList{
+	struct String **e;
+	int num,cap;
+};
 //======global variables======
 int registerNum,labelNum;
 struct RegisterList *registers;
 struct FunctionList *funcList;
+struct StringList *string;
 //======functions======
 void freeFunctionList(struct FunctionList *);
 void freeRegisterList(struct RegisterList *);
+void freeStringList(struct StringList *);
 void ir(void);
 #endif

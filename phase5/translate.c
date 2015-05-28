@@ -9,12 +9,20 @@ static int make4(int x){
 	return t;
 }
 static void printGlobal(struct Function *func){
-	int i;
+	int i,j;
 	printf("\t.data\n");
 	for (i = 1;i <= registerNum;++i)
 		if (registers->e[i]->data == -1){
 			printf("%s:\t.space %d\n",registers->e[i]->name,make4(registers->e[i]->size));
 		}
+	for (i = 0;i < string->num;++i){
+		struct String *s = string->e[i];
+		int n;
+		n = strlen(s->s);
+		printf("__s%d:\n",i);
+		for (j = 0;j < n;++j) printf("\t.byte %d\n",s->s[j]);
+		for (j = n;j < s->size;++j) printf("\t.byte 0\n");
+	}
 	printf("\t.text\n");
 }
 static void printObject(struct Object *o){
@@ -529,6 +537,12 @@ static void printSentence(struct Sentence *s,int *cur,struct Function *func){
 			printf("\tsne $t1, $t1, 0\n");
 			printf("\tsw $t1, 0($t0)\n");
 		}
+	}else if (s->op->type == IRASSCOP){
+		printf("\tla $t0, ");
+		printObject(s->ob[0]);
+		printf("\n");
+		printf("\tla $t1, __s%d\n",s->ob[1]->data);
+		printf("\tsw $t1, 0($t0)\n");
 	}else{
 		//never
 	}
@@ -558,10 +572,74 @@ static void printFunc(struct Function *func){
 static void printPrintf(){
 //print int only currently
 	printf("_printf:\n");
-	printf("\tli $v0, 1\n");
-	printf("\tlw $a0, 4($sp)\n");
-	printf("\tsyscall\n");
+	printf("\tla $a1, 4($sp)\n");
+	printf("\tlw $a2, 4($sp)\n");
+	printf("\tj _printf_loop\n");
+	
+	printf("_printf_end:\n");
 	printf("\tj $ra\n");
+	
+	printf("_printf_loop:\n");
+	printf("\tlb $a0, 0($a2)\n");
+	printf("\tbeq $a0, 0, _printf_end\n");
+	printf("\taddu $a2, $a2, 1\n");
+	printf("\tbeq $a0, '%%', _printf_fmt\n");
+	printf("\tli $v0, 11\n");
+	printf("\tsyscall\n");
+	printf("\tj _printf_loop\n");
+	
+	printf("_printf_fmt:\n");
+	printf("\tlb $a0, 0($a2)\n");
+	printf("\taddu $a2, $a2, 1\n");
+	printf("\tbeq $a0, 'd', _printf_int\n");
+	printf("\tbeq $a0, 's', _printf_str\n");
+	printf("\tbeq $a0, 'c', _printf_char\n");
+	printf("\tbeq $a0, '0', _printf_width\n");
+	printf("\tbeq $a0, '.', _printf_width\n");
+	
+	printf("_printf_int:\n");
+	printf("\taddu $a1, $a1, 4\n");
+	printf("\tlw $a0, 0($a1)\n");
+	printf("\tli $v0, 1\n");
+	printf("\tsyscall\n");
+	printf("\tj _printf_loop\n");
+	
+	printf("_printf_str:\n");
+	printf("\taddu $a1, $a1, 4\n");
+	printf("\tlw $a0, 0($a1)\n");
+	printf("\tli $v0, 4\n");
+	printf("\tsyscall\n");
+	printf("\tj _printf_loop\n");
+	
+	printf("_printf_char:\n");
+	printf("\taddu $a1, $a1, 4\n");
+	printf("\tlb $a0, 0($a1)\n");
+	printf("\tli $v0, 11\n");
+	printf("\tsyscall\n");
+	printf("\tj _printf_loop\n");
+
+	printf("_printf_width:\n");
+	printf("\taddu $a1, $a1, 4\n");
+	printf("\taddu $a2, $a2, 2\n");
+	printf("\tlw $a3, 0($a1)\n");
+	printf("\tbgt $a3, 999, _printf_width_end\n");
+	printf("\tli $v0, 1\n");
+	printf("\tli $a0, 0\n");
+	printf("\tsyscall\n");
+	printf("\tbgt $a3, 99, _printf_width_end\n");
+	printf("\tli $v0, 1\n");
+	printf("\tli $a0, 0\n");
+	printf("\tsyscall\n");
+	printf("\tbgt $a3, 9, _printf_width_end\n");
+	printf("\tli $v0, 1\n");
+	printf("\tli $a0, 0\n");
+	printf("\tsyscall\n");
+	
+	printf("_printf_width_end:");
+	printf("\tlw $a0, 0($a1)\n");
+	printf("\tli $v0, 1\n");
+	printf("\tsyscall\n");
+	printf("\tj _printf_loop\n");
 }
 static void printMalloc(){
 	printf("_malloc:\n");
@@ -588,5 +666,6 @@ int main(void){
 	printGetchar();
 	freeFunctionList(funcList);
 	freeRegisterList(registers);
+	freeStringList(string);
 	return 0;
 }

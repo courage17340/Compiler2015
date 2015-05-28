@@ -164,7 +164,7 @@ static void pushBackObject(struct ObjectList *l,struct Object *o,int link){
 static void freeObjectList(struct ObjectList *t){
 	int i;
 	if (t == NULL) return;
-	for (i = 0;i < t->num;++i) freeObject(t->e[i]);
+	for (i = 0;i < t->num;++i) if (t->e[i] != NULL && t->e[i]->type != IRTEMP) freeObject(t->e[i]);
 	free(t->e);
 	free(t->link);
 	free(t);
@@ -287,7 +287,11 @@ static void makeItgt(struct AstNode *ast,struct Function *func,int label);
 static void makeIfgt(struct AstNode *ast,struct Function *func,int label);
 static struct Object *makeExpr(struct AstNode *ast,struct Function *func);
 static struct Object *makeIntc(int value);
-
+static struct String *getString(char *s);
+static void freeString(struct String *s);
+static struct StringList *getStringList(void);
+static void resizeStringList(struct StringList *l);
+static void pushBackString(struct StringList *l,struct String *s);
 //======main======
 static void irMain(struct AstNode *ast){
 	struct Function *f;
@@ -320,7 +324,7 @@ sp->
 static void irFunc(struct AstNode *ast){
 	struct Function *tmp = getFunction(ast->c[1].data);
 	struct AstNode *atmp;
-	int i,cur;
+	int i,cur,bk;
 	pushBackFunction(funcList,tmp);
 	tmp->para = getObjectList();
 	tmp->vari = getObjectList();
@@ -328,7 +332,9 @@ static void irFunc(struct AstNode *ast){
 	irVari(&ast->c[0],ast->c[1].data,tmp->para,tmp);
 	atmp = &ast->c[2];
 	for (i = 0;i < atmp->num;++i) irVari(&atmp->c[i].c[0],atmp->c[i].c[1].data,tmp->para,tmp);
+	bk = registerNum;
 	irCompStmt(&ast->c[3],tmp,0,0);
+	for (i = bk + 1;i <= registerNum;++i) pushBackObject(tmp->vari,registers->e[i],i);
 	cur = tmp->mainSpace;
 	if (cur & 3){
 		cur = ((cur >> 2) + 1) << 2;
@@ -1433,7 +1439,7 @@ static struct Object *makeExpr(struct AstNode *ast,struct Function *func){
 //			}
 		}
 		l = func->vari;
-		for (i = 0;i < l->num;++i) if (strcmp(ast->data,l->e[i]->name) == 0){
+		for (i = 0;i < l->num;++i) if (l->e[i] != NULL && strcmp(ast->data,l->e[i]->name) == 0){
 			if (ast->retType->type == ARRATYPE){
 				struct Object *ob = getRegister(),*tmp = registers->e[l->link[i]];
 				struct Sentence *s = getSentence();
@@ -1450,7 +1456,7 @@ static struct Object *makeExpr(struct AstNode *ast,struct Function *func){
 			}
 		}
 		l = funcList->e[0]->vari;
-		for (i = 0;i < l->num;++i) if (strcmp(ast->data,l->e[i]->name) == 0){
+		for (i = 0;i < l->num;++i) if (l->e[i] != NULL && strcmp(ast->data,l->e[i]->name) == 0){
 			if (ast->retType->type == ARRATYPE){
 				struct Object *ob = getRegister(),*tmp = registers->e[l->link[i]];
 				struct Sentence *s = getSentence();
@@ -1471,7 +1477,16 @@ static struct Object *makeExpr(struct AstNode *ast,struct Function *func){
 	}else if (ast->type == CHARCONS){
 		return makeIntc(ast->value);
 	}else if (ast->type == STRICONS){
-		return getObject(IRSTRC,0,4,0,ast->data);
+		struct String *st = getString(ast->data);
+		struct Object *o = getRegister();
+		struct Sentence *s = getSentence();
+		pushBackString(string,st);
+		s->op = getOp(IRASSCOP,"=");
+		s->ob[0] = o;
+		s->ob[1] = makeIntc(string->num - 1);
+		s->num = 2;
+		pushBackSentence(func->body,s);
+		return o;
 	}else{
 		//never
 	}
@@ -1479,6 +1494,52 @@ static struct Object *makeExpr(struct AstNode *ast,struct Function *func){
 }
 static struct Object *makeIntc(int value){
 	return getObject(IRINTC,0,4,value,"");
+}
+
+
+static int make4(int x){
+	if (x & 3) x = ((x >> 2) + 1) << 2;
+	return x;
+}
+static struct String *getString(char *s){
+	struct String *st = malloc(sizeof(struct String));
+	st->size = make4(strlen(s) + 1);
+	st->s = strdup(s);
+	return st;
+}
+static void freeString(struct String *s){
+	if (s == NULL) return;
+	free(s->s);
+	free(s);
+}
+static struct StringList *getStringList(void){
+	struct StringList *l = malloc(sizeof(struct StringList));
+	l->e = malloc(sizeof(struct String *));
+	l->num = 0;
+	l->cap = 1;
+	return l;
+}
+static void resizeStringList(struct StringList *l){
+	struct String **tmp;
+	int i;
+	if (l->num < l->cap) return;
+	l->cap <<= 1;
+	tmp = malloc(sizeof(struct String *) * l->cap);
+	for (i = 0;i < l->num;++i) tmp[i] = l->e[i];
+	free(l->e);
+	l->e = tmp;
+}
+static void pushBackString(struct StringList *l,struct String *s){
+	resizeStringList(l);
+	++l->num;
+	l->e[l->num - 1] = s;
+}
+void freeStringList(struct StringList *l){
+	int i;
+	if (l == NULL) return;
+	for (i = 0;i < l->num;++i) freeString(l->e[i]);
+	free(l->e);
+	free(l);
 }
 //======others======
 static void readInput(char *s){
@@ -1501,6 +1562,7 @@ void ir(void){
 	
 	registerNum = labelNum = 0;
 	registers = getRegisterList();
+	string = getStringList();
 	irMain(ast);
 	
 //	freeFunctionList(funcList);
