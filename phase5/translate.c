@@ -3,6 +3,7 @@
 #include <string.h>
 #include "translate.h"
 #include "ir.h"
+static int initArraBegin;
 static int make4(int x){
 	int t = x;
 	if (t & 3) t = ((t >> 2) + 1) << 2;
@@ -27,7 +28,7 @@ static void printGlobal(struct Function *func){
 }
 static void printObject(struct Object *o){
 	if (o->type == IRSTRC){
-		//TODO
+		//nop
 	}else if (o->type == IRINTC){
 		printf("%d",o->data);
 	}else if (o->type == IRTEMP){
@@ -543,6 +544,21 @@ static void printSentence(struct Sentence *s,int *cur,struct Function *func){
 		printf("\n");
 		printf("\tla $t1, __s%d\n",s->ob[1]->data);
 		printf("\tsw $t1, 0($t0)\n");
+	}else if (s->op->type == IRINAROP){
+		printf("\tlw $t0, ");
+		printObject(s->ob[0]);
+		printf("\n");
+		if (s->ob[2]->type == IRINTC)
+			printf("\tli $t1, %d\n",s->ob[2]->data);
+		else{
+			printf("\tlw $t1, ");
+			printObject(s->ob[2]);
+			printf("\n");
+		}
+		if (s->size == 1)
+			printf("\tsb $t1, %d($t0)\n",s->ob[1]->data);
+		else
+			printf("\tsw $t1, %d($t0)\n",s->ob[1]->data);
 	}else{
 		//never
 	}
@@ -556,6 +572,12 @@ static void printFunc(struct Function *func){
 		printf("_%s:\n",func->name);
 	printf("\taddu $sp, $sp, -%d\n",func->mainSpace);
 	printf("\tsw $ra, %d($sp)\n",func->retnStat);
+	
+	if (strcmp(func->name,"main") == 0){
+		struct SentenceList *l = funcList->e[0]->body;
+		for (i = 0;i < l->num;++i) printSentence(l->e[i],&cur,func);
+	}
+	
 	for (i = 0;i < l->num;++i){
 		printSentence(l->e[i],&cur,func);
 	}
@@ -658,6 +680,7 @@ static void printGetchar(){
 }
 int main(void){
 	int i;
+	initArraBegin = 0;
 	ir();
 	printGlobal(funcList->e[0]);
 	for (i = 4;i < funcList->num;++i) printFunc(funcList->e[i]);
