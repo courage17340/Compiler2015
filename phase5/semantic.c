@@ -962,6 +962,7 @@ static void astCheck(struct AstNode *ast,int isInLoop,void *retType){
 		ast->retType = &tmp->c[0];
 		if (tmp->c[0].type != ARRATYPE) ast->lValue = 1;
 		ast->size = tmp->c[0].size;
+		ast->renamingLabel = tmp->renamingLabel;
 	}else if (ast->type == INTECONS){
 		int t = 0,b,k,l;
 		char *s = ast->data;
@@ -1088,10 +1089,16 @@ static void astCheck(struct AstNode *ast,int isInLoop,void *retType){
 				--ast->num;
 				astCheck(&ast->c[2],isInLoop,retType);
 				checkInit(&ast->c[0],&ast->c[2]);
+				
+				ast->renamingLabel = t->renamingLabel;
+				ast->c[1].renamingLabel = t->renamingLabel;
+				
 				return;
 			}
 		}else{
 			addName(ast->c[1].data,(void *)ast,flag);
+			
+			ast->c[1].renamingLabel = ast->renamingLabel;
 		}
 		if (ast->num == 3){
 			astCheck(&ast->c[2],isInLoop,retType);

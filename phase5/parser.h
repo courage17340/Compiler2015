@@ -1,5 +1,5 @@
 #ifndef _PARSER_H_
-#define _PARSER_H
+#define _PARSER_H_
 struct node{
 	char *data;
 	struct node *c;
@@ -31,6 +31,7 @@ struct AstNode{
 	int lValue,constant,value,size,pos;
 	struct AstNode *retType;
 	struct AstNode *bind;
+	int renamingLabel;
 };
 void cstDel(struct node *);
 void doubleSpace(struct AstNode *);

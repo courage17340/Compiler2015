@@ -5,7 +5,7 @@
 
 static int hash(char *);
 static struct Symbol *makeSymbol(char *,struct Symbol *);
-static struct Hash *makeHash(char *,void *,struct Symbol *,struct Hash *,int);
+static struct Hash *makeHash(char *,struct AstNode *,struct Symbol *,struct Hash *,int);
 
 //======local variables======
 static struct Symbol *symTable[HASH_SIZE];
@@ -26,16 +26,20 @@ static struct Symbol *makeSymbol(char *s,struct Symbol *next){
 	struct Symbol *ret = malloc(sizeof *ret);
 	ret->name = s;
 	ret->next = next;
+	ret->count = 0;
 	return ret;
 }
 
-static struct Hash *makeHash(char *s,void *bind,struct Symbol *sym,struct Hash *next,int flag){
+static struct Hash *makeHash(char *s,struct AstNode *bind,struct Symbol *sym,struct Hash *next,int flag){
 	struct Hash *ret = malloc(sizeof *ret);
 	ret->name = s;
 	ret->bind = bind;
 	ret->sym = sym;
 	ret->next = next;
 	ret->flag = flag;
+	sym->count++;
+	ret->renamingLabel = sym->count;
+	if (bind != NULL) bind->renamingLabel = sym->count;
 	return ret;
 }
 
@@ -48,7 +52,7 @@ struct Symbol *getSymbol(char *s){
 	return symTable[i];
 }
 
-int pushHash(struct Hash **h,char *s,void *bind,int flag){
+int pushHash(struct Hash **h,char *s,struct AstNode *bind,int flag){
 	struct Symbol *sym = getSymbol(s);
 	int i = hash(s);
 	h[i] = makeHash(s,bind,sym,h[i],flag);
@@ -75,7 +79,7 @@ int hasHash(struct Hash **h,char *s,int flag){
 	int i = hash(s);
 	struct Hash *t;
 	for (t = h[i];t != NULL;t = t->next)
-		if (t->flag ==flag && t->sym == sym) return 1;
+		if (t->flag == flag && t->sym == sym) return 1;
 	return 0;
 }
 /*
@@ -113,4 +117,13 @@ void clearAll(void){
 			free(t);
 		}
 	}
+}
+
+int hashCount(struct Hash **h,char *s){
+	struct Symbol* sym = getSymbol(s);
+	int i = hash(s),ret = 0;
+	struct Hash *t;
+	for (t = h[i];t != NULL;t = t->next)
+		if (t->sym == sym) ++ret;
+	return ret;
 }

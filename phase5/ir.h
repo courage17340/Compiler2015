@@ -19,6 +19,7 @@ struct Object{
 };
 struct RegisterList{
 	struct Object **e;
+	int *label;
 	int cap;
 };
 struct ObjectList{

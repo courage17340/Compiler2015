@@ -68,7 +68,7 @@ static struct token *makeList(char *s){	//Remember to free the memory!!
 }
 
 struct node *parse(char *s){
-	int i,j,ptr;
+	int ptr;
 	list = makeList(s);
 /*
 	freopen("grammar.out","r",stdin);
