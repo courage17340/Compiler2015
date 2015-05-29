@@ -5,6 +5,7 @@
 #include "removeComments.h"
 #include "split.h"
 #include "tokens.h"
+#include "grammar.h"
 //======local function declarations======
 static struct token *makeList(char *);
 static void init(void);
@@ -21,9 +22,12 @@ static void tab(int);
 static char structName[1000000];
 static int nStructName,pStructName;
 static int error = 0;
+/*
 static int M[200][200],listSize,nonNum,terNum,ruleNum;
 static char terminals[200][40],nonterminals[200][40];
 static struct ruleType rules[300];
+*/
+static int listSize;
 static char AstFlags[50][30] = {
 	"Root","Decl","FunctionDecl","StructDecl","UnionDecl","VarDecl","Type","BasicType",
 	"IntType","CharType","VoidType","StructType","UnionType","PointerType",
@@ -66,6 +70,7 @@ static struct token *makeList(char *s){	//Remember to free the memory!!
 struct node *parse(char *s){
 	int i,j,ptr;
 	list = makeList(s);
+/*
 	freopen("grammar.out","r",stdin);
 //	freopen("AST.txt","w",stdout);
 	scanf("%d",&terNum);
@@ -79,6 +84,8 @@ struct node *parse(char *s){
 	}
 	for (i = 1;i <= nonNum;++i)
 		for (j = 1;j <= terNum;++j) scanf("%d",&M[i][j]);
+*/
+	get_grammar();
 	init();
 	ptr = 0;
 	struct node *CST = getNode();

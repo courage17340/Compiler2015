@@ -131,7 +131,7 @@ static void printSentence(struct Sentence *s,int *cur,struct Function *func){
 			if (s->ob[1]->size == 4)
 				printf("\tlw $t1, ");
 			else
-				printf("\tlb $t0, ");
+				printf("\tlb $t1, ");
 			printObject(s->ob[2]);
 			printf("\n");
 		}

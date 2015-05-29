@@ -7,9 +7,11 @@ struct node{
 };
 struct token *list;
 struct node *parse(char *);
+/*
 struct ruleType{
 	int non,num,items[15][2];
 };
+*/
 //for ast
 enum ASTType{
 	ROOT,DECL,FUNCDECL,STRUDECL,UNIODECL,VARIDECL,TYPE,BASITYPE,

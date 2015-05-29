@@ -1,5 +1,5 @@
 translate : translate.h translate.c parser.h parser.c hash.h hash.c semantic.h semantic.c removeComments.h removeComments.o \
-	split.h split.o tokens.h tokens.o ir.h ir.c
+	split.h split.o tokens.h tokens.o ir.h ir.c grammar.h
 	gcc -Wall -g translate.c ir.c semantic.c parser.c hash.c removeComments.o split.o tokens.o -o translate
 removeComments.o : removeComments.h removeComments.c
 	gcc -c removeComments.c
