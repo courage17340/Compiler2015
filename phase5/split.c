@@ -10,7 +10,7 @@ static int isLetter(char);
 static int isSingle(char);
 
 static int isWhite(char c){
-	return c == ' ' || c == '\t' || c == '\n';
+	return c == ' ' || c == '\t' || c == '\n' || c == '\r';
 }
 static int isDigit(char c){
 	return '0' <= c && c <= '9';

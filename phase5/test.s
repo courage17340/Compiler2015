@@ -6,42 +6,32 @@ __s0:
 	.byte 0
 	.text
 main:
-	addu $sp, $sp, -56
+	addu $sp, $sp, -36
 	sw $ra, 12($sp)
-	la $t0, 24($sp)
-	li $t1, 1
-	sw $t1, 0($t0)
-	la $t0, 28($sp)
-	li $t1, 2
-	sw $t1, 0($t0)
-	la $t0, 32($sp)
+	la $t0, 16($sp)
 	la $t1, __s0
 	sw $t1, 0($t0)
-	lw $t0, 24($sp)
-	lw $t1, 28($sp)
-	addu $t2, $t0, $t1
-	sw $t2, 36($sp)
-	la $t0, 40($sp)
-	lw $t1, 32($sp)
+	la $t0, 20($sp)
+	lw $t1, 16($sp)
 	sw $t1, 0($t0)
-	lw $t0, 40($sp)
+	lw $t0, 20($sp)
 	sw $t0, 4($sp)
-	la $t0, 44($sp)
-	lw $t1, 36($sp)
+	la $t0, 24($sp)
+	li $t1, 13
 	sw $t1, 0($t0)
-	lw $t0, 44($sp)
+	lw $t0, 24($sp)
 	sw $t0, 8($sp)
 	jal _printf
-	la $t0, 48($sp)
+	la $t0, 28($sp)
 	la $t1, 0($sp)
 	sw $t1, 0($t0)
-	la $t0, 52($sp)
-	lw $t1, 48($sp)
+	la $t0, 32($sp)
+	lw $t1, 28($sp)
 	lw $t1, 0($t1)
 	sw $t1, 0($t0)
 __end__main:
 	lw $ra, 12($sp)
-	addu $sp, $sp, 56
+	addu $sp, $sp, 36
 	li $v0, 10
 	syscall
 _printf:
