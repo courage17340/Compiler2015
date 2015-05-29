@@ -1507,10 +1507,7 @@ static struct Object *makeExpr(struct AstNode *ast,struct Function *func){
 		}else{
 			struct Object *ret;
 			int i,number;
-			ob = getRegister();
-			ob->data = -1;
-			ob->size = ast->size;
-			ob->pd = 1;
+			
 //			if (ast->retType->type == PTERTYPE) ob->pd = 1;
 			s = getSentence();
 			s->op = getOp(IRCALLOP,"call");
@@ -1518,14 +1515,28 @@ static struct Object *makeExpr(struct AstNode *ast,struct Function *func){
 				number = i;
 				break;
 			}
+			if (funcList->e[number]->para != NULL) cur += funcList->e[number]->para->e[0]->size;else cur += 4;
+			if (cur & 3) cur = ((cur >> 2) + 1) << 2;
+			if (func->mainSpace < cur) func->mainSpace = cur;
+			
+			if (strcmp(ast->c[0].data,"printf") == 0){
+				s->ob[0] = makeIntc(number);
+				s->ob[1] = makeIntc(tmp->num);
+				s->num = 2;
+				pushBackSentence(func->body,s);
+				return NULL;
+			}
+			
+			ob = getRegister();
+			ob->data = -1;
+			ob->size = ast->size;
+			ob->pd = 1;
+			
 			s->ob[0] = ob;
 			s->ob[1] = makeIntc(number);
 			s->ob[2] = makeIntc(tmp->num);
 			s->num = 3;
 			pushBackSentence(func->body,s);
-			if (funcList->e[number]->para != NULL) cur += funcList->e[number]->para->e[0]->size;else cur += 4;
-			if (cur & 3) cur = ((cur >> 2) + 1) << 2;
-			if (func->mainSpace < cur) func->mainSpace = cur;
 			
 			ret = getRegister();
 			ret->size = ast->size;
@@ -1606,15 +1617,23 @@ static struct Object *makeExpr(struct AstNode *ast,struct Function *func){
 	}else if (ast->type == CHARCONS){
 		return makeIntc(ast->value);
 	}else if (ast->type == STRICONS){
-		struct String *st = getString(ast->data);
-		struct Object *o = getRegister();
-		struct Sentence *s = getSentence();
+		int i;
+		struct String *st;
+		struct Object *o;
+		struct Sentence *s;
+//		for (i = 0;i < string->num;++i){
+//			if (strcmp(ast->data,string->e[i]->s) == 0) return string->e[i]->link;
+//		}
+		st = getString(ast->data);
+		o = getRegister();
+		s = getSentence();
 		pushBackString(string,st);
 		s->op = getOp(IRASSCOP,"=");
 		s->ob[0] = o;
 		s->ob[1] = makeIntc(string->num - 1);
 		s->num = 2;
 		pushBackSentence(func->body,s);
+		string->e[string->num - 1]->link = o;
 		return o;
 	}else{
 		//never

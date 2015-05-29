@@ -49,6 +49,7 @@ struct FunctionList{
 struct String{
 	int size;
 	char *s;
+	struct Object *link;
 };
 struct StringList{
 	struct String **e;
