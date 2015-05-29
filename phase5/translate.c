@@ -642,20 +642,23 @@ static void printPrintf(){
 
 	printf("_printf_width:\n");
 	printf("\taddu $a1, $a1, 4\n");
+	printf("\tlb $t0, 0($a2)\n");
+	printf("\tsubu $t0, $t0, '0'\n");
 	printf("\taddu $a2, $a2, 2\n");
-	printf("\tlw $a3, 0($a1)\n");
-	printf("\tbgt $a3, 999, _printf_width_end\n");
-	printf("\tli $v0, 1\n");
+	printf("\tlw $t1, 0($a1)\n");
+	printf("\tli $t2, 1\n");
+	printf("\tblt $t0, 2, _printf_width_end\n");
+	printf("_label_width_1:\n");
+	printf("\tsubu $t0, $t0, 1\n");
+	printf("\tmul $t2, $t2, 10\n");
+	printf("\tbgt $t0, 1, _label_width_1\n");
 	printf("\tli $a0, 0\n");
-	printf("\tsyscall\n");
-	printf("\tbgt $a3, 99, _printf_width_end\n");
 	printf("\tli $v0, 1\n");
-	printf("\tli $a0, 0\n");
+	printf("_label_width_2:\n");
+	printf("\tbge $t1, $t2, _printf_width_end\n");
 	printf("\tsyscall\n");
-	printf("\tbgt $a3, 9, _printf_width_end\n");
-	printf("\tli $v0, 1\n");
-	printf("\tli $a0, 0\n");
-	printf("\tsyscall\n");
+	printf("\tdiv $t2, $t2, 10\n");
+	printf("\tj _label_width_2\n");
 	
 	printf("_printf_width_end:");
 	printf("\tlw $a0, 0($a1)\n");

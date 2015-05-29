@@ -122,7 +122,7 @@ static void resizeRegisterList(struct RegisterList *t){
 static struct Object *getRegister(void){
 	resizeRegisterList(registers);
 	++registerNum;
-	return registers->e[registerNum] = getObject(IRTEMP,2,4,registerNum,toString(registerNum));
+	return registers->e[registerNum] = getObject(IRTEMP,2,4,-1,toString(registerNum));
 }
 void freeRegisterList(struct RegisterList *t){
 	int i;
@@ -459,7 +459,7 @@ static void irVari(struct AstNode *type,char *name,struct ObjectList *list,struc
 	r = getRegister();
 	r->pd = pd;
 	r->size = type->size;
-	pushBackObject(list,t,r->data);
+	pushBackObject(list,t,/*r->data*/registerNum);
 	if (list == funcList->e[0]->vari) r->data = -1;
 }
 static void irCompStmt(struct AstNode *ast,struct Function *func,int beginLabel,int endLabel){
@@ -1440,24 +1440,25 @@ static struct Object *makeExpr(struct AstNode *ast,struct Function *func){
 			pushBackSentence(func->body,s);
 		}
 		for (i = 0;i < num;++i){
-/*			struct Object *o = getRegister();
+			struct Object *o = getRegister();
 			o->pd = 2;
 			o->size = f[i]->size;
+			if (o->size < 4) o->size = 4;
 			s = getSentence();
 			s->op = getOp(IRASSIOP,"=");
 			s->ob[0] = o;
 			s->ob[1] = f[i];
 			s->num = 2;
 			pushBackSentence(func->body,s);
-		*/	
+		
 			s = getSentence();
 			s->op = getOp(IRPARAOP,"param");
-			s->ob[0] = f[i];
+			s->ob[0] = o;
 			s->num = 1;
 			pushBackSentence(func->body,s);
 			/*if (f[i]->pd == 1) cur += 4;else */cur += f[i]->size;
 			if (cur & 3) cur = ((cur >> 2) + 1) << 2;
-			s->size = f[i]->size;
+			s->size = o->size;
 		}
 		if (f != NULL) free(f);
 		if (ast->retType->type == VOIDTYPE){
