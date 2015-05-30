@@ -592,14 +592,10 @@ static void printFunc(struct Function *func){
 	}
 }
 static void printPrintf(){
-//print int only currently
 	printf("_printf:\n");
 	printf("\tla $a1, 4($sp)\n");
 	printf("\tlw $a2, 4($sp)\n");
-	printf("\tj _printf_loop\n");
-	
-	printf("_printf_end:\n");
-	printf("\tj $ra\n");
+//	printf("\tj _printf_loop\n");
 	
 	printf("_printf_loop:\n");
 	printf("\tlb $a0, 0($a2)\n");
@@ -660,11 +656,15 @@ static void printPrintf(){
 	printf("\tdiv $t2, $t2, 10\n");
 	printf("\tj _label_width_2\n");
 	
-	printf("_printf_width_end:");
+	printf("_printf_width_end:\n");
 	printf("\tlw $a0, 0($a1)\n");
 	printf("\tli $v0, 1\n");
 	printf("\tsyscall\n");
 	printf("\tj _printf_loop\n");
+	
+	
+	printf("_printf_end:\n");
+	printf("\tj $ra\n");
 }
 static void printMalloc(){
 	printf("_malloc:\n");

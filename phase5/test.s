@@ -263,9 +263,6 @@ __end__main:
 _printf:
 	la $a1, 4($sp)
 	lw $a2, 4($sp)
-	j _printf_loop
-_printf_end:
-	j $ra
 _printf_loop:
 	lb $a0, 0($a2)
 	beq $a0, 0, _printf_end
@@ -319,10 +316,13 @@ _label_width_2:
 	syscall
 	div $t2, $t2, 10
 	j _label_width_2
-_printf_width_end:	lw $a0, 0($a1)
+_printf_width_end:
+	lw $a0, 0($a1)
 	li $v0, 1
 	syscall
 	j _printf_loop
+_printf_end:
+	j $ra
 _malloc:
 	li $v0, 9
 	lw $a0, 4($sp)
