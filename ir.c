@@ -643,8 +643,20 @@ static void makeLabl(struct Function *func,int label){
 }
 static void makeItgt(struct AstNode *ast,struct Function *func,int label){
 	struct Op *op = getOp(IRITGTOP,"ifTrueGoto");
-	struct Object *ob = makeExpr(ast,func,0);
+	struct Object *ob,*ob1,*ob2;
 	struct Sentence *s = getSentence();
+	if (ast->constant == 0 && ast->type == BINAEXPR && (strcmp(ast->data,"<=") == 0 || strcmp(ast->data,"<") == 0 || strcmp(ast->data,">=") == 0 || strcmp(ast->data,">") == 0 || strcmp(ast->data,"==") == 0 || strcmp(ast->data,"!=") == 0)){
+		ob1 = makeExpr(&ast->c[0],func,0);
+		ob2 = makeExpr(&ast->c[1],func,0);
+		s->op = getOp(IROTGTOP,ast->data);
+		s->ob[0] = ob1;
+		s->ob[1] = ob2;
+		s->ob[2] = makeIntc(label);
+		s->num = 3;
+		pushBackSentence(func->body,s);
+		return;
+	}
+	ob = makeExpr(ast,func,0);
 	s->op = op;
 	s->ob[0] = ob;
 	s->ob[1] = makeIntc(label);
@@ -653,8 +665,20 @@ static void makeItgt(struct AstNode *ast,struct Function *func,int label){
 }
 static void makeIfgt(struct AstNode *ast,struct Function *func,int label){
 	struct Op *op = getOp(IRIFGTOP,"ifFalseGoto");
-	struct Object *ob = makeExpr(ast,func,0);
+	struct Object *ob,*ob1,*ob2;
 	struct Sentence *s = getSentence();
+	if (ast->constant == 0 && ast->type == BINAEXPR && (strcmp(ast->data,"<=") == 0 || strcmp(ast->data,"<") == 0 || strcmp(ast->data,">=") == 0 || strcmp(ast->data,">") == 0 || strcmp(ast->data,"==") == 0 || strcmp(ast->data,"!=") == 0)){
+		ob1 = makeExpr(&ast->c[0],func,0);
+		ob2 = makeExpr(&ast->c[1],func,0);
+		s->op = getOp(IROFGTOP,ast->data);
+		s->ob[0] = ob1;
+		s->ob[1] = ob2;
+		s->ob[2] = makeIntc(label);
+		s->num = 3;
+		pushBackSentence(func->body,s);
+		return;
+	}
+	ob = makeExpr(ast,func,0);
 	s->op = op;
 	s->ob[0] = ob;
 	s->ob[1] = makeIntc(label);

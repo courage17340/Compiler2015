@@ -39,34 +39,31 @@ __s3:
 	.byte 0
 	.text
 _is_digit:
-	addu $sp, $sp, -16
+	addu $sp, $sp, -12
 	sw $ra, 0($sp)
-	lb $t0, 20($sp)
+	lb $t0, 16($sp)
 	li $t1, 48
-	sge $t2, $t0, $t1
-	sw $t2, 4($sp)
-	lw $t0, 4($sp)
-	beq $t0, 0, label1
-	lb $t0, 20($sp)
+	blt $t0, $t1, label1
+	lb $t0, 16($sp)
 	li $t1, 57
 	sle $t2, $t0, $t1
-	sw $t2, 12($sp)
-	la $t0, 8($sp)
-	lw $t1, 12($sp)
+	sw $t2, 8($sp)
+	la $t0, 4($sp)
+	lw $t1, 8($sp)
 	sne $t1, $t1, 0
 	sw $t1, 0($t0)
 	j label2
 label1:
-	la $t0, 8($sp)
+	la $t0, 4($sp)
 	li $t1, 0
 	sw $t1, 0($t0)
 label2:
-	lw $v0, 8($sp)
-	sw $v0, 16($sp)
+	lw $v0, 4($sp)
+	sw $v0, 12($sp)
 	j __end__is_digit
 __end__is_digit:
 	lw $ra, 0($sp)
-	addu $sp, $sp, 16
+	addu $sp, $sp, 12
 	j $ra
 _get_d:
 	addu $sp, $sp, -92

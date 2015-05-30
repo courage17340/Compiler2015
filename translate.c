@@ -559,6 +559,110 @@ static void printSentence(struct Sentence *s,int *cur,struct Function *func){
 			printf("\tsb $t1, %d($t0)\n",s->ob[1]->data);
 		else
 			printf("\tsw $t1, %d($t0)\n",s->ob[1]->data);
+	}else if (s->op->type == IROFGTOP){
+		if (s->ob[0]->type == IRINTC){
+			printf("\tli $t0, %d\n",s->ob[0]->data);
+		}else if (s->ob[0]->pd == 2){
+			if (s->ob[0]->size == 4)
+				printf("\tlw $t0, ");
+			else
+				printf("\tlb $t0, ");
+			printObject(s->ob[0]);
+			printf("\n");
+		}else{
+			printf("\tlw $t0, ");
+			printObject(s->ob[0]);
+			printf("\n");
+			if (s->ob[0]->size == 4)
+				printf("\tlw $t0, 0($t0)\n");
+			else
+				printf("\tlb $t0, 0($t0)\n");
+		}
+		if (s->ob[1]->type == IRINTC){
+			printf("\tli $t1, %d\n",s->ob[1]->data);
+		}else if (s->ob[1]->pd == 2){
+			if (s->ob[1]->size == 4)
+				printf("\tlw $t1, ");
+			else
+				printf("\tlb $t1, ");
+			printObject(s->ob[1]);
+			printf("\n");
+		}else{
+			printf("\tlw $t1, ");
+			printObject(s->ob[1]);
+			printf("\n");
+			if (s->ob[1]->size == 4)
+				printf("\tlw $t1, 0($t1)\n");
+			else
+				printf("\tlb $t1, 0($t1)\n");
+		}
+		if (strcmp(s->op->name,"<=") == 0){
+			printf("\tbgt $t0, $t1, label%d\n",s->ob[2]->data);
+		}else if (strcmp(s->op->name,"<") == 0){
+			printf("\tbge $t0, $t1, label%d\n",s->ob[2]->data);
+		}else if (strcmp(s->op->name,">=") == 0){
+			printf("\tblt $t0, $t1, label%d\n",s->ob[2]->data);
+		}else if (strcmp(s->op->name,">") == 0){
+			printf("\tble $t0, $t1, label%d\n",s->ob[2]->data);
+		}else if (strcmp(s->op->name,"==") == 0){
+			printf("\tbne $t0, $t1, label%d\n",s->ob[2]->data);
+		}else if (strcmp(s->op->name,"!=") == 0){
+			printf("\tbeq $t0, $t1, label%d\n",s->ob[2]->data);
+		}else{
+			//never
+		}
+	}else if (s->op->type == IROTGTOP){
+		if (s->ob[0]->type == IRINTC){
+			printf("\tli $t0, %d\n",s->ob[0]->data);
+		}else if (s->ob[0]->pd == 2){
+			if (s->ob[0]->size == 4)
+				printf("\tlw $t0, ");
+			else
+				printf("\tlb $t0, ");
+			printObject(s->ob[0]);
+			printf("\n");
+		}else{
+			printf("\tlw $t0, ");
+			printObject(s->ob[0]);
+			printf("\n");
+			if (s->ob[0]->size == 4)
+				printf("\tlw $t0, 0($t0)\n");
+			else
+				printf("\tlb $t0, 0($t0)\n");
+		}
+		if (s->ob[1]->type == IRINTC){
+			printf("\tli $t1, %d\n",s->ob[1]->data);
+		}else if (s->ob[1]->pd == 2){
+			if (s->ob[1]->size == 4)
+				printf("\tlw $t1, ");
+			else
+				printf("\tlb $t1, ");
+			printObject(s->ob[1]);
+			printf("\n");
+		}else{
+			printf("\tlw $t1, ");
+			printObject(s->ob[1]);
+			printf("\n");
+			if (s->ob[1]->size == 4)
+				printf("\tlw $t1, 0($t1)\n");
+			else
+				printf("\tlb $t1, 0($t1)\n");
+		}
+		if (strcmp(s->op->name,"<=") == 0){
+			printf("\tble $t0, $t1, label%d\n",s->ob[2]->data);
+		}else if (strcmp(s->op->name,"<") == 0){
+			printf("\tblt $t0, $t1, label%d\n",s->ob[2]->data);
+		}else if (strcmp(s->op->name,">=") == 0){
+			printf("\tbge $t0, $t1, label%d\n",s->ob[2]->data);
+		}else if (strcmp(s->op->name,">") == 0){
+			printf("\tbgt $t0, $t1, label%d\n",s->ob[2]->data);
+		}else if (strcmp(s->op->name,"==") == 0){
+			printf("\tbeq $t0, $t1, label%d\n",s->ob[2]->data);
+		}else if (strcmp(s->op->name,"!=") == 0){
+			printf("\tbne $t0, $t1, label%d\n",s->ob[2]->data);
+		}else{
+			//never
+		}
 	}else{
 		//never
 	}
