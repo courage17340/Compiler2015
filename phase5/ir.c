@@ -230,7 +230,7 @@ static struct Function *getFunction(char *name){
 	t->name = strdup(name);
 	t->para = t->vari = NULL;
 	t->body = NULL;
-	t->mainSpace = t->retnStat = 0;
+	t->mainSpace = t->retnStat = t->isLeaf = 0;
 	return t;
 }
 static void freeFunction(struct Function *t){
@@ -348,8 +348,14 @@ static void irFunc(struct AstNode *ast){
 		cur = ((cur >> 2) + 1) << 2;
 		tmp->mainSpace = cur;
 	}
+//TODO	
 	tmp->retnStat = cur;
-	cur += 4;
+	
+	if (cur){
+		cur += 4;
+	}else{
+		tmp->isLeaf = 1;
+	}
 	for (i = 0;i < tmp->vari->num;++i){
 		registers->e[tmp->vari->link[i]]->data = cur;
 		

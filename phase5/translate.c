@@ -788,7 +788,9 @@ static void printFunc(struct Function *func){
 	else
 		printf("_%s:\n",func->name);
 	printf("\taddu $sp, $sp, -%d\n",func->mainSpace);
-	printf("\tsw $ra, %d($sp)\n",func->retnStat);
+	
+	if (!func->isLeaf)
+		printf("\tsw $ra, %d($sp)\n",func->retnStat);
 	
 	if (strcmp(func->name,"main") == 0){
 		struct SentenceList *l = funcList->e[0]->body;
@@ -799,7 +801,9 @@ static void printFunc(struct Function *func){
 		printSentence(l->e[i],&cur,func);
 	}
 	printf("__end__%s:\n",func->name);
-	printf("\tlw $ra, %d($sp)\n",func->retnStat);
+	if (!func->isLeaf)
+		printf("\tlw $ra, %d($sp)\n",func->retnStat);
+	
 	printf("\taddu $sp, $sp, %d\n",func->mainSpace);
 	if (strcmp(func->name,"main") == 0){
 		printf("\tli $v0, 10\n");

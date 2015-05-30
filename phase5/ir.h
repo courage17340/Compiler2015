@@ -40,7 +40,7 @@ struct Function{
 	char *name;
 	struct ObjectList *para,*vari;
 	struct SentenceList *body;
-	int mainSpace,retnStat;
+	int mainSpace,retnStat,isLeaf;
 };
 struct FunctionList{
 	struct Function **e;
