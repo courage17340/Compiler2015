@@ -11,6 +11,7 @@ Chu Wei's compiler project
 ##Version details
 | Version | Date | Description |
 |:-------:|:----:|:-----------:|
+| 3.0e | 2015.5.30 | some rubbish inst. killed |
 | 3.0d | 2015.5.30 | printf function optimized deeply |
 | 3.0c | 2015.5.30 | printf function takes one fewer inst. now |
 | 3.0b | 2015.5.30 | not-used return value won't be loaded now |

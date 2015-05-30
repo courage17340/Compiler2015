@@ -1472,7 +1472,7 @@ static struct Object *makeExpr(struct AstNode *ast,struct Function *func,int not
 			pushBackSentence(func->body,s);
 		}
 		for (i = 0;i < num;++i){
-			struct Object *o = getRegister();
+/*			struct Object *o = getRegister();
 			o->pd = 2;
 			o->size = f[i]->size;
 			if (o->size < 4) o->size = 4;
@@ -1482,10 +1482,10 @@ static struct Object *makeExpr(struct AstNode *ast,struct Function *func,int not
 			s->ob[1] = f[i];
 			s->num = 2;
 			pushBackSentence(func->body,s);
-		
+*/		
 			s = getSentence();
 			s->op = getOp(IRPARAOP,"param");
-			s->ob[0] = o;
+			s->ob[0] = f[i];
 			s->num = 1;
 			pushBackSentence(func->body,s);
 			/*if (f[i]->pd == 1) cur += 4;else */cur += f[i]->size;
