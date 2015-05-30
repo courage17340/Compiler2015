@@ -592,6 +592,8 @@ static void printFunc(struct Function *func){
 	}
 }
 static void printPrintf(){
+	char *a[3];
+	int f[3],i,j,t;
 	printf("_printf:\n");
 	printf("\tla $a1, 4($sp)\n");
 	printf("\tlw $a2, 4($sp)\n");
@@ -609,62 +611,90 @@ static void printPrintf(){
 	printf("_printf_fmt:\n");
 	printf("\tlb $a0, 0($a2)\n");
 	printf("\taddu $a2, $a2, 1\n");
-	printf("\tbeq $a0, 'd', _printf_int\n");
-	printf("\tbeq $a0, 's', _printf_str\n");
-	printf("\tbeq $a0, 'c', _printf_char\n");
-	printf("\tbeq $a0, '0', _printf_width\n");
-	printf("\tbeq $a0, '.', _printf_width\n");
 	
-	printf("_printf_int:\n");
-	printf("\taddu $a1, $a1, 4\n");
-	printf("\tlw $a0, 0($a1)\n");
-	printf("\tli $v0, 1\n");
-	printf("\tsyscall\n");
-	printf("\tj _printf_loop\n");
+	a[0] = "\tbeq $a0, 'c', _printf_char\n";
+	a[1] = "\tbeq $a0, 'd', _printf_int\n";
+	a[2] = "\tbeq $a0, 's', _printf_str\n";
+	f[0] = 0;
+	f[1] = 1;
+	f[2] = 2;
+	for (i = 0;i < 2;++i)
+		for (j = i + 1;j < 3;++j)
+			if (numOfFmt[f[i]] < numOfFmt[f[j]]){
+				t = f[i];
+				f[i] = f[j];
+				f[j] = t;
+			}
+	if (numOfFmt[f[0]]){
+		if (numOfFmt[f[1]] || numOfFmt[f[2]] || numOfFmt[3])
+			printf("%s",a[f[0]]);
+		else{
+			//nop;
+		}
+	}
+	if (numOfFmt[f[1]])
+		printf("%s",a[f[1]]);
+	if (numOfFmt[f[2]])
+		printf("%s",a[f[2]]);
 	
-	printf("_printf_str:\n");
-	printf("\taddu $a1, $a1, 4\n");
-	printf("\tlw $a0, 0($a1)\n");
-	printf("\tli $v0, 4\n");
-	printf("\tsyscall\n");
-	printf("\tj _printf_loop\n");
+	if (numOfFmt[3]){
+		printf("_printf_width:\n");
+		printf("\taddu $a1, $a1, 4\n");
+		printf("\tlb $t0, 0($a2)\n");
+		printf("\tsubu $t0, $t0, '0'\n");
+		printf("\taddu $a2, $a2, 2\n");
+		printf("\tlw $t1, 0($a1)\n");
+		printf("\tli $t2, 1\n");
+		printf("\tblt $t0, 2, _printf_width_end\n");
+		printf("_label_width_1:\n");
+		printf("\tsubu $t0, $t0, 1\n");
+		printf("\tmul $t2, $t2, 10\n");
+		printf("\tbgt $t0, 1, _label_width_1\n");
+		printf("\tli $a0, 0\n");
+		printf("\tli $v0, 1\n");
+		printf("_label_width_2:\n");
+		printf("\tbge $t1, $t2, _printf_width_end\n");
+		printf("\tsyscall\n");
+		printf("\tdiv $t2, $t2, 10\n");
+		printf("\tj _label_width_2\n");
+		
+		printf("_printf_width_end:\n");
+		printf("\tlw $a0, 0($a1)\n");
+		printf("\tli $v0, 1\n");
+		printf("\tsyscall\n");
+		printf("\tj _printf_loop\n");
+	}
+	if (numOfFmt[0]){
+		printf("_printf_char:\n");
+		printf("\taddu $a1, $a1, 4\n");
+		printf("\tlb $a0, 0($a1)\n");
+		printf("\tli $v0, 11\n");
+		printf("\tsyscall\n");
+		printf("\tj _printf_loop\n");
+	}
 	
-	printf("_printf_char:\n");
-	printf("\taddu $a1, $a1, 4\n");
-	printf("\tlb $a0, 0($a1)\n");
-	printf("\tli $v0, 11\n");
-	printf("\tsyscall\n");
-	printf("\tj _printf_loop\n");
-
-	printf("_printf_width:\n");
-	printf("\taddu $a1, $a1, 4\n");
-	printf("\tlb $t0, 0($a2)\n");
-	printf("\tsubu $t0, $t0, '0'\n");
-	printf("\taddu $a2, $a2, 2\n");
-	printf("\tlw $t1, 0($a1)\n");
-	printf("\tli $t2, 1\n");
-	printf("\tblt $t0, 2, _printf_width_end\n");
-	printf("_label_width_1:\n");
-	printf("\tsubu $t0, $t0, 1\n");
-	printf("\tmul $t2, $t2, 10\n");
-	printf("\tbgt $t0, 1, _label_width_1\n");
-	printf("\tli $a0, 0\n");
-	printf("\tli $v0, 1\n");
-	printf("_label_width_2:\n");
-	printf("\tbge $t1, $t2, _printf_width_end\n");
-	printf("\tsyscall\n");
-	printf("\tdiv $t2, $t2, 10\n");
-	printf("\tj _label_width_2\n");
+	if (numOfFmt[1]){
+		printf("_printf_int:\n");
+		printf("\taddu $a1, $a1, 4\n");
+		printf("\tlw $a0, 0($a1)\n");
+		printf("\tli $v0, 1\n");
+		printf("\tsyscall\n");
+		printf("\tj _printf_loop\n");
+	}
 	
-	printf("_printf_width_end:\n");
-	printf("\tlw $a0, 0($a1)\n");
-	printf("\tli $v0, 1\n");
-	printf("\tsyscall\n");
-	printf("\tj _printf_loop\n");
-	
+	if (numOfFmt[2]){
+		printf("_printf_str:\n");
+		printf("\taddu $a1, $a1, 4\n");
+		printf("\tlw $a0, 0($a1)\n");
+		printf("\tli $v0, 4\n");
+		printf("\tsyscall\n");
+		printf("\tj _printf_loop\n");
+	}
 	
 	printf("_printf_end:\n");
 	printf("\tj $ra\n");
+	
+	
 }
 static void printMalloc(){
 	printf("_malloc:\n");

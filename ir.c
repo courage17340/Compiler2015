@@ -1621,7 +1621,7 @@ static struct Object *makeExpr(struct AstNode *ast,struct Function *func,int not
 	}else if (ast->type == CHARCONS){
 		return makeIntc(ast->value);
 	}else if (ast->type == STRICONS){
-//		int i;
+		int i,l;
 		struct String *st;
 		struct Object *o;
 		struct Sentence *s;
@@ -1629,6 +1629,22 @@ static struct Object *makeExpr(struct AstNode *ast,struct Function *func,int not
 //			if (strcmp(ast->data,string->e[i]->s) == 0) return string->e[i]->link;
 //		}
 		st = getString(ast->data);
+		l = strlen(ast->data);
+		for (i = 0;i < l;++i){
+			if (ast->data[i] == '%'){
+				if (ast->data[i + 1] == 'c'){
+					numOfFmt[0]++;
+				}else if (ast->data[i + 1] == 'd'){
+					numOfFmt[1]++;
+				}else if (ast->data[i + 1] == 's'){
+					numOfFmt[2]++;
+				}else if (ast->data[i + 1] == '0' || ast->data[i + 1] == '.'){
+					numOfFmt[3]++;
+				}
+				++i;
+			}
+		}
+		
 		o = getRegister();
 		s = getSentence();
 		pushBackString(string,st);
@@ -1713,6 +1729,7 @@ void ir(void){
 //	astPrint(NULL,ast,0);
 	
 	registerNum = labelNum = 0;
+	numOfFmt[0] = numOfFmt[1] = numOfFmt[2] = 0;
 	registers = getRegisterList();
 	string = getStringList();
 	irMain(ast);

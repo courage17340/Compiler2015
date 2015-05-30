@@ -1,6 +1,5 @@
 #!/bin/bash
 
 ./translate < test.c > test.s
-spim load "test.s"
-echo
+spim -stat load "test.s"
 

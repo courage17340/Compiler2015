@@ -60,6 +60,7 @@ int registerNum,labelNum;
 struct RegisterList *registers;
 struct FunctionList *funcList;
 struct StringList *string;
+int numOfFmt[4];
 //======functions======
 void freeFunctionList(struct FunctionList *);
 void freeRegisterList(struct RegisterList *);

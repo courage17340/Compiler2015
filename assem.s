@@ -411,49 +411,16 @@ _printf_loop:
 _printf_fmt:
 	lb $a0, 0($a2)
 	addu $a2, $a2, 1
-	beq $a0, 'd', _printf_int
-	beq $a0, 's', _printf_str
 	beq $a0, 'c', _printf_char
-	beq $a0, '0', _printf_width
-	beq $a0, '.', _printf_width
-_printf_int:
-	addu $a1, $a1, 4
-	lw $a0, 0($a1)
-	li $v0, 1
-	syscall
-	j _printf_loop
-_printf_str:
-	addu $a1, $a1, 4
-	lw $a0, 0($a1)
-	li $v0, 4
-	syscall
-	j _printf_loop
+	beq $a0, 'd', _printf_int
 _printf_char:
 	addu $a1, $a1, 4
 	lb $a0, 0($a1)
 	li $v0, 11
 	syscall
 	j _printf_loop
-_printf_width:
+_printf_int:
 	addu $a1, $a1, 4
-	lb $t0, 0($a2)
-	subu $t0, $t0, '0'
-	addu $a2, $a2, 2
-	lw $t1, 0($a1)
-	li $t2, 1
-	blt $t0, 2, _printf_width_end
-_label_width_1:
-	subu $t0, $t0, 1
-	mul $t2, $t2, 10
-	bgt $t0, 1, _label_width_1
-	li $a0, 0
-	li $v0, 1
-_label_width_2:
-	bge $t1, $t2, _printf_width_end
-	syscall
-	div $t2, $t2, 10
-	j _label_width_2
-_printf_width_end:
 	lw $a0, 0($a1)
 	li $v0, 1
 	syscall
