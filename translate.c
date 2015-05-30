@@ -4,7 +4,7 @@
 #include "translate.h"
 #include "ir.h"
 static int initArraBegin;
-static char t0[100],t1[100],t2[100];
+static char /*t0[100],*/t1[100]/*,t2[100]*/;
 
 static int make4(int x){
 	int t = x;
@@ -119,8 +119,10 @@ static void printSentence(struct Sentence *s,int *cur,struct Function *func){
 			printObject(s->ob[1]);
 			printf("\n");
 		}
+		sprintf(t1,"$t1");
 		if (s->ob[2]->type == IRINTC){
-			printf("\tli $t1, %d\n",s->ob[2]->data);
+//			printf("\tli $t1, %d\n",s->ob[2]->data);
+			sprintf(t1,"%d",s->ob[2]->data);
 		}else if (s->ob[2]->pd == 1){
 			printf("\tlw $t1, ");
 			printObject(s->ob[2]);
@@ -139,37 +141,37 @@ static void printSentence(struct Sentence *s,int *cur,struct Function *func){
 		}
 		
 		if (strcmp(s->op->name,"|") == 0){
-			printf("\tor $t2, $t0, $t1\n");
+			printf("\tor $t2, $t0, %s\n",t1);
 		}else if (strcmp(s->op->name,"^") == 0){
-			printf("\txor $t2, $t0, $t1\n");
+			printf("\txor $t2, $t0, %s\n",t1);
 		}else if (strcmp(s->op->name,"&") == 0){
-			printf("\tand $t2, $t0, $t1\n");
+			printf("\tand $t2, $t0, %s\n",t1);
 		}else if (strcmp(s->op->name,"<") == 0){
-			printf("\tslt $t2, $t0, $t1\n");
+			printf("\tslt $t2, $t0, %s\n",t1);
 		}else if (strcmp(s->op->name,">") == 0){
-			printf("\tsgt $t2, $t0, $t1\n");
+			printf("\tsgt $t2, $t0, %s\n",t1);
 		}else if (strcmp(s->op->name,"+") == 0){
-			printf("\taddu $t2, $t0, $t1\n");
+			printf("\taddu $t2, $t0, %s\n",t1);
 		}else if (strcmp(s->op->name,"-") == 0){
-			printf("\tsubu $t2, $t0, $t1\n");
+			printf("\tsubu $t2, $t0, %s\n",t1);
 		}else if (strcmp(s->op->name,"*") == 0){
-			printf("\tmul $t2, $t0, $t1\n");
+			printf("\tmul $t2, $t0, %s\n",t1);
 		}else if (strcmp(s->op->name,"/") == 0){
-			printf("\tdiv $t2, $t0, $t1\n");
+			printf("\tdiv $t2, $t0, %s\n",t1);
 		}else if (strcmp(s->op->name,"%") == 0){
-			printf("\trem $t2, $t0, $t1\n");
+			printf("\trem $t2, $t0, %s\n",t1);
 		}else if (strcmp(s->op->name,"==") == 0){
-			printf("\tseq $t2, $t0, $t1\n");
+			printf("\tseq $t2, $t0, %s\n",t1);
 		}else if (strcmp(s->op->name,"!=") == 0){
-			printf("\tsne $t2, $t0, $t1\n");
+			printf("\tsne $t2, $t0, %s\n",t1);
 		}else if (strcmp(s->op->name,"<=") == 0){
-			printf("\tsle $t2, $t0, $t1\n");
+			printf("\tsle $t2, $t0, %s\n",t1);
 		}else if (strcmp(s->op->name,">=") == 0){
-			printf("\tsge $t2, $t0, $t1\n");
+			printf("\tsge $t2, $t0, %s\n",t1);
 		}else if (strcmp(s->op->name,"<<") == 0){
-			printf("\tsll $t2, $t0, $t1\n");
+			printf("\tsll $t2, $t0, %s\n",t1);
 		}else if (strcmp(s->op->name,">>") == 0){
-			printf("\tsra $t2, $t0, $t1\n");
+			printf("\tsra $t2, $t0, %s\n",t1);
 		}
 		printf("\tsw $t2, ");
 		printObject(s->ob[0]);

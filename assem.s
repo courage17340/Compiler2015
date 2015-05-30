@@ -44,8 +44,7 @@ _is_digit:
 	lb $t0, 16($sp)
 	blt $t0, 48, label1
 	lb $t0, 16($sp)
-	li $t1, 57
-	sle $t2, $t0, $t1
+	sle $t2, $t0, 57
 	sw $t2, 8($sp)
 	la $t0, 4($sp)
 	lw $t1, 8($sp)
@@ -130,16 +129,14 @@ label5:
 	lw $t0, 68($sp)
 	beq $t0, 0, label6
 	lw $t0, 32($sp)
-	li $t1, 10
-	mul $t2, $t0, $t1
+	mul $t2, $t0, 10
 	sw $t2, 72($sp)
 	lw $t0, 72($sp)
 	lb $t1, 20($sp)
 	addu $t2, $t0, $t1
 	sw $t2, 76($sp)
 	lw $t0, 76($sp)
-	li $t1, 48
-	subu $t2, $t0, $t1
+	subu $t2, $t0, 48
 	sw $t2, 80($sp)
 	la $t0, 32($sp)
 	lw $t1, 80($sp)
