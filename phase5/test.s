@@ -30,8 +30,7 @@ _hanoi:
 	addu $sp, $sp, -96
 	sw $ra, 20($sp)
 	lw $t0, 112($sp)
-	li $t1, 1
-	bgt $t0, $t1, label1
+	bgt $t0, 1, label1
 	la $t0, 28($sp)
 	la $t1, __s0
 	sw $t1, 0($t0)
@@ -166,8 +165,7 @@ main:
 	lw $t1, 60($sp)
 	sw $t1, 0($t0)
 	lw $t0, 28($sp)
-	li $t1, 0
-	bgt $t0, $t1, label3
+	bgt $t0, 0, label3
 	j label4
 label3:
 	la $t0, 64($sp)

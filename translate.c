@@ -4,6 +4,8 @@
 #include "translate.h"
 #include "ir.h"
 static int initArraBegin;
+static char t0[100],t1[100],t2[100];
+
 static int make4(int x){
 	int t = x;
 	if (t & 3) t = ((t >> 2) + 1) << 2;
@@ -578,8 +580,10 @@ static void printSentence(struct Sentence *s,int *cur,struct Function *func){
 			else
 				printf("\tlb $t0, 0($t0)\n");
 		}
+		sprintf(t1,"$t1");
 		if (s->ob[1]->type == IRINTC){
-			printf("\tli $t1, %d\n",s->ob[1]->data);
+//			printf("\tli $t1, %d\n",s->ob[1]->data);
+			sprintf(t1,"%d",s->ob[1]->data);
 		}else if (s->ob[1]->pd == 2){
 			if (s->ob[1]->size == 4)
 				printf("\tlw $t1, ");
@@ -597,17 +601,17 @@ static void printSentence(struct Sentence *s,int *cur,struct Function *func){
 				printf("\tlb $t1, 0($t1)\n");
 		}
 		if (strcmp(s->op->name,"<=") == 0){
-			printf("\tbgt $t0, $t1, label%d\n",s->ob[2]->data);
+			printf("\tbgt $t0, %s, label%d\n",t1,s->ob[2]->data);
 		}else if (strcmp(s->op->name,"<") == 0){
-			printf("\tbge $t0, $t1, label%d\n",s->ob[2]->data);
+			printf("\tbge $t0, %s, label%d\n",t1,s->ob[2]->data);
 		}else if (strcmp(s->op->name,">=") == 0){
-			printf("\tblt $t0, $t1, label%d\n",s->ob[2]->data);
+			printf("\tblt $t0, %s, label%d\n",t1,s->ob[2]->data);
 		}else if (strcmp(s->op->name,">") == 0){
-			printf("\tble $t0, $t1, label%d\n",s->ob[2]->data);
+			printf("\tble $t0, %s, label%d\n",t1,s->ob[2]->data);
 		}else if (strcmp(s->op->name,"==") == 0){
-			printf("\tbne $t0, $t1, label%d\n",s->ob[2]->data);
+			printf("\tbne $t0, %s, label%d\n",t1,s->ob[2]->data);
 		}else if (strcmp(s->op->name,"!=") == 0){
-			printf("\tbeq $t0, $t1, label%d\n",s->ob[2]->data);
+			printf("\tbeq $t0, %s, label%d\n",t1,s->ob[2]->data);
 		}else{
 			//never
 		}
@@ -630,8 +634,10 @@ static void printSentence(struct Sentence *s,int *cur,struct Function *func){
 			else
 				printf("\tlb $t0, 0($t0)\n");
 		}
+		sprintf(t1,"$t1");
 		if (s->ob[1]->type == IRINTC){
-			printf("\tli $t1, %d\n",s->ob[1]->data);
+//			printf("\tli $t1, %d\n",s->ob[1]->data);
+			sprintf(t1,"%d",s->ob[1]->data);
 		}else if (s->ob[1]->pd == 2){
 			if (s->ob[1]->size == 4)
 				printf("\tlw $t1, ");
@@ -649,17 +655,17 @@ static void printSentence(struct Sentence *s,int *cur,struct Function *func){
 				printf("\tlb $t1, 0($t1)\n");
 		}
 		if (strcmp(s->op->name,"<=") == 0){
-			printf("\tble $t0, $t1, label%d\n",s->ob[2]->data);
+			printf("\tble $t0, %s, label%d\n",t1,s->ob[2]->data);
 		}else if (strcmp(s->op->name,"<") == 0){
-			printf("\tblt $t0, $t1, label%d\n",s->ob[2]->data);
+			printf("\tblt $t0, %s, label%d\n",t1,s->ob[2]->data);
 		}else if (strcmp(s->op->name,">=") == 0){
-			printf("\tbge $t0, $t1, label%d\n",s->ob[2]->data);
+			printf("\tbge $t0, %s, label%d\n",t1,s->ob[2]->data);
 		}else if (strcmp(s->op->name,">") == 0){
-			printf("\tbgt $t0, $t1, label%d\n",s->ob[2]->data);
+			printf("\tbgt $t0, %s, label%d\n",t1,s->ob[2]->data);
 		}else if (strcmp(s->op->name,"==") == 0){
-			printf("\tbeq $t0, $t1, label%d\n",s->ob[2]->data);
+			printf("\tbeq $t0, %s, label%d\n",t1,s->ob[2]->data);
 		}else if (strcmp(s->op->name,"!=") == 0){
-			printf("\tbne $t0, $t1, label%d\n",s->ob[2]->data);
+			printf("\tbne $t0, %s, label%d\n",t1,s->ob[2]->data);
 		}else{
 			//never
 		}

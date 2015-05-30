@@ -42,8 +42,7 @@ _is_digit:
 	addu $sp, $sp, -12
 	sw $ra, 0($sp)
 	lb $t0, 16($sp)
-	li $t1, 48
-	blt $t0, $t1, label1
+	blt $t0, 48, label1
 	lb $t0, 16($sp)
 	li $t1, 57
 	sle $t2, $t0, $t1
