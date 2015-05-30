@@ -671,6 +671,72 @@ static void printSentence(struct Sentence *s,int *cur,struct Function *func){
 		}else{
 			//never
 		}
+	}else if (s->op->type == IRINCROP){
+		if (s->ob[0]->pd == 2){
+			if (s->size == 1){
+				printf("\tlb $t0, ");
+				printObject(s->ob[0]);
+				printf("\n");
+				printf("\taddu $t0, $t0, %d\n",s->ob[1]->data);
+				printf("\tsb $t0, ");
+				printObject(s->ob[0]);
+				printf("\n");
+			}else{
+				printf("\tlw $t0, ");
+				printObject(s->ob[0]);
+				printf("\n");
+				printf("\taddu $t0, $t0, %d\n",s->ob[1]->data);
+				printf("\tsw $t0, ");
+				printObject(s->ob[0]);
+				printf("\n");
+			}
+		}else{
+			printf("\tlw $t0, ");
+			printObject(s->ob[0]);
+			printf("\n");
+			if (s->size == 1){
+				printf("\tlb $t1, 0($t0)\n");
+				printf("\taddu $t1, $t1, %d\n",s->ob[1]->data);
+				printf("\tsb $t1, 0($t0)\n");
+			}else{
+				printf("\tlw $t1, 0($t0)\n");
+				printf("\taddu $t1, $t1, %d\n",s->ob[1]->data);
+				printf("\tsw $t1, 0($t0)\n");
+			}
+		}
+	}else if (s->op->type == IRDECROP){
+		if (s->ob[0]->pd == 2){
+			if (s->size == 1){
+				printf("\tlb $t0, ");
+				printObject(s->ob[0]);
+				printf("\n");
+				printf("\tsubu $t0, $t0, %d\n",s->ob[1]->data);
+				printf("\tsb $t0, ");
+				printObject(s->ob[0]);
+				printf("\n");
+			}else{
+				printf("\tlw $t0, ");
+				printObject(s->ob[0]);
+				printf("\n");
+				printf("\tsubu $t0, $t0, %d\n",s->ob[1]->data);
+				printf("\tsw $t0, ");
+				printObject(s->ob[0]);
+				printf("\n");
+			}
+		}else{
+			printf("\tlw $t0, ");
+			printObject(s->ob[0]);
+			printf("\n");
+			if (s->size == 1){
+				printf("\tlb $t1, 0($t0)\n");
+				printf("\tsubu $t1, $t1, %d\n",s->ob[1]->data);
+				printf("\tsb $t1, 0($t0)\n");
+			}else{
+				printf("\tlw $t1, 0($t0)\n");
+				printf("\tsubu $t1, $t1, %d\n",s->ob[1]->data);
+				printf("\tsw $t1, 0($t0)\n");
+			}
+		}
 	}else{
 		//never
 	}

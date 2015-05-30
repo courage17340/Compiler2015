@@ -1269,6 +1269,18 @@ static struct Object *makeExpr(struct AstNode *ast,struct Function *func,int not
 			pushBackSentence(func->body,s);
 			return s->ob[0];
 		}else if (strcmp(ast->data,"++") == 0){
+			if (notUsed){
+				s->op = getOp(IRINCROP,"++");
+				s->ob[0] = ob1;
+				if (ast->retType->type == PTERTYPE)
+					s->ob[1] = makeIntc(ast->retType->c[0].size);
+				else
+					s->ob[1] = makeIntc(1);
+				s->num = 2;
+				s->size = ast->size;
+				pushBackSentence(func->body,s);
+				return NULL;
+			}
 			ob = getRegister();
 			ob->size = 4;
 			ob->data = -1;
@@ -1290,6 +1302,19 @@ static struct Object *makeExpr(struct AstNode *ast,struct Function *func,int not
 			return s->ob[0];
 
 		}else if (strcmp(ast->data,"--") == 0){
+			if (notUsed){
+				s->op = getOp(IRDECROP,"--");
+				s->ob[0] = ob1;
+				if (ast->retType->type == PTERTYPE)
+					s->ob[1] = makeIntc(ast->retType->c[0].size);
+				else
+					s->ob[1] = makeIntc(1);
+				s->num = 2;
+				s->size = ast->size;
+				pushBackSentence(func->body,s);
+				return NULL;
+			}
+			
 			ob = getRegister();
 			ob->size = 4;
 			ob->data = -1;
@@ -1373,6 +1398,21 @@ static struct Object *makeExpr(struct AstNode *ast,struct Function *func,int not
 	}else if (ast->type == SELFINCR){
 		struct Sentence *s;
 		ob1 = makeExpr(&ast->c[0],func,0);
+		
+		if (notUsed){
+			s = getSentence();
+			s->op = getOp(IRINCROP,"++");
+			s->ob[0] = ob1;
+			if (ast->retType->type == PTERTYPE)
+				s->ob[1] = makeIntc(ast->retType->c[0].size);
+			else
+				s->ob[1] = makeIntc(1);
+			s->num = 2;
+			s->size = ast->size;
+			pushBackSentence(func->body,s);
+			return NULL;
+		}
+		
 		ob2 = getRegister();
 		ob2->data = -1;
 		ob3 = getRegister();
@@ -1403,6 +1443,21 @@ static struct Object *makeExpr(struct AstNode *ast,struct Function *func,int not
 	}else if (ast->type == SELFDECR){
 		struct Sentence *s;
 		ob1 = makeExpr(&ast->c[0],func,0);
+		
+		if (notUsed){
+			s = getSentence();
+			s->op = getOp(IRDECROP,"--");
+			s->ob[0] = ob1;
+			if (ast->retType->type == PTERTYPE)
+				s->ob[1] = makeIntc(ast->retType->c[0].size);
+			else
+				s->ob[1] = makeIntc(1);
+			s->num = 2;
+			s->size = ast->size;
+			pushBackSentence(func->body,s);
+			return NULL;
+		}
+		
 		ob2 = getRegister();
 		ob2->data = -1;
 		ob3 = getRegister();

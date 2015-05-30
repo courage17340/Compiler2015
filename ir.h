@@ -3,8 +3,8 @@
 enum OpType{
 	IRUNAROP,IRBINAOP,IRASSIOP,IRPARAOP,IRCALLOP,IRLABLOP,IRGOTOOP,IRITGTOP,IRIFGTOP,IRARRROP,IRARRWOP,IRPTRROP,IRPTRWOP,IRRTSZOP,IRRETNOP,
 //	unary    binary   =        param    call     label    goto     ifTgoto  ifFgoto  a=b[x],4 a[x]=b,4 t0=*a,4  *a=t0,4  ...      ret
-	IRLGASOP,IRARASOP,IRASSCOP,IRINAROP,IROTGTOP,IROFGTOP
-//	...      =        =        =        sge...   ...
+	IRLGASOP,IRARASOP,IRASSCOP,IRINAROP,IROTGTOP,IROFGTOP,IRINCROP,IRDECROP
+//	...      =        =        =        sge...   ...      ++       --
 };
 enum ObjectType{
 	IRSTRC,IRINTC,IRNAME,IRTEMP
