@@ -15,7 +15,7 @@ static void printGlobal(struct Function *func){
 	int i,j;
 	printf("\t.data\n");
 	for (i = 1;i <= registerNum;++i)
-		if (registers->e[i]->data == -1){
+		if (registers->e[i]->data < 0){
 			printf("%s:\t.space %d\n",registers->e[i]->name,make4(registers->e[i]->size));
 		}
 	for (i = 0;i < string->num;++i){
@@ -34,7 +34,7 @@ static void printObject(struct Object *o){
 	}else if (o->type == IRINTC){
 		printf("%d",o->data);
 	}else if (o->type == IRTEMP){
-		if (o->data == -1)
+		if (o->data < 0)
 			printf("%s",o->name);
 		else
 			printf("%d($sp)",o->data);
