@@ -25,6 +25,7 @@ struct RegisterList{
 struct ObjectList{
 	struct Object **e;
 	int *link;
+	struct Object **tmpLink;
 	int num,cap;
 };
 struct Sentence{

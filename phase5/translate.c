@@ -82,8 +82,13 @@ static void printSentence(struct Sentence *s,int *cur,struct Function *func){
 			}
 			printf("\tlw $t0, 0($t0)\n");
 		}else{
+			sprintf(t0,"$t0");
 			if (s->ob[1]->type == IRINTC){
-				printf("\tli $t0, %d\n",s->ob[1]->data);
+				if (s->ob[1]->data == 0){
+					sprintf(t0,"$0");
+				}else{
+					printf("\tli $t0, %d\n",s->ob[1]->data);
+				}
 			}else if (s->ob[1]->pd == 1){
 				printf("\tlw $t0, ");
 				printObject(s->ob[1]);
@@ -103,11 +108,11 @@ static void printSentence(struct Sentence *s,int *cur,struct Function *func){
 			if (strcmp(s->op->name,"+") == 0){
 				//nop
 			}else if (strcmp(s->op->name,"-") == 0){
-				printf("\tnegu $t0, $t0\n");
+				printf("\tnegu $t0, %s\n",t0);
 			}else if (strcmp(s->op->name,"~") == 0){
-				printf("\tnot $t0, $t0\n");
+				printf("\tnot $t0, %s\n",t0);
 			}else if (strcmp(s->op->name,"!") == 0){
-				printf("\tseq $t0, $t0, 0\n");
+				printf("\tseq $t0, %s, 0\n",t0);
 			}else{
 				//never
 			}
@@ -116,8 +121,13 @@ static void printSentence(struct Sentence *s,int *cur,struct Function *func){
 		printObject(s->ob[0]);
 		printf("\n");
 	}else if (s->op->type == IRBINAOP){
+		sprintf(t0,"$t0");
 		if (s->ob[1]->type == IRINTC){
-			printf("\tli $t0, %d\n",s->ob[1]->data);
+			if (s->ob[1]->data == 0){
+				sprintf(t0,"$0");
+			}else{
+				printf("\tli $t0, %d\n",s->ob[1]->data);
+			}
 		}else if (s->ob[1]->pd == 1){
 			printf("\tlw $t0, ");
 			printObject(s->ob[1]);
@@ -156,37 +166,37 @@ static void printSentence(struct Sentence *s,int *cur,struct Function *func){
 		}
 		
 		if (strcmp(s->op->name,"|") == 0){
-			printf("\tor $t2, $t0, %s\n",t1);
+			printf("\tor $t2, %s, %s\n",t0,t1);
 		}else if (strcmp(s->op->name,"^") == 0){
-			printf("\txor $t2, $t0, %s\n",t1);
+			printf("\txor $t2, %s, %s\n",t0,t1);
 		}else if (strcmp(s->op->name,"&") == 0){
-			printf("\tand $t2, $t0, %s\n",t1);
+			printf("\tand $t2, %s, %s\n",t0,t1);
 		}else if (strcmp(s->op->name,"<") == 0){
-			printf("\tslt $t2, $t0, %s\n",t1);
+			printf("\tslt $t2, %s, %s\n",t0,t1);
 		}else if (strcmp(s->op->name,">") == 0){
-			printf("\tsgt $t2, $t0, %s\n",t1);
+			printf("\tsgt $t2, %s, %s\n",t0,t1);
 		}else if (strcmp(s->op->name,"+") == 0){
-			printf("\taddu $t2, $t0, %s\n",t1);
+			printf("\taddu $t2, %s, %s\n",t0,t1);
 		}else if (strcmp(s->op->name,"-") == 0){
-			printf("\tsubu $t2, $t0, %s\n",t1);
+			printf("\tsubu $t2, %s, %s\n",t0,t1);
 		}else if (strcmp(s->op->name,"*") == 0){
-			printf("\tmul $t2, $t0, %s\n",t1);
+			printf("\tmul $t2, %s, %s\n",t0,t1);
 		}else if (strcmp(s->op->name,"/") == 0){
-			printf("\tdiv $t2, $t0, %s\n",t1);
+			printf("\tdiv $t2, %s, %s\n",t0,t1);
 		}else if (strcmp(s->op->name,"%") == 0){
-			printf("\trem $t2, $t0, %s\n",t1);
+			printf("\trem $t2, %s, %s\n",t0,t1);
 		}else if (strcmp(s->op->name,"==") == 0){
-			printf("\tseq $t2, $t0, %s\n",t1);
+			printf("\tseq $t2, %s, %s\n",t0,t1);
 		}else if (strcmp(s->op->name,"!=") == 0){
-			printf("\tsne $t2, $t0, %s\n",t1);
+			printf("\tsne $t2, %s, %s\n",t0,t1);
 		}else if (strcmp(s->op->name,"<=") == 0){
-			printf("\tsle $t2, $t0, %s\n",t1);
+			printf("\tsle $t2, %s, %s\n",t0,t1);
 		}else if (strcmp(s->op->name,">=") == 0){
-			printf("\tsge $t2, $t0, %s\n",t1);
+			printf("\tsge $t2, %s, %s\n",t0,t1);
 		}else if (strcmp(s->op->name,"<<") == 0){
-			printf("\tsll $t2, $t0, %s\n",t1);
+			printf("\tsll $t2, %s, %s\n",t0,t1);
 		}else if (strcmp(s->op->name,">>") == 0){
-			printf("\tsra $t2, $t0, %s\n",t1);
+			printf("\tsra $t2, %s, %s\n",t0,t1);
 		}
 		printf("\tsw $t2, ");
 		printObject(s->ob[0]);
@@ -251,8 +261,13 @@ static void printSentence(struct Sentence *s,int *cur,struct Function *func){
 				sPrintObject(t0,s->ob[0]);
 			}
 			if (s->ob[1]->type == IRINTC){
-				printf("\tli $t1, %d\n",s->ob[1]->data);
-				printf("\tsb $t1, %s\n",t0);
+				sprintf(t1,"$t1");
+				if (s->ob[1]->data == 0){
+					sprintf(t1,"$0");
+				}else{
+					printf("\tli $t1, %d\n",s->ob[1]->data);
+				}
+				printf("\tsb %s, %s\n",t1,t0);
 			}else if (s->ob[1]->pd == 2){
 				if (s->ob[1]->size == 1)
 					printf("\tlb $t1, ");
@@ -289,8 +304,13 @@ static void printSentence(struct Sentence *s,int *cur,struct Function *func){
 				sPrintObject(t0,s->ob[0]);
 			}
 			if (s->ob[1]->type == IRINTC){
-				printf("\tli $t1, %d\n",s->ob[1]->data);
-				printf("\tsw $t1, %s\n",t0);
+				sprintf(t1,"$t1");
+				if (s->ob[1]->data == 0){
+					sprintf(t1,"$0");
+				}else{
+					printf("\tli $t1, %d\n",s->ob[1]->data);
+				}
+				printf("\tsw %s, %s\n",t1,t0);
 			}else if (s->ob[1]->pd == 2){
 				if (s->ob[1]->size == 1)
 					printf("\tlb $t1, ");
