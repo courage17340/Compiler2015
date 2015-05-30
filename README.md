@@ -11,6 +11,7 @@ Chu Wei's compiler project
 ##Version details
 | Version | Date | Description |
 |:-------:|:----:|:-----------:|
+| 3.1a | 2015.5.30 | small optimization |
 | 3.1 | 2015.5.30 | hanoi2 passed (1/20) |
 | 3.0f | 2015.5.30 | comparison expr optimized |
 | 3.0e | 2015.5.30 | some rubbish inst. killed |
