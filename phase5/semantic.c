@@ -474,7 +474,10 @@ static void astCheck(struct AstNode *ast,int isInLoop,void *retType){
 		b = ast->c[1].retType;
 		if (strcmp(ast->data,",") == 0){
 			ast->retType = b;
-			if (ast->c[1].constant) ast->constant = 1;
+			if (ast->c[0].constant && ast->c[1].constant){
+				ast->constant = 1;
+				ast->value = ast->c[0].value + ast->c[1].value;
+			}
 			ast->size = ast->c[1].size;
 		}else if (strcmp(ast->data,"=") == 0){
 			if (!ast->c[0].lValue) halt();

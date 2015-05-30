@@ -663,6 +663,9 @@ static void makeIfgt(struct AstNode *ast,struct Function *func,int label){
 }
 static struct Object *makeExpr(struct AstNode *ast,struct Function *func){
 	struct Object *ob,*ob1,*ob2,*ob3;
+	if (ast->constant){
+		return makeIntc(ast->value);
+	}
 	if (ast->type == EMPTEXPR){
 		return NULL;
 	}else if (ast->type == BINAEXPR){
