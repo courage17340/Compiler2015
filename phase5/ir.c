@@ -1530,9 +1530,15 @@ static struct Object *makeExpr(struct AstNode *ast,struct Function *func,int not
 			num = 0;
 		}
 		for (i = 0;i < num;++i){
-			struct Object *o = getRegister();
+			struct Object *o/* = getRegister()*/;
 			f[i] = makeExpr(&tmp->c[i],func,0);
 			if (tmp->c[i].retType->type == ARRATYPE) f[i]->size = 4;
+			
+			if (tmp->c[i].type != FUNCCALL){
+				continue;
+			}
+			
+			o = getRegister();
 			o->size = f[i]->size;
 			if (o->size < 4) o->size = 4;
 			s = getSentence();

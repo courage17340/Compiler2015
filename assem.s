@@ -62,7 +62,7 @@ __end__is_digit:
 	addu $sp, $sp, 12
 	j $ra
 _get_d:
-	addu $sp, $sp, -92
+	addu $sp, $sp, -84
 	sw $ra, 8($sp)
 	jal _getchar
 	la $t1, 0($sp)
@@ -75,75 +75,71 @@ _get_d:
 	li $t1, 0
 	sw $t1, 32($sp)
 label3:
-	lb $t1, 20($sp)
-	sw $t1, 36($sp)
-	lw $t0, 36($sp)
-	sw $t0, 4($sp)
+	lb $t0, 20($sp)
+	sb $t0, 4($sp)
 	jal _is_digit
 	la $t1, 0($sp)
-	sw $t1, 40($sp)
-	lw $t1, 40($sp)
+	sw $t1, 36($sp)
+	lw $t1, 36($sp)
 	lw $t1, 0($t1)
-	sw $t1, 44($sp)
-	lw $t0, 44($sp)
+	sw $t1, 40($sp)
+	lw $t0, 40($sp)
 	seq $t0, $t0, 0
-	sw $t0, 48($sp)
-	lw $t0, 48($sp)
+	sw $t0, 44($sp)
+	lw $t0, 44($sp)
 	beq $t0, 0, label4
 	jal _getchar
 	la $t1, 0($sp)
+	sw $t1, 48($sp)
+	lw $t1, 48($sp)
+	lw $t1, 0($t1)
 	sw $t1, 52($sp)
 	lw $t1, 52($sp)
-	lw $t1, 0($t1)
-	sw $t1, 56($sp)
-	lw $t1, 56($sp)
 	sb $t1, 20($sp)
 	j label3
 label4:
 label5:
-	lb $t1, 20($sp)
-	sw $t1, 60($sp)
-	lw $t0, 60($sp)
-	sw $t0, 4($sp)
+	lb $t0, 20($sp)
+	sb $t0, 4($sp)
 	jal _is_digit
 	la $t1, 0($sp)
-	sw $t1, 64($sp)
-	lw $t1, 64($sp)
+	sw $t1, 56($sp)
+	lw $t1, 56($sp)
 	lw $t1, 0($t1)
-	sw $t1, 68($sp)
-	lw $t0, 68($sp)
+	sw $t1, 60($sp)
+	lw $t0, 60($sp)
 	beq $t0, 0, label6
 	lw $t0, 32($sp)
 	mul $t2, $t0, 10
-	sw $t2, 72($sp)
-	lw $t0, 72($sp)
+	sw $t2, 64($sp)
+	lw $t0, 64($sp)
 	lb $t1, 20($sp)
 	addu $t2, $t0, $t1
-	sw $t2, 76($sp)
-	lw $t0, 76($sp)
+	sw $t2, 68($sp)
+	lw $t0, 68($sp)
 	subu $t2, $t0, 48
-	sw $t2, 80($sp)
-	lw $t1, 80($sp)
+	sw $t2, 72($sp)
+	lw $t1, 72($sp)
 	sw $t1, 32($sp)
 	jal _getchar
 	la $t1, 0($sp)
-	sw $t1, 84($sp)
-	lw $t1, 84($sp)
+	sw $t1, 76($sp)
+	lw $t1, 76($sp)
 	lw $t1, 0($t1)
-	sw $t1, 88($sp)
-	lw $t1, 88($sp)
+	sw $t1, 80($sp)
+	lw $t1, 80($sp)
 	sb $t1, 20($sp)
 	j label5
 label6:
 	lw $v0, 32($sp)
-	sw $v0, 92($sp)
+	sw $v0, 84($sp)
 	j __end__get_d
 __end__get_d:
 	lw $ra, 8($sp)
-	addu $sp, $sp, 92
+	addu $sp, $sp, 84
 	j $ra
 main:
-	addu $sp, $sp, -172
+	addu $sp, $sp, -124
 	sw $ra, 16($sp)
 	jal _getchar
 	la $t1, 0($sp)
@@ -169,142 +165,118 @@ main:
 	lb $t1, 28($sp)
 	sb $t1, 0($t0)
 	la $t1, __s0
-	sw $t1, 60($sp)
-	lw $t1, 60($sp)
 	sw $t1, 56($sp)
 	la $t0, __1
 	li $t1, 0
 	addu $t1, $t0, $t1
-	sw $t1, 68($sp)
-	lw $t1, 68($sp)
-	lb $t1, 0($t1)
-	sw $t1, 64($sp)
+	sw $t1, 60($sp)
 	la $t0, __1
 	li $t1, 0
 	addu $t1, $t0, $t1
-	sw $t1, 76($sp)
-	lw $t1, 76($sp)
-	lw $t1, 0($t1)
-	sw $t1, 72($sp)
+	sw $t1, 64($sp)
 	lw $t0, 56($sp)
 	sw $t0, 4($sp)
+	lw $t0, 60($sp)
+	lb $t0, 0($t0)
+	sb $t0, 8($sp)
 	lw $t0, 64($sp)
-	sw $t0, 8($sp)
-	lw $t0, 72($sp)
+	lw $t0, 0($t0)
 	sw $t0, 12($sp)
 	jal _printf
+	la $t0, __2
+	li $t1, 0
+	addu $t1, $t0, $t1
+	sw $t1, 68($sp)
+	la $t0, __1
+	li $t1, 0
+	addu $t1, $t0, $t1
+	sw $t1, 72($sp)
+	lw $t0, 68($sp)
+	lw $t1, 72($sp)
+	lb $t1, 0($t1)
+	sb $t1, 0($t0)
+	la $t1, __s1
+	sw $t1, 76($sp)
 	la $t0, __2
 	li $t1, 0
 	addu $t1, $t0, $t1
 	sw $t1, 80($sp)
-	la $t0, __1
-	li $t1, 0
-	addu $t1, $t0, $t1
-	sw $t1, 84($sp)
-	lw $t0, 80($sp)
-	lw $t1, 84($sp)
-	lb $t1, 0($t1)
-	sb $t1, 0($t0)
-	la $t1, __s1
-	sw $t1, 92($sp)
-	lw $t1, 92($sp)
-	sw $t1, 88($sp)
-	la $t0, __2
-	li $t1, 0
-	addu $t1, $t0, $t1
-	sw $t1, 100($sp)
-	lw $t1, 100($sp)
-	lb $t1, 0($t1)
-	sw $t1, 96($sp)
 	la $t0, __2
 	li $t1, 4
 	addu $t1, $t0, $t1
-	sw $t1, 108($sp)
-	lw $t1, 108($sp)
-	lw $t1, 0($t1)
-	sw $t1, 104($sp)
-	lw $t0, 88($sp)
+	sw $t1, 84($sp)
+	lw $t0, 76($sp)
 	sw $t0, 4($sp)
-	lw $t0, 96($sp)
-	sw $t0, 8($sp)
-	lw $t0, 104($sp)
+	lw $t0, 80($sp)
+	lb $t0, 0($t0)
+	sb $t0, 8($sp)
+	lw $t0, 84($sp)
+	lw $t0, 0($t0)
 	sw $t0, 12($sp)
 	jal _printf
 	la $t0, __1
 	li $t1, 0
 	addu $t1, $t0, $t1
-	sw $t1, 112($sp)
-	lw $t0, 112($sp)
+	sw $t1, 88($sp)
+	lw $t0, 88($sp)
 	lw $t1, 40($sp)
 	sw $t1, 0($t0)
 	la $t1, __s2
-	sw $t1, 120($sp)
-	lw $t1, 120($sp)
-	sw $t1, 116($sp)
+	sw $t1, 92($sp)
 	la $t0, __1
 	li $t1, 0
 	addu $t1, $t0, $t1
-	sw $t1, 128($sp)
-	lw $t1, 128($sp)
-	lb $t1, 0($t1)
-	sw $t1, 124($sp)
+	sw $t1, 96($sp)
 	la $t0, __1
 	li $t1, 0
 	addu $t1, $t0, $t1
-	sw $t1, 136($sp)
-	lw $t1, 136($sp)
-	lw $t1, 0($t1)
-	sw $t1, 132($sp)
-	lw $t0, 116($sp)
+	sw $t1, 100($sp)
+	lw $t0, 92($sp)
 	sw $t0, 4($sp)
-	lw $t0, 124($sp)
-	sw $t0, 8($sp)
-	lw $t0, 132($sp)
+	lw $t0, 96($sp)
+	lb $t0, 0($t0)
+	sb $t0, 8($sp)
+	lw $t0, 100($sp)
+	lw $t0, 0($t0)
 	sw $t0, 12($sp)
 	jal _printf
 	la $t0, __2
 	li $t1, 4
 	addu $t1, $t0, $t1
-	sw $t1, 140($sp)
+	sw $t1, 104($sp)
 	la $t0, __1
 	li $t1, 0
 	addu $t1, $t0, $t1
-	sw $t1, 144($sp)
-	lw $t0, 140($sp)
-	lw $t1, 144($sp)
+	sw $t1, 108($sp)
+	lw $t0, 104($sp)
+	lw $t1, 108($sp)
 	lw $t1, 0($t1)
 	sw $t1, 0($t0)
 	la $t1, __s3
-	sw $t1, 152($sp)
-	lw $t1, 152($sp)
-	sw $t1, 148($sp)
+	sw $t1, 112($sp)
 	la $t0, __2
 	li $t1, 0
 	addu $t1, $t0, $t1
-	sw $t1, 160($sp)
-	lw $t1, 160($sp)
-	lb $t1, 0($t1)
-	sw $t1, 156($sp)
+	sw $t1, 116($sp)
 	la $t0, __2
 	li $t1, 4
 	addu $t1, $t0, $t1
-	sw $t1, 168($sp)
-	lw $t1, 168($sp)
-	lw $t1, 0($t1)
-	sw $t1, 164($sp)
-	lw $t0, 148($sp)
+	sw $t1, 120($sp)
+	lw $t0, 112($sp)
 	sw $t0, 4($sp)
-	lw $t0, 156($sp)
-	sw $t0, 8($sp)
-	lw $t0, 164($sp)
+	lw $t0, 116($sp)
+	lb $t0, 0($t0)
+	sb $t0, 8($sp)
+	lw $t0, 120($sp)
+	lw $t0, 0($t0)
 	sw $t0, 12($sp)
 	jal _printf
 	li $v0, 0
-	sw $v0, 172($sp)
+	sw $v0, 124($sp)
 	j __end__main
 __end__main:
 	lw $ra, 16($sp)
-	addu $sp, $sp, 172
+	addu $sp, $sp, 124
 	li $v0, 10
 	syscall
 _printf:
