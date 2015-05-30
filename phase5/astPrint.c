@@ -1,6 +1,7 @@
 #include "parser.h"
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 int n,c,flag,size;
 char s[1000010];
 void readInput(void){

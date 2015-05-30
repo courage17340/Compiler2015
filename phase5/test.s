@@ -1,322 +1,263 @@
 	.data
 __s0:
 	.byte 37
-	.byte 100
+	.byte 99
+	.byte 32
+	.byte 45
+	.byte 62
+	.byte 32
+	.byte 37
+	.byte 99
 	.byte 10
 	.byte 0
+	.byte 0
+	.byte 0
+__s1:
+	.byte 37
+	.byte 99
+	.byte 32
+	.byte 45
+	.byte 62
+	.byte 32
+	.byte 37
+	.byte 99
+	.byte 10
+	.byte 0
+	.byte 0
+	.byte 0
 	.text
-main:
-	addu $sp, $sp, -80244
-	sw $ra, 12($sp)
-	la $t0, 80040($sp)
-	li $t1, 0
-	sw $t1, 0($t0)
-	la $t0, 80032($sp)
-	li $t1, 0
-	sw $t1, 0($t0)
-	j label2
-label1:
-	la $t0, 80044($sp)
-	lw $t1, 80032($sp)
-	sw $t1, 0($t0)
-	lw $t0, 80032($sp)
+_hanoi:
+	addu $sp, $sp, -156
+	sw $ra, 20($sp)
+	lw $t0, 172($sp)
 	li $t1, 1
-	addu $t2, $t0, $t1
-	sw $t2, 80048($sp)
-	la $t0, 80032($sp)
-	lw $t1, 80048($sp)
-	sw $t1, 0($t0)
-label2:
-	lw $t0, 80032($sp)
-	li $t1, 100
-	slt $t2, $t0, $t1
-	sw $t2, 80052($sp)
-	lw $t0, 80052($sp)
-	beq $t0, 0, label3
-	la $t0, 80036($sp)
-	li $t1, 0
-	sw $t1, 0($t0)
-	j label5
-label4:
-	la $t0, 80056($sp)
-	lw $t1, 80036($sp)
-	sw $t1, 0($t0)
-	lw $t0, 80036($sp)
-	li $t1, 1
-	addu $t2, $t0, $t1
-	sw $t2, 80060($sp)
-	la $t0, 80036($sp)
-	lw $t1, 80060($sp)
-	sw $t1, 0($t0)
-label5:
-	lw $t0, 80036($sp)
-	li $t1, 100
-	slt $t2, $t0, $t1
-	sw $t2, 80064($sp)
-	lw $t0, 80064($sp)
-	beq $t0, 0, label6
-	lw $t0, 80036($sp)
-	li $t1, 4
-	mul $t2, $t0, $t1
-	sw $t2, 80068($sp)
-	lw $t0, 80032($sp)
-	li $t1, 400
-	mul $t2, $t0, $t1
-	sw $t2, 80076($sp)
-	la $t0, 80084($sp)
-	la $t1, 40032($sp)
-	sw $t1, 0($t0)
-	lw $t0, 80084($sp)
-	lw $t1, 80076($sp)
-	addu $t1, $t0, $t1
-	sw $t1, 80080($sp)
-	lw $t0, 80080($sp)
-	lw $t1, 80068($sp)
-	addu $t1, $t0, $t1
-	sw $t1, 80072($sp)
-	lw $t0, 80072($sp)
-	li $t1, 0
-	sw $t1, 0($t0)
-	j label4
-label6:
-	j label1
-label3:
-	la $t0, 80032($sp)
-	li $t1, 0
-	sw $t1, 0($t0)
-	j label8
-label7:
-	la $t0, 80088($sp)
-	lw $t1, 80032($sp)
-	sw $t1, 0($t0)
-	lw $t0, 80032($sp)
-	li $t1, 1
-	addu $t2, $t0, $t1
-	sw $t2, 80092($sp)
-	la $t0, 80032($sp)
-	lw $t1, 80092($sp)
-	sw $t1, 0($t0)
-label8:
-	lw $t0, 80032($sp)
-	li $t1, 100
-	slt $t2, $t0, $t1
-	sw $t2, 80096($sp)
-	lw $t0, 80096($sp)
-	beq $t0, 0, label9
-	lw $t0, 80032($sp)
-	li $t1, 20
 	sgt $t2, $t0, $t1
-	sw $t2, 80100($sp)
-	lw $t0, 80100($sp)
-	beq $t0, 0, label12
-	lw $t0, 80032($sp)
-	li $t1, 80
-	slt $t2, $t0, $t1
-	sw $t2, 80108($sp)
-	la $t0, 80104($sp)
-	lw $t1, 80108($sp)
-	sne $t1, $t1, 0
-	sw $t1, 0($t0)
-	j label13
-label12:
-	la $t0, 80104($sp)
-	li $t1, 0
-	sw $t1, 0($t0)
-label13:
-	lw $t0, 80104($sp)
-	bne $t0, 0, label10
-	j label11
-label10:
-	lw $t0, 80032($sp)
-	li $t1, 400
-	mul $t2, $t0, $t1
-	sw $t2, 80116($sp)
-	la $t0, 80124($sp)
-	la $t1, 40032($sp)
-	sw $t1, 0($t0)
-	lw $t0, 80124($sp)
-	lw $t1, 80116($sp)
-	addu $t1, $t0, $t1
-	sw $t1, 80120($sp)
-	la $t0, 80112($sp)
-	lw $t1, 80120($sp)
-	sw $t1, 0($t0)
-	la $t0, 80036($sp)
-	li $t1, 0
-	sw $t1, 0($t0)
-	j label15
-label14:
-	la $t0, 80128($sp)
-	lw $t1, 80036($sp)
-	sw $t1, 0($t0)
-	lw $t0, 80036($sp)
-	li $t1, 1
-	addu $t2, $t0, $t1
-	sw $t2, 80132($sp)
-	la $t0, 80036($sp)
-	lw $t1, 80132($sp)
-	sw $t1, 0($t0)
-label15:
-	lw $t0, 80036($sp)
-	li $t1, 100
-	slt $t2, $t0, $t1
-	sw $t2, 80136($sp)
-	lw $t0, 80136($sp)
-	beq $t0, 0, label16
-	lw $t0, 80036($sp)
-	li $t1, 5
-	sgt $t2, $t0, $t1
-	sw $t2, 80140($sp)
-	lw $t0, 80140($sp)
-	bne $t0, 0, label19
-	lw $t0, 80032($sp)
-	li $t1, 90
-	slt $t2, $t0, $t1
-	sw $t2, 80148($sp)
-	la $t0, 80144($sp)
-	lw $t1, 80148($sp)
-	sne $t1, $t1, 0
-	sw $t1, 0($t0)
-	j label20
-label19:
-	la $t0, 80144($sp)
-	li $t1, 1
-	sw $t1, 0($t0)
-label20:
-	lw $t0, 80144($sp)
-	bne $t0, 0, label17
-	j label18
-label17:
-	lw $t0, 80036($sp)
-	li $t1, 4
-	mul $t2, $t0, $t1
-	sw $t2, 80152($sp)
-	lw $t0, 80152($sp)
-	li $t1, 4
-	mul $t2, $t0, $t1
-	sw $t2, 80160($sp)
-	lw $t0, 80112($sp)
-	lw $t1, 80160($sp)
-	addu $t2, $t0, $t1
-	sw $t2, 80156($sp)
-	la $t0, 80164($sp)
-	li $t1, 0
-	sw $t1, 0($t0)
-	lw $t0, 80156($sp)
-	lw $t1, 80164($sp)
-	addu $t1, $t0, $t1
-	sw $t1, 80168($sp)
-	lw $t0, 80036($sp)
-	li $t1, 50
-	addu $t2, $t0, $t1
-	sw $t2, 80172($sp)
-	lw $t0, 80168($sp)
-	lw $t1, 80172($sp)
-	sw $t1, 0($t0)
-label18:
-	j label14
-label16:
-label11:
-	j label7
-label9:
-	la $t0, 80032($sp)
-	li $t1, 0
-	sw $t1, 0($t0)
-	j label22
-label21:
-	la $t0, 80176($sp)
-	lw $t1, 80032($sp)
-	sw $t1, 0($t0)
-	lw $t0, 80032($sp)
-	li $t1, 1
-	addu $t2, $t0, $t1
-	sw $t2, 80180($sp)
-	la $t0, 80032($sp)
-	lw $t1, 80180($sp)
-	sw $t1, 0($t0)
-label22:
-	lw $t0, 80032($sp)
-	li $t1, 100
-	slt $t2, $t0, $t1
-	sw $t2, 80184($sp)
-	lw $t0, 80184($sp)
-	beq $t0, 0, label23
-	la $t0, 80036($sp)
-	li $t1, 0
-	sw $t1, 0($t0)
-	j label25
-label24:
-	la $t0, 80188($sp)
-	lw $t1, 80036($sp)
-	sw $t1, 0($t0)
-	lw $t0, 80036($sp)
-	li $t1, 1
-	addu $t2, $t0, $t1
-	sw $t2, 80192($sp)
-	la $t0, 80036($sp)
-	lw $t1, 80192($sp)
-	sw $t1, 0($t0)
-label25:
-	lw $t0, 80036($sp)
-	li $t1, 100
-	slt $t2, $t0, $t1
-	sw $t2, 80196($sp)
-	lw $t0, 80196($sp)
-	beq $t0, 0, label26
-	lw $t0, 80036($sp)
-	li $t1, 4
-	mul $t2, $t0, $t1
-	sw $t2, 80200($sp)
-	lw $t0, 80032($sp)
-	li $t1, 400
-	mul $t2, $t0, $t1
-	sw $t2, 80208($sp)
-	la $t0, 80216($sp)
-	la $t1, 40032($sp)
-	sw $t1, 0($t0)
-	lw $t0, 80216($sp)
-	lw $t1, 80208($sp)
-	addu $t1, $t0, $t1
-	sw $t1, 80212($sp)
-	lw $t0, 80212($sp)
-	lw $t1, 80200($sp)
-	addu $t1, $t0, $t1
-	sw $t1, 80204($sp)
-	lw $t0, 80040($sp)
-	lw $t1, 80204($sp)
-	lw $t1, 0($t1)
-	addu $t2, $t0, $t1
-	sw $t2, 80220($sp)
-	la $t0, 80040($sp)
-	lw $t1, 80220($sp)
-	sw $t1, 0($t0)
-	j label24
-label26:
-	j label21
-label23:
-	la $t0, 80228($sp)
+	sw $t2, 24($sp)
+	lw $t0, 24($sp)
+	bne $t0, 0, label1
+	la $t0, 32($sp)
 	la $t1, __s0
 	sw $t1, 0($t0)
-	la $t0, 80224($sp)
-	lw $t1, 80228($sp)
+	la $t0, 28($sp)
+	lw $t1, 32($sp)
 	sw $t1, 0($t0)
-	la $t0, 80232($sp)
-	lw $t1, 80040($sp)
+	la $t0, 36($sp)
+	lb $t1, 160($sp)
 	sw $t1, 0($t0)
-	la $t0, 80236($sp)
-	lw $t1, 80224($sp)
+	la $t0, 40($sp)
+	lb $t1, 168($sp)
 	sw $t1, 0($t0)
-	lw $t0, 80236($sp)
+	la $t0, 44($sp)
+	lw $t1, 28($sp)
+	sw $t1, 0($t0)
+	lw $t0, 44($sp)
 	sw $t0, 4($sp)
-	la $t0, 80240($sp)
-	lw $t1, 80232($sp)
+	la $t0, 48($sp)
+	lw $t1, 36($sp)
 	sw $t1, 0($t0)
-	lw $t0, 80240($sp)
+	lw $t0, 48($sp)
 	sw $t0, 8($sp)
+	la $t0, 52($sp)
+	lw $t1, 40($sp)
+	sw $t1, 0($t0)
+	lw $t0, 52($sp)
+	sw $t0, 12($sp)
 	jal _printf
+	j label2
+label1:
+	la $t0, 56($sp)
+	lb $t1, 160($sp)
+	sw $t1, 0($t0)
+	la $t0, 60($sp)
+	lb $t1, 168($sp)
+	sw $t1, 0($t0)
+	la $t0, 64($sp)
+	lb $t1, 164($sp)
+	sw $t1, 0($t0)
+	lw $t0, 172($sp)
+	li $t1, 1
+	subu $t2, $t0, $t1
+	sw $t2, 72($sp)
+	la $t0, 68($sp)
+	lw $t1, 72($sp)
+	sw $t1, 0($t0)
+	la $t0, 76($sp)
+	lw $t1, 56($sp)
+	sw $t1, 0($t0)
+	lw $t0, 76($sp)
+	sw $t0, 4($sp)
+	la $t0, 80($sp)
+	lw $t1, 60($sp)
+	sw $t1, 0($t0)
+	lw $t0, 80($sp)
+	sw $t0, 8($sp)
+	la $t0, 84($sp)
+	lw $t1, 64($sp)
+	sw $t1, 0($t0)
+	lw $t0, 84($sp)
+	sw $t0, 12($sp)
+	la $t0, 88($sp)
+	lw $t1, 68($sp)
+	sw $t1, 0($t0)
+	lw $t0, 88($sp)
+	sw $t0, 16($sp)
+	jal _hanoi
+	la $t0, 96($sp)
+	la $t1, __s1
+	sw $t1, 0($t0)
+	la $t0, 92($sp)
+	lw $t1, 96($sp)
+	sw $t1, 0($t0)
+	la $t0, 100($sp)
+	lb $t1, 160($sp)
+	sw $t1, 0($t0)
+	la $t0, 104($sp)
+	lb $t1, 168($sp)
+	sw $t1, 0($t0)
+	la $t0, 108($sp)
+	lw $t1, 92($sp)
+	sw $t1, 0($t0)
+	lw $t0, 108($sp)
+	sw $t0, 4($sp)
+	la $t0, 112($sp)
+	lw $t1, 100($sp)
+	sw $t1, 0($t0)
+	lw $t0, 112($sp)
+	sw $t0, 8($sp)
+	la $t0, 116($sp)
+	lw $t1, 104($sp)
+	sw $t1, 0($t0)
+	lw $t0, 116($sp)
+	sw $t0, 12($sp)
+	jal _printf
+	la $t0, 120($sp)
+	lb $t1, 164($sp)
+	sw $t1, 0($t0)
+	la $t0, 124($sp)
+	lb $t1, 160($sp)
+	sw $t1, 0($t0)
+	la $t0, 128($sp)
+	lb $t1, 168($sp)
+	sw $t1, 0($t0)
+	lw $t0, 172($sp)
+	li $t1, 1
+	subu $t2, $t0, $t1
+	sw $t2, 136($sp)
+	la $t0, 132($sp)
+	lw $t1, 136($sp)
+	sw $t1, 0($t0)
+	la $t0, 140($sp)
+	lw $t1, 120($sp)
+	sw $t1, 0($t0)
+	lw $t0, 140($sp)
+	sw $t0, 4($sp)
+	la $t0, 144($sp)
+	lw $t1, 124($sp)
+	sw $t1, 0($t0)
+	lw $t0, 144($sp)
+	sw $t0, 8($sp)
+	la $t0, 148($sp)
+	lw $t1, 128($sp)
+	sw $t1, 0($t0)
+	lw $t0, 148($sp)
+	sw $t0, 12($sp)
+	la $t0, 152($sp)
+	lw $t1, 132($sp)
+	sw $t1, 0($t0)
+	lw $t0, 152($sp)
+	sw $t0, 16($sp)
+	jal _hanoi
+label2:
+__end__hanoi:
+	lw $ra, 20($sp)
+	addu $sp, $sp, 156
+	j $ra
+main:
+	addu $sp, $sp, -100
+	sw $ra, 20($sp)
+	jal _getchar
+	la $t0, 32($sp)
+	la $t1, 0($sp)
+	sw $t1, 0($t0)
+	la $t0, 36($sp)
+	lw $t1, 32($sp)
+	lw $t1, 0($t1)
+	sw $t1, 0($t0)
+	lw $t0, 36($sp)
+	li $t1, 48
+	subu $t2, $t0, $t1
+	sw $t2, 40($sp)
+	li $t0, 10
+	lw $t1, 40($sp)
+	mul $t2, $t0, $t1
+	sw $t2, 44($sp)
+	jal _getchar
+	la $t0, 48($sp)
+	la $t1, 0($sp)
+	sw $t1, 0($t0)
+	la $t0, 52($sp)
+	lw $t1, 48($sp)
+	lw $t1, 0($t1)
+	sw $t1, 0($t0)
+	lw $t0, 44($sp)
+	lw $t1, 52($sp)
+	addu $t2, $t0, $t1
+	sw $t2, 56($sp)
+	lw $t0, 56($sp)
+	li $t1, 48
+	subu $t2, $t0, $t1
+	sw $t2, 60($sp)
+	la $t0, 28($sp)
+	lw $t1, 60($sp)
+	sw $t1, 0($t0)
+	lw $t0, 28($sp)
+	li $t1, 0
+	sgt $t2, $t0, $t1
+	sw $t2, 64($sp)
+	lw $t0, 64($sp)
+	bne $t0, 0, label3
+	j label4
+label3:
+	la $t0, 68($sp)
+	li $t1, 97
+	sw $t1, 0($t0)
+	la $t0, 72($sp)
+	li $t1, 98
+	sw $t1, 0($t0)
+	la $t0, 76($sp)
+	li $t1, 99
+	sw $t1, 0($t0)
+	la $t0, 80($sp)
+	lw $t1, 28($sp)
+	sw $t1, 0($t0)
+	la $t0, 84($sp)
+	lw $t1, 68($sp)
+	sw $t1, 0($t0)
+	lw $t0, 84($sp)
+	sw $t0, 4($sp)
+	la $t0, 88($sp)
+	lw $t1, 72($sp)
+	sw $t1, 0($t0)
+	lw $t0, 88($sp)
+	sw $t0, 8($sp)
+	la $t0, 92($sp)
+	lw $t1, 76($sp)
+	sw $t1, 0($t0)
+	lw $t0, 92($sp)
+	sw $t0, 12($sp)
+	la $t0, 96($sp)
+	lw $t1, 80($sp)
+	sw $t1, 0($t0)
+	lw $t0, 96($sp)
+	sw $t0, 16($sp)
+	jal _hanoi
+label4:
+	li $v0, 0
+	sw $v0, 100($sp)
+	j __end__main
 __end__main:
-	lw $ra, 12($sp)
-	addu $sp, $sp, 80244
+	lw $ra, 20($sp)
+	addu $sp, $sp, 100
 	li $v0, 10
 	syscall
 _printf:

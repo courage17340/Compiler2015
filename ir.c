@@ -292,7 +292,7 @@ static void makeGoto(struct Function *func,int label);
 static void makeLabl(struct Function *func,int label);
 static void makeItgt(struct AstNode *ast,struct Function *func,int label);
 static void makeIfgt(struct AstNode *ast,struct Function *func,int label);
-static struct Object *makeExpr(struct AstNode *ast,struct Function *func);
+static struct Object *makeExpr(struct AstNode *ast,struct Function *func,int notUsed);
 static struct Object *makeIntc(int value);
 static struct String *getString(char *s);
 static void freeString(struct String *s);
@@ -409,7 +409,7 @@ static void initArra(struct Object *r,int beginAddr,struct AstNode *ast,struct A
 			s->op = getOp(IRINAROP,"init");
 			s->ob[0] = r;
 			s->ob[1] = makeIntc(t);
-			s->ob[2] = makeExpr(&init->c[i].c[0],func);
+			s->ob[2] = makeExpr(&init->c[i].c[0],func,0);
 			s->num = 3;
 			s->size = k;
 			pushBackSentence(func->body,s);
@@ -444,7 +444,7 @@ static void irVariList(struct AstNode *ast,struct ObjectList *list,struct Functi
 			}else{
 				ob = registers->e[list->link[list->num - 1]];
 				//ob = makeExpr(&ast->c[i].c[1],func);
-				ob1 = makeExpr(&ast->c[i].c[2].c[0],func);
+				ob1 = makeExpr(&ast->c[i].c[2].c[0],func,0);
 				s = getSentence();
 				s->op = getOp(IRASSIOP,"=");
 				s->ob[0] = ob;
@@ -570,10 +570,10 @@ label end
 	int t;
 	labelNum += 3;
 	t = labelNum;
-	makeExpr(&ast->c[0],func);
+	makeExpr(&ast->c[0],func,1);
 	makeGoto(func,t - 1);
 	makeLabl(func,t - 2);
-	makeExpr(&ast->c[2],func);
+	makeExpr(&ast->c[2],func,1);
 	makeLabl(func,t - 1);
 	if (ast->c[1].type == EMPTEXPR){
 		//nop
@@ -610,7 +610,7 @@ label end
 }
 static void irExprStmt(struct AstNode *ast,struct Function *func){
 	if (ast->c[0].type == EMPTEXPR) return;
-	makeExpr(&ast->c[0],func);
+	makeExpr(&ast->c[0],func,1);
 }
 static void irRetnStmt(struct AstNode *ast,struct Function * func){
 	struct Sentence *s = getSentence();
@@ -619,7 +619,7 @@ static void irRetnStmt(struct AstNode *ast,struct Function * func){
 	if (ast->type == EMPTEXPR){
 		s->num = 0;
 	}else{
-		struct Object *ob = makeExpr(ast,func);
+		struct Object *ob = makeExpr(ast,func,0);
 		s->num = 1;
 		s->ob[0] = ob;
 	}
@@ -643,7 +643,7 @@ static void makeLabl(struct Function *func,int label){
 }
 static void makeItgt(struct AstNode *ast,struct Function *func,int label){
 	struct Op *op = getOp(IRITGTOP,"ifTrueGoto");
-	struct Object *ob = makeExpr(ast,func);
+	struct Object *ob = makeExpr(ast,func,0);
 	struct Sentence *s = getSentence();
 	s->op = op;
 	s->ob[0] = ob;
@@ -653,7 +653,7 @@ static void makeItgt(struct AstNode *ast,struct Function *func,int label){
 }
 static void makeIfgt(struct AstNode *ast,struct Function *func,int label){
 	struct Op *op = getOp(IRIFGTOP,"ifFalseGoto");
-	struct Object *ob = makeExpr(ast,func);
+	struct Object *ob = makeExpr(ast,func,0);
 	struct Sentence *s = getSentence();
 	s->op = op;
 	s->ob[0] = ob;
@@ -661,8 +661,11 @@ static void makeIfgt(struct AstNode *ast,struct Function *func,int label){
 	s->num = 2;
 	pushBackSentence(func->body,s);
 }
-static struct Object *makeExpr(struct AstNode *ast,struct Function *func){
+static struct Object *makeExpr(struct AstNode *ast,struct Function *func,int notUsed){
 	struct Object *ob,*ob1,*ob2,*ob3;
+	if (ast->constant){
+		return makeIntc(ast->value);
+	}
 	if (ast->type == EMPTEXPR){
 		return NULL;
 	}else if (ast->type == BINAEXPR){
@@ -675,7 +678,7 @@ static struct Object *makeExpr(struct AstNode *ast,struct Function *func){
 			makeIfgt(&ast->c[0],func,t - 1);
 			ob1 = getRegister();
 			ob1->data = -1;
-			ob2 = makeExpr(&ast->c[1],func);
+			ob2 = makeExpr(&ast->c[1],func,0);
 			s = getSentence();
 			s->op = getOp(IRLGASOP,"=");
 			s->ob[0] = ob1;
@@ -700,7 +703,7 @@ static struct Object *makeExpr(struct AstNode *ast,struct Function *func){
 			makeItgt(&ast->c[0],func,t - 1);
 			ob1 = getRegister();
 			ob1->data = -1;
-			ob2 = makeExpr(&ast->c[1],func);
+			ob2 = makeExpr(&ast->c[1],func,0);
 			s = getSentence();
 			s->op = getOp(IRLGASOP,"=");
 			s->ob[0] = ob1;
@@ -719,8 +722,8 @@ static struct Object *makeExpr(struct AstNode *ast,struct Function *func){
 			return ob1;
 		}
 		s = getSentence();
-		ob1 = makeExpr(&ast->c[0],func);
-		ob2 = makeExpr(&ast->c[1],func);
+		ob1 = makeExpr(&ast->c[0],func,0);
+		ob2 = makeExpr(&ast->c[1],func,0);
 		if (strcmp(ast->data,",") == 0){
 			return ob2;
 		}else if (strcmp(ast->data,"=") == 0){
@@ -1160,7 +1163,7 @@ static struct Object *makeExpr(struct AstNode *ast,struct Function *func){
 		}
 	}else if (ast->type == UNAREXPR){
 		struct Sentence *s = getSentence();
-		ob1 = makeExpr(&ast->c[0],func);
+		ob1 = makeExpr(&ast->c[0],func,0);
 		if (strcmp(ast->data,"&") == 0){
 			s->op = getOp(IRUNAROP,"&");
 			ob = getRegister();
@@ -1287,7 +1290,7 @@ static struct Object *makeExpr(struct AstNode *ast,struct Function *func){
 			return NULL;
 		}
 	}else if (ast->type == SZOFEXPR){
-		ob1 = makeExpr(&ast->c[0],func);
+		ob1 = makeExpr(&ast->c[0],func,0);
 		return makeIntc(ast->value);
 	}else if (ast->type == CASTEXPR){
 		struct Sentence *s = getSentence();
@@ -1298,7 +1301,7 @@ static struct Object *makeExpr(struct AstNode *ast,struct Function *func){
 //		if (ast->retType->type == PTERTYPE) ob->pd = 1;
 		s->op = getOp(IRASSIOP,"=");
 		s->ob[0] = ob;
-		ob1 = makeExpr(&ast->c[1],func);
+		ob1 = makeExpr(&ast->c[1],func,0);
 		s->ob[1] = ob1;
 		s->num = 2;
 		pushBackSentence(func->body,s);
@@ -1318,7 +1321,7 @@ static struct Object *makeExpr(struct AstNode *ast,struct Function *func){
 //		if (ast->retType->type == ARRATYPE || ast->retType->type == PTERTYPE) ob->pd = 1;
 		s->op = getOp(IRPTRROP,"[]");
 		s->ob[0] = ob;
-		s->ob[1] = makeExpr(&ast->c[0],func);
+		s->ob[1] = makeExpr(&ast->c[0],func,0);
 		s->ob[2] = makeIntc(ast->pos);
 		s->num = 3;
 		pushBackSentence(func->body,s);
@@ -1338,14 +1341,14 @@ static struct Object *makeExpr(struct AstNode *ast,struct Function *func){
 //		if (ast->retType->type == ARRATYPE || ast->retType->type == PTERTYPE) ob->pd = 1;
 		s->op = getOp(IRARRROP,"[]");
 		s->ob[0] = ob;
-		s->ob[1] = makeExpr(&ast->c[0],func);
+		s->ob[1] = makeExpr(&ast->c[0],func,0);
 		s->ob[2] = makeIntc(ast->pos);
 		s->num = 3;
 		pushBackSentence(func->body,s);
 		return ob;
 	}else if (ast->type == SELFINCR){
 		struct Sentence *s;
-		ob1 = makeExpr(&ast->c[0],func);
+		ob1 = makeExpr(&ast->c[0],func,0);
 		ob2 = getRegister();
 		ob2->data = -1;
 		ob3 = getRegister();
@@ -1375,7 +1378,7 @@ static struct Object *makeExpr(struct AstNode *ast,struct Function *func){
 		return ob2;
 	}else if (ast->type == SELFDECR){
 		struct Sentence *s;
-		ob1 = makeExpr(&ast->c[0],func);
+		ob1 = makeExpr(&ast->c[0],func,0);
 		ob2 = getRegister();
 		ob2->data = -1;
 		ob3 = getRegister();
@@ -1410,7 +1413,7 @@ static struct Object *makeExpr(struct AstNode *ast,struct Function *func){
 		ob->pd = 2;
 		s->op = getOp(IRBINAOP,"*");
 		s->ob[0] = ob;
-		s->ob[1] = makeExpr(&ast->c[1],func);
+		s->ob[1] = makeExpr(&ast->c[1],func,0);
 		s->ob[2] = makeIntc(ast->size);
 		s->num = 3;
 		pushBackSentence(func->body,s);
@@ -1430,7 +1433,7 @@ static struct Object *makeExpr(struct AstNode *ast,struct Function *func){
 		}
 		
 		s->ob[0] = ob1;
-		s->ob[1] = makeExpr(&ast->c[0],func);
+		s->ob[1] = makeExpr(&ast->c[0],func,0);
 		s->ob[2] = ob;
 		s->num = 3;
 		pushBackSentence(func->body,s);
@@ -1449,7 +1452,7 @@ static struct Object *makeExpr(struct AstNode *ast,struct Function *func){
 		}
 		for (i = 0;i < num;++i){
 			struct Object *o = getRegister();
-			f[i] = makeExpr(&tmp->c[i],func);
+			f[i] = makeExpr(&tmp->c[i],func,0);
 			if (tmp->c[i].retType->type == ARRATYPE) f[i]->size = 4;
 			o->size = f[i]->size;
 			if (o->size < 4) o->size = 4;
@@ -1519,7 +1522,8 @@ static struct Object *makeExpr(struct AstNode *ast,struct Function *func){
 			if (cur & 3) cur = ((cur >> 2) + 1) << 2;
 			if (func->mainSpace < cur) func->mainSpace = cur;
 			
-			if (strcmp(ast->c[0].data,"printf") == 0){
+//			if (strcmp(ast->c[0].data,"printf") == 0){
+			if (notUsed){
 				s->ob[0] = makeIntc(number);
 				s->ob[1] = makeIntc(tmp->num);
 				s->num = 2;

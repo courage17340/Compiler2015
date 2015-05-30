@@ -9,4 +9,8 @@ astPrint
 ir
 test.*
 translate
+quiet
+assem.s
+spimout
+spimstat
 
