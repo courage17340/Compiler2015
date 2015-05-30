@@ -53,7 +53,7 @@ iterative.c		Accepted	26976
 joseph.c		Accepted	12230
 kmp.c		Accepted	1385
 lct.c		Accepted	33078
-linenumber.c		Wrong Answer
+linenumber.c		Accepted	503180
 manacher.c		Accepted	13307
 minrep.c		Accepted	2612
 palautm.c		Accepted	4580

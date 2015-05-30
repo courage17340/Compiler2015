@@ -11,6 +11,7 @@ Chu Wei's compiler project
 ##Version details
 | Version | Date | Description |
 |:-------:|:----:|:-----------:|
+| 3.0 | 2015.5.30 | basic compiler done, TODO optimization |
 | 2.1 | 2015.5.16 | structure refined |
 | 2.0 | 2015.5.12 | type size added |
 | 1.2b | 2015.5.2 | some bugs fixed |

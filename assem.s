@@ -144,7 +144,7 @@ label5:
 	mul $t2, $t0, $t1
 	sw $t2, 80($sp)
 	lw $t0, 80($sp)
-	lw $t1, 20($sp)
+	lb $t1, 20($sp)
 	addu $t2, $t0, $t1
 	sw $t2, 84($sp)
 	lw $t0, 84($sp)
