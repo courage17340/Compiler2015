@@ -49,7 +49,7 @@ static void sPrintObject(char *s,struct Object *o){
 	}else if (o->type == IRINTC){
 		sprintf(s,"%d",o->data);
 	}else if (o->type == IRTEMP){
-		if (o->data == -1)
+		if (o->data < 0)
 			sprintf(s,"%s",o->name);
 		else
 			sprintf(s,"%d($sp)",o->data);
@@ -415,8 +415,16 @@ static void printSentence(struct Sentence *s,int *cur,struct Function *func){
 //			printObject(s->ob[0]);
 //			printf("\n");
 			sPrintObject(t0,s->ob[0]);
-			printf("\tla $t1, 0($sp)\n");
-			printf("\tsw $t1, %s\n",t0);
+			
+			if (s->ob[0]->size <= 4 && s->ob[0]->pd == 2){
+				if (s->ob[0]->size == 4)
+					printf("\tsw $v0, %s\n",t0);
+				else
+					printf("\tsb $v0, %s\n",t0);
+			}else{
+				printf("\tla $t1, 0($sp)\n");
+				printf("\tsw $t1, %s\n",t0);
+			}
 		}
 	}else if (s->op->type == IRLABLOP){
 		printf("label%d:\n",s->ob[0]->data);
@@ -523,9 +531,9 @@ static void printSentence(struct Sentence *s,int *cur,struct Function *func){
 		if (s->num){
 			if (s->ob[0]->type == IRINTC){
 				printf("\tli $v0, %d\n",s->ob[0]->data);
-				printf("\tsw $v0, ");
-				printObject(registers->e[func->para->link[0]]);
-				printf("\n");
+//				printf("\tsw $v0, ");
+//				printObject(registers->e[func->para->link[0]]);
+//				printf("\n");
 			}else if (s->ob[0]->size == 4){
 				if (s->ob[0]->pd == 2){
 					printf("\tlw $v0, ");
@@ -537,9 +545,9 @@ static void printSentence(struct Sentence *s,int *cur,struct Function *func){
 					printf("\n");
 					printf("\tlw $v0, 0($v0)\n");
 				}
-				printf("\tsw $v0, ");
-				printObject(registers->e[func->para->link[0]]);
-				printf("\n");
+//				printf("\tsw $v0, ");
+//				printObject(registers->e[func->para->link[0]]);
+//				printf("\n");
 			}else if (s->ob[0]->size == 1){
 				if (s->ob[0]->pd == 2){
 					printf("\tlb $v0, ");
@@ -551,9 +559,9 @@ static void printSentence(struct Sentence *s,int *cur,struct Function *func){
 					printf("\n");
 					printf("\tlb $v0, 0($v0)\n");
 				}
-				printf("\tsb $v0, ");
-				printObject(registers->e[func->para->link[0]]);
-				printf("\n");
+//				printf("\tsb $v0, ");
+//				printObject(registers->e[func->para->link[0]]);
+//				printf("\n");
 			}else{
 				int k;
 				if (s->ob[0]->pd == 2)

@@ -1639,6 +1639,7 @@ static struct Object *makeExpr(struct AstNode *ast,struct Function *func,int not
 			ob->data = -1;
 			ob->size = ast->size;
 			ob->pd = 1;
+			if (ast->size <= 4) ob->pd = 2;
 			
 			s->ob[0] = ob;
 			s->ob[1] = makeIntc(number);
@@ -1646,16 +1647,20 @@ static struct Object *makeExpr(struct AstNode *ast,struct Function *func,int not
 			s->num = 3;
 			pushBackSentence(func->body,s);
 			
-			ret = getRegister();
-			ret->size = ast->size;
-			s = getSentence();
-			s->op = getOp(IRASSIOP,"=");
-			s->ob[0] = ret;
-			s->ob[1] = ob;
-			s->num = 2;
-			pushBackSentence(func->body,s);
+			if (ob->pd == 1){
+				ret = getRegister();
+				ret->size = ast->size;
+				s = getSentence();
+				s->op = getOp(IRASSIOP,"=");
+				s->ob[0] = ret;
+				s->ob[1] = ob;
+				s->num = 2;
+				pushBackSentence(func->body,s);
 			
-			return ret;
+				return ret;
+			}else{
+				return ob;
+			}
 		}
 	}else if (ast->type == IDEN){
 		int i,n,t;
