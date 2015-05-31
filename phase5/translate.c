@@ -4,7 +4,27 @@
 #include "translate.h"
 #include "ir.h"
 static int initArraBegin;
-static char t0[100],t1[100]/*,t2[100]*/;
+static char t[100],buffer[100],t0[100],t1[100]/*,t2[100]*/;
+
+
+static char mips[100010][100];
+static int senLen[100010];
+static int numOfLines,ptrOfBuffer;
+
+static void pushBuffer(void){
+	int n = strlen(t);
+	sprintf(buffer + ptrOfBuffer,"%s",t);
+	ptrOfBuffer += n;
+}
+static void pushLine(void){
+	++numOfLines;
+	sprintf(mips[numOfLines],"%s",buffer);
+	ptrOfBuffer = 0;
+}
+static void printMips(void){
+	int i;
+	for (i = 1;i <= numOfLines;++i) printf("%s",mips[i]);
+}
 
 static int make4(int x){
 	int t = x;
@@ -13,31 +33,45 @@ static int make4(int x){
 }
 static void printGlobal(struct Function *func){
 	int i,j;
-	printf("\t.data\n");
+	sprintf(buffer,"\t.data\n");
+	pushLine();
 	for (i = 1;i <= registerNum;++i)
 		if (registers->e[i]->data < 0){
-			printf("%s:\t.space %d\n",registers->e[i]->name,make4(registers->e[i]->size));
+			sprintf(buffer,"%s:\t.space %d\n",registers->e[i]->name,make4(registers->e[i]->size));
+			pushLine();
 		}
 	for (i = 0;i < string->num;++i){
 		struct String *s = string->e[i];
 		int n;
 		n = strlen(s->s);
-		printf("__s%d:\n",i);
-		for (j = 0;j < n;++j) printf("\t.byte %d\n",s->s[j]);
-		for (j = n;j < s->size;++j) printf("\t.byte 0\n");
+		sprintf(buffer,"__s%d:\n",i);
+		pushLine();
+		for (j = 0;j < n;++j){
+			sprintf(buffer,"\t.byte %d\n",s->s[j]);
+			pushLine();
+		}
+		for (j = n;j < s->size;++j){
+			sprintf(buffer,"\t.byte 0\n");
+			pushLine();
+		}
 	}
-	printf("\t.text\n");
+	sprintf(buffer,"\t.text\n");
+	pushLine();
 }
 static void printObject(struct Object *o){
 	if (o->type == IRSTRC){
 		//nop
 	}else if (o->type == IRINTC){
-		printf("%d",o->data);
+		sprintf(t,"%d",o->data);
+		pushBuffer();
 	}else if (o->type == IRTEMP){
-		if (o->data < 0)
-			printf("%s",o->name);
-		else
-			printf("%d($sp)",o->data);
+		if (o->data < 0){
+			sprintf(t,"%s",o->name);
+			pushBuffer();
+		}else{
+			sprintf(t,"%d($sp)",o->data);
+			pushBuffer();
+		}
 	}else{
 		//never
 	}
@@ -62,188 +96,227 @@ static void printSentence(struct Sentence *s,int *cur,struct Function *func){
 	if (s->op->type == IRUNAROP){
 		if (strcmp(s->op->name,"&") == 0){
 			if (s->ob[1]->pd == 2){
-				printf("\tla $t0, ");
+				sprintf(t,"\tla $t0, ");pushBuffer();
 				printObject(s->ob[1]);
-				printf("\n");
+				sprintf(t,"\n");pushBuffer();
+				pushLine();
 			}else{
-				printf("\tlw $t0, ");
+				sprintf(t,"\tlw $t0, ");pushBuffer();
 				printObject(s->ob[1]);
-				printf("\n");
+				sprintf(t,"\n");pushBuffer();
+				pushLine();
 			}
 		}else if (strcmp(s->op->name,"*") == 0){
 			if (s->ob[1]->pd == 1){
-				printf("\tlw $t0, ");
+				sprintf(t,"\tlw $t0, ");pushBuffer();
 				printObject(s->ob[1]);
-				printf("\n");
+				sprintf(t,"\n");pushBuffer();
+				pushLine();
 			}else{
-				printf("\tla $t0, ");
+				sprintf(t,"\tla $t0, ");pushBuffer();
 				printObject(s->ob[1]);
-				printf("\n");
+				sprintf(t,"\n");pushBuffer();
+				pushLine();
 			}
-			printf("\tlw $t0, 0($t0)\n");
+			sprintf(buffer,"\tlw $t0, 0($t0)\n");
+			pushLine();
 		}else{
 			sprintf(t0,"$t0");
 			if (s->ob[1]->type == IRINTC){
 				if (s->ob[1]->data == 0){
 					sprintf(t0,"$0");
 				}else{
-					printf("\tli $t0, %d\n",s->ob[1]->data);
+					sprintf(buffer,"\tli $t0, %d\n",s->ob[1]->data);
+					pushLine();
 				}
 			}else if (s->ob[1]->pd == 1){
-				printf("\tlw $t0, ");
+				sprintf(t,"\tlw $t0, ");pushBuffer();
 				printObject(s->ob[1]);
-				printf("\n");
-				if (s->ob[1]->size == 4)
-					printf("\tlw $t0, 0($t0)\n");
-				else
-					printf("\tlb $t0, 0($t0)\n");
+				sprintf(t,"\n");pushBuffer();
+				pushLine();
+				if (s->ob[1]->size == 4){
+					sprintf(buffer,"\tlw $t0, 0($t0)\n");
+					pushLine();
+				}else{
+					sprintf(buffer,"\tlb $t0, 0($t0)\n");
+					pushLine();
+				}
 			}else{
 				if (s->ob[1]->size == 4)
-					printf("\tlw $t0, ");
+					sprintf(t,"\tlw $t0, ");
 				else
-					printf("\tlb $t0, ");
+					sprintf(t,"\tlb $t0, ");
+				pushBuffer();
 				printObject(s->ob[1]);
-				printf("\n");
+				sprintf(t,"\n");pushBuffer();
+				pushLine();
 			}
 			if (strcmp(s->op->name,"+") == 0){
 				//nop
 			}else if (strcmp(s->op->name,"-") == 0){
-				printf("\tnegu $t0, %s\n",t0);
+				sprintf(buffer,"\tnegu $t0, %s\n",t0);
+				pushLine();
 			}else if (strcmp(s->op->name,"~") == 0){
-				printf("\tnot $t0, %s\n",t0);
+				sprintf(buffer,"\tnot $t0, %s\n",t0);
+				pushLine();
 			}else if (strcmp(s->op->name,"!") == 0){
-				printf("\tseq $t0, %s, 0\n",t0);
+				sprintf(buffer,"\tseq $t0, %s, 0\n",t0);
+				pushLine();
 			}else{
 				//never
 			}
 		}
-		printf("\tsw $t0, ");
+		sprintf(t,"\tsw $t0, ");pushBuffer();
 		printObject(s->ob[0]);
-		printf("\n");
+		sprintf(t,"\n");pushBuffer();
+		pushLine();
 	}else if (s->op->type == IRBINAOP){
 		sprintf(t0,"$t0");
 		if (s->ob[1]->type == IRINTC){
 			if (s->ob[1]->data == 0){
 				sprintf(t0,"$0");
 			}else{
-				printf("\tli $t0, %d\n",s->ob[1]->data);
+				sprintf(buffer,"\tli $t0, %d\n",s->ob[1]->data);
+				pushLine();
 			}
 		}else if (s->ob[1]->pd == 1){
-			printf("\tlw $t0, ");
+			sprintf(t,"\tlw $t0, ");pushBuffer();
 			printObject(s->ob[1]);
-			printf("\n");
-			if (s->ob[1]->size == 4)
-				printf("\tlw $t0, 0($t0)\n");
-			else
-				printf("\tlb $t0, 0($t0)\n");
+			sprintf(t,"\n");pushBuffer();
+			pushLine();
+			if (s->ob[1]->size == 4){
+				sprintf(buffer,"\tlw $t0, 0($t0)\n");
+				pushLine();
+			}else{
+				sprintf(buffer,"\tlb $t0, 0($t0)\n");
+				pushLine();
+			}
 		}else{
 			if (s->ob[1]->size == 4)
-				printf("\tlw $t0, ");
+				sprintf(t,"\tlw $t0, ");
 			else
-				printf("\tlb $t0, ");
+				sprintf(t,"\tlb $t0, ");
+			pushBuffer();
 			printObject(s->ob[1]);
-			printf("\n");
+			sprintf(t,"\n");pushBuffer();
+			pushLine();
 		}
 		sprintf(t1,"$t1");
 		if (s->ob[2]->type == IRINTC){
 //			printf("\tli $t1, %d\n",s->ob[2]->data);
 			sprintf(t1,"%d",s->ob[2]->data);
 		}else if (s->ob[2]->pd == 1){
-			printf("\tlw $t1, ");
+			sprintf(t,"\tlw $t1, ");pushBuffer();
 			printObject(s->ob[2]);
-			printf("\n");
+			sprintf(t,"\n");pushBuffer();
+			pushLine();
 			if (s->ob[2]->size == 4)
-				printf("\tlw $t1, 0($t1)\n");
+				sprintf(buffer,"\tlw $t1, 0($t1)\n");
 			else
-				printf("\tlb $t1, 0($t1)\n");
+				sprintf(buffer,"\tlb $t1, 0($t1)\n");
+			pushLine();
 		}else{
 			if (s->ob[2]->size == 4)
-				printf("\tlw $t1, ");
+				sprintf(t,"\tlw $t1, ");
 			else
-				printf("\tlb $t1, ");
+				sprintf(t,"\tlb $t1, ");
+			pushBuffer();
 			printObject(s->ob[2]);
-			printf("\n");
+			sprintf(t,"\n");pushBuffer();
+			pushLine();
 		}
 		
 		if (strcmp(s->op->name,"|") == 0){
-			printf("\tor $t2, %s, %s\n",t0,t1);
+			sprintf(buffer,"\tor $t2, %s, %s\n",t0,t1);
 		}else if (strcmp(s->op->name,"^") == 0){
-			printf("\txor $t2, %s, %s\n",t0,t1);
+			sprintf(buffer,"\txor $t2, %s, %s\n",t0,t1);
 		}else if (strcmp(s->op->name,"&") == 0){
-			printf("\tand $t2, %s, %s\n",t0,t1);
+			sprintf(buffer,"\tand $t2, %s, %s\n",t0,t1);
 		}else if (strcmp(s->op->name,"<") == 0){
-			printf("\tslt $t2, %s, %s\n",t0,t1);
+			sprintf(buffer,"\tslt $t2, %s, %s\n",t0,t1);
 		}else if (strcmp(s->op->name,">") == 0){
-			printf("\tsgt $t2, %s, %s\n",t0,t1);
+			sprintf(buffer,"\tsgt $t2, %s, %s\n",t0,t1);
 		}else if (strcmp(s->op->name,"+") == 0){
-			printf("\taddu $t2, %s, %s\n",t0,t1);
+			sprintf(buffer,"\taddu $t2, %s, %s\n",t0,t1);
 		}else if (strcmp(s->op->name,"-") == 0){
-			printf("\tsubu $t2, %s, %s\n",t0,t1);
+			sprintf(buffer,"\tsubu $t2, %s, %s\n",t0,t1);
 		}else if (strcmp(s->op->name,"*") == 0){
-			printf("\tmul $t2, %s, %s\n",t0,t1);
+			sprintf(buffer,"\tmul $t2, %s, %s\n",t0,t1);
 		}else if (strcmp(s->op->name,"/") == 0){
-			printf("\tdiv $t2, %s, %s\n",t0,t1);
+			sprintf(buffer,"\tdiv $t2, %s, %s\n",t0,t1);
 		}else if (strcmp(s->op->name,"%") == 0){
-			printf("\trem $t2, %s, %s\n",t0,t1);
+			sprintf(buffer,"\trem $t2, %s, %s\n",t0,t1);
 		}else if (strcmp(s->op->name,"==") == 0){
-			printf("\tseq $t2, %s, %s\n",t0,t1);
+			sprintf(buffer,"\tseq $t2, %s, %s\n",t0,t1);
 		}else if (strcmp(s->op->name,"!=") == 0){
-			printf("\tsne $t2, %s, %s\n",t0,t1);
+			sprintf(buffer,"\tsne $t2, %s, %s\n",t0,t1);
 		}else if (strcmp(s->op->name,"<=") == 0){
-			printf("\tsle $t2, %s, %s\n",t0,t1);
+			sprintf(buffer,"\tsle $t2, %s, %s\n",t0,t1);
 		}else if (strcmp(s->op->name,">=") == 0){
-			printf("\tsge $t2, %s, %s\n",t0,t1);
+			sprintf(buffer,"\tsge $t2, %s, %s\n",t0,t1);
 		}else if (strcmp(s->op->name,"<<") == 0){
-			printf("\tsll $t2, %s, %s\n",t0,t1);
+			sprintf(buffer,"\tsll $t2, %s, %s\n",t0,t1);
 		}else if (strcmp(s->op->name,">>") == 0){
-			printf("\tsra $t2, %s, %s\n",t0,t1);
+			sprintf(buffer,"\tsra $t2, %s, %s\n",t0,t1);
 		}
-		printf("\tsw $t2, ");
+		pushLine();
+		sprintf(t,"\tsw $t2, ");pushBuffer();
 		printObject(s->ob[0]);
-		printf("\n");
+		sprintf(t,"\n");pushBuffer();
+		pushLine();
 	}else if (s->op->type == IRARASOP){
 		if (s->ob[0]->size == 1){
 			if (s->ob[0]->pd == 1){
-				printf("\tlw $t0, ");
+				sprintf(t,"\tlw $t1, ");pushBuffer();
 				printObject(s->ob[0]);
-				printf("\n");
+				sprintf(t,"\n");pushBuffer();
+				pushLine();
 			}else{
-//				printf("\tla $t0, ");
+//				printf("\tla $t1, ");
 //				printObject(s->ob[0]);
 //				printf("\n");
-				printf("\tla $t1, ");
+				sprintf(t,"\tla $t0, ");pushBuffer();
 				printObject(s->ob[1]);
-				printf("\n");
-				printf("\tsb $t1, ");
+				sprintf(t,"\n");pushBuffer();
+				pushLine();
+				sprintf(t,"\tsb $t0, ");pushBuffer();
 				printObject(s->ob[0]);
-				printf("\n");
+				sprintf(t,"\n");pushBuffer();
+				pushLine();
 				return;
 			}
-			printf("\tla $t1, ");
+			sprintf(t,"\tla $t0, ");pushBuffer();
 			printObject(s->ob[1]);
-			printf("\n");
-			printf("\tsb $t1, 0($t0)\n");
+			sprintf(t,"\n");pushBuffer();
+			pushLine();
+			sprintf(buffer,"\tsb $t0, 0($t1)\n");
+			pushLine();
 		}else if (s->ob[0]->size == 4){
 			if (s->ob[0]->pd == 1){
-				printf("\tlw $t0, ");
+				sprintf(t,"\tlw $t1, ");pushBuffer();
 				printObject(s->ob[0]);
-				printf("\n");
+				sprintf(t,"\n");pushBuffer();
+				pushLine();
 			}else{
-//				printf("\tla $t0, ");
+//				printf("\tla $t1, ");
 //				printObject(s->ob[0]);
 //				printf("\n");
-				printf("\tla $t1, ");
+				sprintf(t,"\tla $t0, ");pushBuffer();
 				printObject(s->ob[1]);
-				printf("\n");
-				printf("\tsw $t1, ");
+				sprintf(t,"\n");pushBuffer();
+				pushLine();
+				sprintf(t,"\tsw $t0, ");pushBuffer();
 				printObject(s->ob[0]);
-				printf("\n");
+				sprintf(t,"\n");pushBuffer();
+				pushLine();
 				return;
 			}
-			printf("\tla $t1, ");
+			sprintf(t,"\tla $t0, ");pushBuffer();
 			printObject(s->ob[1]);
-			printf("\n");
-			printf("\tsw $t1, 0($t0)\n");
+			sprintf(t,"\n");pushBuffer();
+			pushLine();
+			sprintf(buffer,"\tsw $t0, 0($t1)\n");
+			pushLine();
 		}else{
 			//never
 		}
@@ -251,9 +324,10 @@ static void printSentence(struct Sentence *s,int *cur,struct Function *func){
 		if (s->ob[0]->size == 1){
 			sprintf(t0,"0($t0)");
 			if (s->ob[0]->pd == 1){
-				printf("\tlw $t0, ");
+				sprintf(t,"\tlw $t0, ");pushBuffer();
 				printObject(s->ob[0]);
-				printf("\n");
+				sprintf(t,"\n");pushBuffer();
+				pushLine();
 			}else{
 //				printf("\tla $t0, ");
 //				printObject(s->ob[0]);
@@ -265,38 +339,49 @@ static void printSentence(struct Sentence *s,int *cur,struct Function *func){
 				if (s->ob[1]->data == 0){
 					sprintf(t1,"$0");
 				}else{
-					printf("\tli $t1, %d\n",s->ob[1]->data);
+					sprintf(buffer,"\tli $t1, %d\n",s->ob[1]->data);
+					pushLine();
 				}
-				printf("\tsb %s, %s\n",t1,t0);
+				sprintf(buffer,"\tsb %s, %s\n",t1,t0);
+				pushLine();
 			}else if (s->ob[1]->pd == 2){
 				if (s->ob[1]->size == 1)
-					printf("\tlb $t1, ");
+					sprintf(t,"\tlb $t1, ");
 				else
-					printf("\tlw $t1, ");
+					sprintf(t,"\tlw $t1, ");
+				pushBuffer();
 				printObject(s->ob[1]);
-				printf("\n");
-				printf("\tsb $t1, %s\n",t0);
+				sprintf(t,"\n");pushBuffer();
+				pushLine();
+				sprintf(buffer,"\tsb $t1, %s\n",t0);
+				pushLine();
 			}else if (s->ob[1]->pd == 1){
-				printf("\tlw $t1, ");
+				sprintf(t,"\tlw $t1, ");pushBuffer();
 				printObject(s->ob[1]);
-				printf("\n");
+				sprintf(t,"\n");pushBuffer();
+				pushLine();
 				if (s->ob[1]->size == 1)
-					printf("\tlb $t1, 0($t1)\n");
+					sprintf(buffer,"\tlb $t1, 0($t1)\n");
 				else
-					printf("\tlw $t1, 0($t1)\n");
-				printf("\tsb $t1, %s\n",t0);
+					sprintf(buffer,"\tlw $t1, 0($t1)\n");
+				pushLine();
+				sprintf(buffer,"\tsb $t1, %s\n",t0);
+				pushLine();
 			}else{
-				printf("la $t1, ");
+				sprintf(t,"la $t1, ");pushBuffer();
 				printObject(s->ob[1]);
-				printf("\n");
-				printf("\tsb $t1, %s\n",t0);
+				sprintf(t,"\n");pushBuffer();
+				pushLine();
+				sprintf(buffer,"\tsb $t1, %s\n",t0);
+				pushLine();
 			}
 		}else if (s->ob[0]->size == 4){
 			sprintf(t0,"0($t0)");
 			if (s->ob[0]->pd == 1){
-				printf("\tlw $t0, ");
+				sprintf(t,"\tlw $t0, ");pushBuffer();
 				printObject(s->ob[0]);
-				printf("\n");
+				sprintf(t,"\n");pushBuffer();
+				pushLine();
 			}else{
 //				printf("\tla $t0, ");
 //				printObject(s->ob[0]);
@@ -308,108 +393,143 @@ static void printSentence(struct Sentence *s,int *cur,struct Function *func){
 				if (s->ob[1]->data == 0){
 					sprintf(t1,"$0");
 				}else{
-					printf("\tli $t1, %d\n",s->ob[1]->data);
+					sprintf(buffer,"\tli $t1, %d\n",s->ob[1]->data);
+					pushLine();
 				}
-				printf("\tsw %s, %s\n",t1,t0);
+				sprintf(buffer,"\tsw %s, %s\n",t1,t0);
+				pushLine();
 			}else if (s->ob[1]->pd == 2){
 				if (s->ob[1]->size == 1)
-					printf("\tlb $t1, ");
+					sprintf(t,"\tlb $t1, ");
 				else
-					printf("\tlw $t1, ");
+					sprintf(t,"\tlw $t1, ");
+				pushBuffer();
 				printObject(s->ob[1]);
-				printf("\n");
-				printf("\tsw $t1, %s\n",t0);
+				sprintf(t,"\n");pushBuffer();
+				pushLine();
+				sprintf(buffer,"\tsw $t1, %s\n",t0);
+				pushLine();
 			}else if (s->ob[1]->pd == 1){
-				printf("\tlw $t1, ");
+				sprintf(t,"\tlw $t1, ");pushBuffer();
 				printObject(s->ob[1]);
-				printf("\n");
+				sprintf(t,"\n");pushBuffer();
+				pushLine();
 				if (s->ob[1]->size == 1)
-					printf("\tlb $t1, 0($t1)\n");
+					sprintf(buffer,"\tlb $t1, 0($t1)\n");
 				else
-					printf("\tlw $t1, 0($t1)\n");
-				printf("\tsw $t1, %s\n",t0);
+					sprintf(buffer,"\tlw $t1, 0($t1)\n");
+				pushLine();
+				sprintf(buffer,"\tsw $t1, %s\n",t0);
+				pushLine();
 			}else{
-				printf("\tla $t1, ");
+				sprintf(t,"\tla $t1, ");pushBuffer();
 				printObject(s->ob[1]);
-				printf("\n");
-				printf("\tsw $t1, %s\n",t0);
+				sprintf(t,"\n");pushBuffer();
+				pushLine();
+				sprintf(buffer,"\tsw $t1, %s\n",t0);
+				pushLine();
 			}
 		}else{
 			int k;
 			if (s->ob[0]->pd == 1){
-				printf("\tlw $t0, ");
+				sprintf(t,"\tlw $t0, ");pushBuffer();
 				printObject(s->ob[0]);
-				printf("\n");
+				sprintf(t,"\n");pushBuffer();
+				pushLine();
 			}else{
-				printf("\tla $t0, ");
+				sprintf(t,"\tla $t0, ");pushBuffer();
 				printObject(s->ob[0]);
-				printf("\n");
+				sprintf(t,"\n");pushBuffer();
+				pushLine();
 			}
 			
 			if (s->ob[1]->pd == 1)
-				printf("\tlw $t1, ");
+				sprintf(t,"\tlw $t1, ");
 			else
-				printf("\tla $t1, ");
+				sprintf(t,"\tla $t1, ");
+			pushBuffer();
 			printObject(s->ob[1]);
-			printf("\n");
+			sprintf(t,"\n");pushBuffer();
+			pushLine();
 			for (k = 0;k < s->ob[0]->size;k += 4){
-				printf("\tlw $t2, %d($t1)\n",k);
-				printf("\tsw $t2, %d($t0)\n",k);
+				sprintf(buffer,"\tlw $t2, %d($t1)\n",k);
+				pushLine();
+				sprintf(buffer,"\tsw $t2, %d($t0)\n",k);
+				pushLine();
 			}
 		}
 	}else if (s->op->type == IRPARAOP){
 		if (s->size == 1){
 			if (s->ob[0]->type == IRINTC){
-				printf("\tli $t0, %d\n",s->ob[0]->data);
-				printf("\tsb $t0, %d($sp)\n",*cur);
+				sprintf(buffer,"\tli $t0, %d\n",s->ob[0]->data);
+				pushLine();
+				sprintf(buffer,"\tsb $t0, %d($sp)\n",*cur);
+				pushLine();
 			}else if (s->ob[0]->pd == 1){
-				printf("\tlw $t0, ");
+				sprintf(t,"\tlw $t0, ");pushBuffer();
 				printObject(s->ob[0]);
-				printf("\n");
-				printf("\tlb $t0, 0($t0)\n");
-				printf("\tsb $t0, %d($sp)\n",*cur);
+				sprintf(t,"\n");pushBuffer();
+				pushLine();
+				sprintf(buffer,"\tlb $t0, 0($t0)\n");
+				pushLine();
+				sprintf(buffer,"\tsb $t0, %d($sp)\n",*cur);
+				pushLine();
 			}else if (s->ob[0]->pd == 2){
-				printf("\tlb $t0, ");
+				sprintf(t,"\tlb $t0, ");pushBuffer();
 				printObject(s->ob[0]);
-				printf("\n");
-				printf("\tsb $t0, %d($sp)\n",*cur);
+				sprintf(t,"\n");pushBuffer();
+				pushLine();
+				sprintf(buffer,"\tsb $t0, %d($sp)\n",*cur);
+				pushLine();
 			}else{
 			
 			}
 			*cur += 4;
 		}else if (s->size == 4){
 			if (s->ob[0]->type == IRINTC){
-				printf("\tli $t0, %d\n",s->ob[0]->data);
-				printf("\tsw $t0, %d($sp)\n",*cur);
+				sprintf(buffer,"\tli $t0, %d\n",s->ob[0]->data);
+				pushLine();
+				sprintf(buffer,"\tsw $t0, %d($sp)\n",*cur);
+				pushLine();
 			}else if (s->ob[0]->pd == 1){
-				printf("\tlw $t0, ");
+				sprintf(t,"\tlw $t0, ");pushBuffer();
 				printObject(s->ob[0]);
-				printf("\n");
-				printf("\tlw $t0, 0($t0)\n");
-				printf("\tsw $t0, %d($sp)\n",*cur);
+				sprintf(t,"\n");pushBuffer();
+				pushLine();
+				sprintf(buffer,"\tlw $t0, 0($t0)\n");
+				pushLine();
+				sprintf(buffer,"\tsw $t0, %d($sp)\n",*cur);
+				pushLine();
 			}else{
-				printf("\tlw $t0, ");
+				sprintf(t,"\tlw $t0, ");pushBuffer();
 				printObject(s->ob[0]);
-				printf("\n");
-				printf("\tsw $t0, %d($sp)\n",*cur);
+				sprintf(t,"\n");pushBuffer();
+				pushLine();
+				sprintf(buffer,"\tsw $t0, %d($sp)\n",*cur);
+				pushLine();
 			}
 			*cur += 4;
 		}else{
 			if (s->ob[0]->pd == 2)
-				printf("\tla $t0, ");
+				sprintf(t,"\tla $t0, ");
 			else
-				printf("\tlw $t0, ");
+				sprintf(t,"\tlw $t0, ");
+			pushBuffer();
 			printObject(s->ob[0]);
-			printf("\n");
+			sprintf(t,"\n");pushBuffer();
+			pushLine();
 			for (i = 0;i < s->size;i += 4){
-				printf("\tlw $t1, %d($t0)\n",i);
-				printf("\tsw $t1, %d($sp)\n",*cur);
+				sprintf(buffer,"\tlw $t1, %d($t0)\n",i);
+				pushLine();
+				sprintf(buffer,"\tsw $t1, %d($sp)\n",*cur);
+				pushLine();
 				*cur += 4;
 			}
 		}
 	}else if (s->op->type == IRCALLOP){
 		*cur = 0;
-		printf("\tjal _%s\n",funcList->e[s->ob[s->num - 2]->data]->name);
+		sprintf(buffer,"\tjal _%s\n",funcList->e[s->ob[s->num - 2]->data]->name);
+		pushLine();
 		if (s->num > 2){
 //			printf("\tla $t0, ");
 //			printObject(s->ob[0]);
@@ -418,111 +538,141 @@ static void printSentence(struct Sentence *s,int *cur,struct Function *func){
 			
 			if (s->ob[0]->size <= 4 && s->ob[0]->pd == 2){
 				if (s->ob[0]->size == 4)
-					printf("\tsw $v0, %s\n",t0);
+					sprintf(buffer,"\tsw $v0, %s\n",t0);
 				else
-					printf("\tsb $v0, %s\n",t0);
+					sprintf(buffer,"\tsb $v0, %s\n",t0);
+				pushLine();
 			}else{
-				printf("\tla $t1, 0($sp)\n");
-				printf("\tsw $t1, %s\n",t0);
+				sprintf(buffer,"\tla $t1, 0($sp)\n");
+				pushLine();
+				sprintf(buffer,"\tsw $t1, %s\n",t0);
+				pushLine();
 			}
 		}
 	}else if (s->op->type == IRLABLOP){
-		printf("label%d:\n",s->ob[0]->data);
+		sprintf(buffer,"label%d:\n",s->ob[0]->data);
+		pushLine();
 	}else if (s->op->type == IRGOTOOP){
-		printf("\tj label%d\n",s->ob[0]->data);
+		sprintf(buffer,"\tj label%d\n",s->ob[0]->data);
+		pushLine();
 	}else if (s->op->type == IRITGTOP){
 		if (s->ob[0]->type == IRINTC){
-			printf("\tli $t0, %d\n",s->ob[0]->data);
+			sprintf(buffer,"\tli $t0, %d\n",s->ob[0]->data);
+			pushLine();
 		}else if (s->ob[0]->pd == 2){
 			if (s->ob[0]->size == 4)
-				printf("\tlw $t0, ");
+				sprintf(t,"\tlw $t0, ");
 			else
-				printf("\tlb $t0, ");
+				sprintf(t,"\tlb $t0, ");
+			pushBuffer();
 			printObject(s->ob[0]);
-			printf("\n");
+			sprintf(t,"\n");pushBuffer();
+			pushLine();
 		}else{
-			printf("\tlw $t0, ");
+			sprintf(t,"\tlw $t0, ");pushBuffer();
 			printObject(s->ob[0]);
-			printf("\n");
+			sprintf(t,"\n");pushBuffer();
+			pushLine();
 			if (s->ob[0]->size == 4)
-				printf("\tlw $t0, 0($t0)\n");
+				sprintf(buffer,"\tlw $t0, 0($t0)\n");
 			else
-				printf("\tlb $t0, 0($t0)\n");
+				sprintf(buffer,"\tlb $t0, 0($t0)\n");
+			pushLine();
 		}
-		printf("\tbne $t0, 0, label%d\n",s->ob[1]->data);
+		sprintf(buffer,"\tbne $t0, 0, label%d\n",s->ob[1]->data);
+		pushLine();
 	}else if (s->op->type == IRIFGTOP){
 		if (s->ob[0]->type == IRINTC){
-			printf("\tli $t0, %d\n",s->ob[0]->data);
+			sprintf(buffer,"\tli $t0, %d\n",s->ob[0]->data);
+			pushLine();
 		}else if (s->ob[0]->pd == 2){
 			if (s->ob[0]->size == 4)
-				printf("\tlw $t0, ");
+				sprintf(t,"\tlw $t0, ");
 			else
-				printf("\tlb $t0, ");
+				sprintf(t,"\tlb $t0, ");
+			pushBuffer();
 			printObject(s->ob[0]);
-			printf("\n");
+			sprintf(t,"\n");pushBuffer();
+			pushLine();
 		}else{
-			printf("\tlw $t0, ");
+			sprintf(t,"\tlw $t0, ");pushBuffer();
 			printObject(s->ob[0]);
-			printf("\n");
+			sprintf(t,"\n");pushBuffer();
+			pushLine();
 			if (s->ob[0]->size == 4)
-				printf("\tlw $t0, 0($t0)\n");
+				sprintf(buffer,"\tlw $t0, 0($t0)\n");
 			else
-				printf("\tlb $t0, 0($t0)\n");
+				sprintf(buffer,"\tlb $t0, 0($t0)\n");
+			pushLine();
 		}
-		printf("\tbeq $t0, 0, label%d\n",s->ob[1]->data);
+		sprintf(buffer,"\tbeq $t0, 0, label%d\n",s->ob[1]->data);
+		pushLine();
 	}else if (s->op->type == IRARRROP){
 		if (s->ob[1]->pd == 2){
-			printf("\tla $t0, ");
+			sprintf(t,"\tla $t0, ");pushBuffer();
 			printObject(s->ob[1]);
-			printf("\n");
+			sprintf(t,"\n");pushBuffer();
+			pushLine();
 		}else{
-			printf("\tlw $t0, ");
+			sprintf(t,"\tlw $t0, ");pushBuffer();
 			printObject(s->ob[1]);
-			printf("\n");
+			sprintf(t,"\n");pushBuffer();
+			pushLine();
 		}
 		
 		if (s->ob[2]->type == IRINTC){
-			printf("\tli $t1, %d\n",s->ob[2]->data);
+			sprintf(buffer,"\tli $t1, %d\n",s->ob[2]->data);
+			pushLine();
 		}else if (s->ob[2]->pd == 2){
-			printf("\tlw $t1, ");
+			sprintf(t,"\tlw $t1, ");pushBuffer();
 			printObject(s->ob[2]);
-			printf("\n");
+			sprintf(t,"\n");pushBuffer();
+			pushLine();
 		}else{
-			printf("nizaidouwo\n");
+//			printf("nizaidouwo\n");
 		}
 		
-		printf("\taddu $t1, $t0, $t1\n");
-		printf("\tsw $t1, ");
+		sprintf(buffer,"\taddu $t1, $t0, $t1\n");
+		pushLine();
+		sprintf(t,"\tsw $t1, ");pushBuffer();
 		printObject(s->ob[0]);
-		printf("\n");
+		sprintf(t,"\n");pushBuffer();
+		pushLine();
 	}else if (s->op->type == IRARRWOP){
 		//never
 	}else if (s->op->type == IRPTRROP){
 		if (s->ob[1]->pd == 2){
-			printf("\tlw $t0, ");
+			sprintf(t,"\tlw $t0, ");pushBuffer();
 			printObject(s->ob[1]);
-			printf("\n");
+			sprintf(t,"\n");pushBuffer();
+			pushLine();
 		}else{
-			printf("\tlw $t0, ");
+			sprintf(t,"\tlw $t0, ");pushBuffer();
 			printObject(s->ob[1]);
-			printf("\n");
-			printf("\tlw $t0, 0($t0)\n");
+			sprintf(t,"\n");pushBuffer();
+			pushLine();
+			sprintf(buffer,"\tlw $t0, 0($t0)\n");
+			pushLine();
 		}
 		
 		if (s->ob[2]->type == IRINTC){
-			printf("\tli $t1, %d\n",s->ob[2]->data);
+			sprintf(buffer,"\tli $t1, %d\n",s->ob[2]->data);
+			pushLine();
 		}else if (s->ob[2]->pd == 2){
-			printf("\tlw $t1, ");
+			sprintf(t,"\tlw $t1, ");pushBuffer();
 			printObject(s->ob[2]);
-			printf("\n");
+			sprintf(t,"\n");pushBuffer();
+			pushLine();
 		}else{
-			printf("nizaidouwo\n");
+//			printf("nizaidouwo\n");
 		}
 		
-		printf("\taddu $t1, $t0, $t1\n");
-		printf("\tsw $t1, ");
+		sprintf(buffer,"\taddu $t1, $t0, $t1\n");
+		pushLine();
+		sprintf(t,"\tsw $t1, ");pushBuffer();
 		printObject(s->ob[0]);
-		printf("\n");
+		sprintf(t,"\n");pushBuffer();
+		pushLine();
 	}else if (s->op->type == IRPTRWOP){
 		//never
 	}else if (s->op->type == IRRTSZOP){
@@ -530,34 +680,41 @@ static void printSentence(struct Sentence *s,int *cur,struct Function *func){
 	}else if (s->op->type == IRRETNOP){
 		if (s->num){
 			if (s->ob[0]->type == IRINTC){
-				printf("\tli $v0, %d\n",s->ob[0]->data);
+				sprintf(buffer,"\tli $v0, %d\n",s->ob[0]->data);
+				pushLine();
 //				printf("\tsw $v0, ");
 //				printObject(registers->e[func->para->link[0]]);
 //				printf("\n");
 			}else if (s->ob[0]->size == 4){
 				if (s->ob[0]->pd == 2){
-					printf("\tlw $v0, ");
+					sprintf(t,"\tlw $v0, ");pushBuffer();
 					printObject(s->ob[0]);
-					printf("\n");
+					sprintf(t,"\n");pushBuffer();
+					pushLine();
 				}else{
-					printf("\tlw $v0, ");
+					sprintf(t,"\tlw $v0, ");pushBuffer();
 					printObject(s->ob[0]);
-					printf("\n");
-					printf("\tlw $v0, 0($v0)\n");
+					sprintf(t,"\n");pushBuffer();
+					pushLine();
+					sprintf(buffer,"\tlw $v0, 0($v0)\n");
+					pushLine();
 				}
 //				printf("\tsw $v0, ");
 //				printObject(registers->e[func->para->link[0]]);
 //				printf("\n");
 			}else if (s->ob[0]->size == 1){
 				if (s->ob[0]->pd == 2){
-					printf("\tlb $v0, ");
+					sprintf(t,"\tlb $v0, ");pushBuffer();
 					printObject(s->ob[0]);
-					printf("\n");
+					sprintf(t,"\n");pushBuffer();
+					pushLine();
 				}else{
-					printf("\tlw $v0, ");
+					sprintf(t,"\tlw $v0, ");pushBuffer();
 					printObject(s->ob[0]);
-					printf("\n");
-					printf("\tlb $v0, 0($v0)\n");
+					sprintf(t,"\n");pushBuffer();
+					pushLine();
+					sprintf(buffer,"\tlb $v0, 0($v0)\n");
+					pushLine();
 				}
 //				printf("\tsb $v0, ");
 //				printObject(registers->e[func->para->link[0]]);
@@ -565,89 +722,116 @@ static void printSentence(struct Sentence *s,int *cur,struct Function *func){
 			}else{
 				int k;
 				if (s->ob[0]->pd == 2)
-					printf("\tla $t0, ");
+					sprintf(t,"\tla $t0, ");
 				else
-					printf("\tlw $t0, ");
+					sprintf(t,"\tlw $t0, ");
+				pushBuffer();
 				printObject(s->ob[0]);
-				printf("\n");
-				printf("\tla $v0, ");
+				sprintf(t,"\n");pushBuffer();
+				pushLine();
+				sprintf(t,"\tla $v0, ");pushBuffer();
 				printObject(registers->e[func->para->link[0]]);
-				printf("\n");
+				sprintf(t,"\n");pushBuffer();
+				pushLine();
 				for (k = 0;k < s->ob[0]->size;k += 4){
-					printf("\tlw $t1, %d($t0)\n",k);
-					printf("\tsw $t1, %d($v0)\n",k);
+					sprintf(buffer,"\tlw $t1, %d($t0)\n",k);
+					pushLine();
+					sprintf(buffer,"\tsw $t1, %d($v0)\n",k);
+					pushLine();
 				}
 			}
 		}
-		printf("\tj __end__%s\n",func->name);
+		sprintf(buffer,"\tj __end__%s\n",func->name);
+		pushLine();
 	}else if (s->op->type == IRLGASOP){
 		sPrintObject(t0,s->ob[0]);
 //		printf("\tla $t0, ");
 //		printObject(s->ob[0]);
 //		printf("\n");
 		if (s->ob[1]->type == IRINTC){
-			printf("\tli $t1, %d\n",s->ob[1]->data != 0);
-			printf("\tsw $t1, %s\n",t0);
+			sprintf(buffer,"\tli $t1, %d\n",s->ob[1]->data != 0);
+			pushLine();
+			sprintf(buffer,"\tsw $t1, %s\n",t0);
+			pushLine();
 		}else if (s->ob[1]->pd == 2){
 			if (s->ob[1]->size == 4)
-				printf("\tlw $t1, ");
+				sprintf(t,"\tlw $t1, ");
 			else
-				printf("\tlb $t1, ");
+				sprintf(t,"\tlb $t1, ");
+			pushBuffer();
 			printObject(s->ob[1]);
-			printf("\n");
-			printf("\tsne $t1, $t1, 0\n");
-			printf("\tsw $t1, %s\n",t0);
+			sprintf(t,"\n");pushBuffer();
+			pushLine();
+			sprintf(buffer,"\tsne $t1, $t1, 0\n");
+			pushLine();
+			sprintf(buffer,"\tsw $t1, %s\n",t0);
+			pushLine();
 		}else{
-			printf("\tlw $t1, ");
+			sprintf(t,"\tlw $t1, ");pushBuffer();
 			printObject(s->ob[1]);
-			printf("\n");
+			sprintf(t,"\n");pushBuffer();
+			pushLine();
 			if (s->ob[1]->size == 4)
-				printf("\tlw $t1, 0($t1)\n");
+				sprintf(buffer,"\tlw $t1, 0($t1)\n");
 			else
-				printf("\tlb $t1, 0($t1)\n");
-			printf("\tsne $t1, $t1, 0\n");
-			printf("\tsw $t1, %s\n",t0);
+				sprintf(buffer,"\tlb $t1, 0($t1)\n");
+			pushLine();
+			sprintf(buffer,"\tsne $t1, $t1, 0\n");
+			pushLine();
+			sprintf(buffer,"\tsw $t1, %s\n",t0);
+			pushLine();
 		}
 	}else if (s->op->type == IRASSCOP){
 //		printf("\tla $t0, ");
 //		printObject(s->ob[0]);
 //		printf("\n");
 		sPrintObject(t0,s->ob[0]);
-		printf("\tla $t1, __s%d\n",s->ob[1]->data);
-		printf("\tsw $t1, %s\n",t0);
+		sprintf(buffer,"\tla $t1, __s%d\n",s->ob[1]->data);
+		pushLine();
+		sprintf(buffer,"\tsw $t1, %s\n",t0);
+		pushLine();
 	}else if (s->op->type == IRINAROP){
-		printf("\tlw $t0, ");
+		sprintf(t,"\tlw $t0, ");pushBuffer();
 		printObject(s->ob[0]);
-		printf("\n");
-		if (s->ob[2]->type == IRINTC)
-			printf("\tli $t1, %d\n",s->ob[2]->data);
-		else{
-			printf("\tlw $t1, ");
+		sprintf(t,"\n");pushBuffer();
+		pushLine();
+		if (s->ob[2]->type == IRINTC){
+			sprintf(buffer,"\tli $t1, %d\n",s->ob[2]->data);
+			pushLine();
+		}else{
+			sprintf(t,"\tlw $t1, ");pushBuffer();
 			printObject(s->ob[2]);
-			printf("\n");
+			sprintf(t,"\n");pushBuffer();
+			pushLine();
 		}
 		if (s->size == 1)
-			printf("\tsb $t1, %d($t0)\n",s->ob[1]->data);
+			sprintf(buffer,"\tsb $t1, %d($t0)\n",s->ob[1]->data);
 		else
-			printf("\tsw $t1, %d($t0)\n",s->ob[1]->data);
+			sprintf(buffer,"\tsw $t1, %d($t0)\n",s->ob[1]->data);
+		pushLine();
 	}else if (s->op->type == IROFGTOP){
 		if (s->ob[0]->type == IRINTC){
-			printf("\tli $t0, %d\n",s->ob[0]->data);
+			sprintf(buffer,"\tli $t0, %d\n",s->ob[0]->data);
+			pushLine();
 		}else if (s->ob[0]->pd == 2){
 			if (s->ob[0]->size == 4)
-				printf("\tlw $t0, ");
+				sprintf(t,"\tlw $t0, ");
 			else
-				printf("\tlb $t0, ");
+				sprintf(t,"\tlb $t0, ");
+			pushBuffer();
 			printObject(s->ob[0]);
-			printf("\n");
+			sprintf(t,"\n");pushBuffer();
+			pushLine();
 		}else{
-			printf("\tlw $t0, ");
+			sprintf(t,"\tlw $t0, ");pushBuffer();
 			printObject(s->ob[0]);
-			printf("\n");
+			sprintf(t,"\n");pushBuffer();
+			pushLine();
 			if (s->ob[0]->size == 4)
-				printf("\tlw $t0, 0($t0)\n");
+				sprintf(buffer,"\tlw $t0, 0($t0)\n");
 			else
-				printf("\tlb $t0, 0($t0)\n");
+				sprintf(buffer,"\tlb $t0, 0($t0)\n");
+			pushLine();
 		}
 		sprintf(t1,"$t1");
 		if (s->ob[1]->type == IRINTC){
@@ -655,53 +839,63 @@ static void printSentence(struct Sentence *s,int *cur,struct Function *func){
 			sprintf(t1,"%d",s->ob[1]->data);
 		}else if (s->ob[1]->pd == 2){
 			if (s->ob[1]->size == 4)
-				printf("\tlw $t1, ");
+				sprintf(t,"\tlw $t1, ");
 			else
-				printf("\tlb $t1, ");
+				sprintf(t,"\tlb $t1, ");
+			pushBuffer();
 			printObject(s->ob[1]);
-			printf("\n");
+			sprintf(t,"\n");pushBuffer();
+			pushLine();
 		}else{
-			printf("\tlw $t1, ");
+			sprintf(t,"\tlw $t1, ");pushBuffer();
 			printObject(s->ob[1]);
-			printf("\n");
+			sprintf(t,"\n");pushBuffer();
+			pushLine();
 			if (s->ob[1]->size == 4)
-				printf("\tlw $t1, 0($t1)\n");
+				sprintf(buffer,"\tlw $t1, 0($t1)\n");
 			else
-				printf("\tlb $t1, 0($t1)\n");
+				sprintf(buffer,"\tlb $t1, 0($t1)\n");
+			pushLine();
 		}
 		if (strcmp(s->op->name,"<=") == 0){
-			printf("\tbgt $t0, %s, label%d\n",t1,s->ob[2]->data);
+			sprintf(buffer,"\tbgt $t0, %s, label%d\n",t1,s->ob[2]->data);
 		}else if (strcmp(s->op->name,"<") == 0){
-			printf("\tbge $t0, %s, label%d\n",t1,s->ob[2]->data);
+			sprintf(buffer,"\tbge $t0, %s, label%d\n",t1,s->ob[2]->data);
 		}else if (strcmp(s->op->name,">=") == 0){
-			printf("\tblt $t0, %s, label%d\n",t1,s->ob[2]->data);
+			sprintf(buffer,"\tblt $t0, %s, label%d\n",t1,s->ob[2]->data);
 		}else if (strcmp(s->op->name,">") == 0){
-			printf("\tble $t0, %s, label%d\n",t1,s->ob[2]->data);
+			sprintf(buffer,"\tble $t0, %s, label%d\n",t1,s->ob[2]->data);
 		}else if (strcmp(s->op->name,"==") == 0){
-			printf("\tbne $t0, %s, label%d\n",t1,s->ob[2]->data);
+			sprintf(buffer,"\tbne $t0, %s, label%d\n",t1,s->ob[2]->data);
 		}else if (strcmp(s->op->name,"!=") == 0){
-			printf("\tbeq $t0, %s, label%d\n",t1,s->ob[2]->data);
+			sprintf(buffer,"\tbeq $t0, %s, label%d\n",t1,s->ob[2]->data);
 		}else{
 			//never
 		}
+		pushLine();
 	}else if (s->op->type == IROTGTOP){
 		if (s->ob[0]->type == IRINTC){
-			printf("\tli $t0, %d\n",s->ob[0]->data);
+			sprintf(buffer,"\tli $t0, %d\n",s->ob[0]->data);
+			pushLine();
 		}else if (s->ob[0]->pd == 2){
 			if (s->ob[0]->size == 4)
-				printf("\tlw $t0, ");
+				sprintf(t,"\tlw $t0, ");
 			else
-				printf("\tlb $t0, ");
+				sprintf(t,"\tlb $t0, ");
+			pushBuffer();
 			printObject(s->ob[0]);
-			printf("\n");
+			sprintf(t,"\n");pushBuffer();
+			pushLine();
 		}else{
-			printf("\tlw $t0, ");
+			sprintf(t,"\tlw $t0, ");pushBuffer();
 			printObject(s->ob[0]);
-			printf("\n");
+			sprintf(t,"\n");pushBuffer();
+			pushLine();
 			if (s->ob[0]->size == 4)
-				printf("\tlw $t0, 0($t0)\n");
+				sprintf(buffer,"\tlw $t0, 0($t0)\n");
 			else
-				printf("\tlb $t0, 0($t0)\n");
+				sprintf(buffer,"\tlb $t0, 0($t0)\n");
+			pushLine();
 		}
 		sprintf(t1,"$t1");
 		if (s->ob[1]->type == IRINTC){
@@ -709,99 +903,130 @@ static void printSentence(struct Sentence *s,int *cur,struct Function *func){
 			sprintf(t1,"%d",s->ob[1]->data);
 		}else if (s->ob[1]->pd == 2){
 			if (s->ob[1]->size == 4)
-				printf("\tlw $t1, ");
+				sprintf(t,"\tlw $t1, ");
 			else
-				printf("\tlb $t1, ");
+				sprintf(t,"\tlb $t1, ");
+			pushBuffer();
 			printObject(s->ob[1]);
-			printf("\n");
+			sprintf(t,"\n");pushBuffer();
+			pushLine();
 		}else{
-			printf("\tlw $t1, ");
+			sprintf(t,"\tlw $t1, ");pushBuffer();
 			printObject(s->ob[1]);
-			printf("\n");
+			sprintf(t,"\n");pushBuffer();
+			pushLine();
 			if (s->ob[1]->size == 4)
-				printf("\tlw $t1, 0($t1)\n");
+				sprintf(buffer,"\tlw $t1, 0($t1)\n");
 			else
-				printf("\tlb $t1, 0($t1)\n");
+				sprintf(buffer,"\tlb $t1, 0($t1)\n");
+			pushLine();
 		}
 		if (strcmp(s->op->name,"<=") == 0){
-			printf("\tble $t0, %s, label%d\n",t1,s->ob[2]->data);
+			sprintf(buffer,"\tble $t0, %s, label%d\n",t1,s->ob[2]->data);
 		}else if (strcmp(s->op->name,"<") == 0){
-			printf("\tblt $t0, %s, label%d\n",t1,s->ob[2]->data);
+			sprintf(buffer,"\tblt $t0, %s, label%d\n",t1,s->ob[2]->data);
 		}else if (strcmp(s->op->name,">=") == 0){
-			printf("\tbge $t0, %s, label%d\n",t1,s->ob[2]->data);
+			sprintf(buffer,"\tbge $t0, %s, label%d\n",t1,s->ob[2]->data);
 		}else if (strcmp(s->op->name,">") == 0){
-			printf("\tbgt $t0, %s, label%d\n",t1,s->ob[2]->data);
+			sprintf(buffer,"\tbgt $t0, %s, label%d\n",t1,s->ob[2]->data);
 		}else if (strcmp(s->op->name,"==") == 0){
-			printf("\tbeq $t0, %s, label%d\n",t1,s->ob[2]->data);
+			sprintf(buffer,"\tbeq $t0, %s, label%d\n",t1,s->ob[2]->data);
 		}else if (strcmp(s->op->name,"!=") == 0){
-			printf("\tbne $t0, %s, label%d\n",t1,s->ob[2]->data);
+			sprintf(buffer,"\tbne $t0, %s, label%d\n",t1,s->ob[2]->data);
 		}else{
 			//never
 		}
+		pushLine();
 	}else if (s->op->type == IRINCROP){
 		if (s->ob[0]->pd == 2){
 			if (s->size == 1){
-				printf("\tlb $t0, ");
+				sprintf(t,"\tlb $t0, ");pushBuffer();
 				printObject(s->ob[0]);
-				printf("\n");
-				printf("\taddu $t0, $t0, %d\n",s->ob[1]->data);
-				printf("\tsb $t0, ");
+				sprintf(t,"\n");pushBuffer();
+				pushLine();
+				sprintf(buffer,"\taddu $t0, $t0, %d\n",s->ob[1]->data);
+				pushLine();
+				sprintf(t,"\tsb $t0, ");pushBuffer();
 				printObject(s->ob[0]);
-				printf("\n");
+				sprintf(t,"\n");pushBuffer();
+				pushLine();
 			}else{
-				printf("\tlw $t0, ");
+				sprintf(t,"\tlw $t0, ");pushBuffer();
 				printObject(s->ob[0]);
-				printf("\n");
-				printf("\taddu $t0, $t0, %d\n",s->ob[1]->data);
-				printf("\tsw $t0, ");
+				sprintf(t,"\n");pushBuffer();
+				pushLine();
+				sprintf(buffer,"\taddu $t0, $t0, %d\n",s->ob[1]->data);
+				pushLine();
+				sprintf(t,"\tsw $t0, ");pushBuffer();
 				printObject(s->ob[0]);
-				printf("\n");
+				sprintf(t,"\n");pushBuffer();
+				pushLine();
 			}
 		}else{
-			printf("\tlw $t0, ");
+			sprintf(t,"\tlw $t0, ");pushBuffer();
 			printObject(s->ob[0]);
-			printf("\n");
+			sprintf(t,"\n");pushBuffer();
+			pushLine();
 			if (s->size == 1){
-				printf("\tlb $t1, 0($t0)\n");
-				printf("\taddu $t1, $t1, %d\n",s->ob[1]->data);
-				printf("\tsb $t1, 0($t0)\n");
+				sprintf(buffer,"\tlb $t1, 0($t0)\n");
+				pushLine();
+				sprintf(buffer,"\taddu $t1, $t1, %d\n",s->ob[1]->data);
+				pushLine();
+				sprintf(buffer,"\tsb $t1, 0($t0)\n");
+				pushLine();
 			}else{
-				printf("\tlw $t1, 0($t0)\n");
-				printf("\taddu $t1, $t1, %d\n",s->ob[1]->data);
-				printf("\tsw $t1, 0($t0)\n");
+				sprintf(buffer,"\tlw $t1, 0($t0)\n");
+				pushLine();
+				sprintf(buffer,"\taddu $t1, $t1, %d\n",s->ob[1]->data);
+				pushLine();
+				sprintf(buffer,"\tsw $t1, 0($t0)\n");
+				pushLine();
 			}
 		}
 	}else if (s->op->type == IRDECROP){
 		if (s->ob[0]->pd == 2){
 			if (s->size == 1){
-				printf("\tlb $t0, ");
+				sprintf(t,"\tlb $t0, ");pushBuffer();
 				printObject(s->ob[0]);
-				printf("\n");
-				printf("\tsubu $t0, $t0, %d\n",s->ob[1]->data);
-				printf("\tsb $t0, ");
+				sprintf(t,"\n");pushBuffer();
+				pushLine();
+				sprintf(buffer,"\tsubu $t0, $t0, %d\n",s->ob[1]->data);
+				pushLine();
+				sprintf(t,"\tsb $t0, ");pushBuffer();
 				printObject(s->ob[0]);
-				printf("\n");
+				sprintf(t,"\n");pushBuffer();
+				pushLine();
 			}else{
-				printf("\tlw $t0, ");
+				sprintf(t,"\tlw $t0, ");pushBuffer();
 				printObject(s->ob[0]);
-				printf("\n");
-				printf("\tsubu $t0, $t0, %d\n",s->ob[1]->data);
-				printf("\tsw $t0, ");
+				sprintf(t,"\n");pushBuffer();
+				pushLine();
+				sprintf(buffer,"\tsubu $t0, $t0, %d\n",s->ob[1]->data);
+				pushLine();
+				sprintf(t,"\tsw $t0, ");pushBuffer();
 				printObject(s->ob[0]);
-				printf("\n");
+				sprintf(t,"\n");pushBuffer();
+				pushLine();
 			}
 		}else{
-			printf("\tlw $t0, ");
+			sprintf(t,"\tlw $t0, ");pushBuffer();
 			printObject(s->ob[0]);
-			printf("\n");
+			sprintf(t,"\n");pushBuffer();
+			pushLine();
 			if (s->size == 1){
-				printf("\tlb $t1, 0($t0)\n");
-				printf("\tsubu $t1, $t1, %d\n",s->ob[1]->data);
-				printf("\tsb $t1, 0($t0)\n");
+				sprintf(buffer,"\tlb $t1, 0($t0)\n");
+				pushLine();
+				sprintf(buffer,"\tsubu $t1, $t1, %d\n",s->ob[1]->data);
+				pushLine();
+				sprintf(buffer,"\tsb $t1, 0($t0)\n");
+				pushLine();
 			}else{
-				printf("\tlw $t1, 0($t0)\n");
-				printf("\tsubu $t1, $t1, %d\n",s->ob[1]->data);
-				printf("\tsw $t1, 0($t0)\n");
+				sprintf(buffer,"\tlw $t1, 0($t0)\n");
+				pushLine();
+				sprintf(buffer,"\tsubu $t1, $t1, %d\n",s->ob[1]->data);
+				pushLine();
+				sprintf(buffer,"\tsw $t1, 0($t0)\n");
+				pushLine();
 			}
 		}
 	}else{
@@ -812,14 +1037,17 @@ static void printFunc(struct Function *func){
 	int i,cur = 0;
 	struct SentenceList *l = func->body;
 	if (strcmp(func->name,"main") == 0)
-		printf("%s:\n",func->name);
+		sprintf(buffer,"%s:\n",func->name);
 	else
-		printf("_%s:\n",func->name);
-	printf("\taddu $sp, $sp, -%d\n",func->mainSpace);
+		sprintf(buffer,"_%s:\n",func->name);
+	pushLine();
+	sprintf(buffer,"\tsubu $sp, $sp, %d\n",func->mainSpace);
+	pushLine();
 	
-	if (!func->isLeaf)
-		printf("\tsw $ra, %d($sp)\n",func->retnStat);
-	
+	if (!func->isLeaf){
+		sprintf(buffer,"\tsw $ra, %d($sp)\n",func->retnStat);
+		pushLine();
+	}
 	if (strcmp(func->name,"main") == 0){
 		struct SentenceList *l = funcList->e[0]->body;
 		for (i = 0;i < l->num;++i) printSentence(l->e[i],&cur,func);
@@ -828,38 +1056,58 @@ static void printFunc(struct Function *func){
 	for (i = 0;i < l->num;++i){
 		printSentence(l->e[i],&cur,func);
 	}
-	printf("__end__%s:\n",func->name);
-	if (!func->isLeaf)
-		printf("\tlw $ra, %d($sp)\n",func->retnStat);
-	
-	printf("\taddu $sp, $sp, %d\n",func->mainSpace);
+	sprintf(buffer,"__end__%s:\n",func->name);
+	pushLine();
+	if (!func->isLeaf){
+		sprintf(buffer,"\tlw $ra, %d($sp)\n",func->retnStat);
+		pushLine();
+	}
+	sprintf(buffer,"\taddu $sp, $sp, %d\n",func->mainSpace);
+	pushLine();
 	if (strcmp(func->name,"main") == 0){
-		printf("\tli $v0, 10\n");
-		printf("\tsyscall\n");
+		sprintf(buffer,"\tli $v0, 10\n");
+		pushLine();
+		sprintf(buffer,"\tsyscall\n");
+		pushLine();
 	}else{
-		printf("\tj $ra\n");
+		sprintf(buffer,"\tj $ra\n");
+		pushLine();
 	}
 }
 static void printPrintf(){
 	char *a[3];
 	int f[3],i,j,t;
-	printf("_printf:\n");
-	printf("\tla $a1, 4($sp)\n");
-	printf("\tlw $a2, 4($sp)\n");
+	sprintf(buffer,"_printf:\n");
+	pushLine();
+	sprintf(buffer,"\tla $a1, 4($sp)\n");
+	pushLine();
+	sprintf(buffer,"\tlw $a2, 4($sp)\n");
+	pushLine();
 //	printf("\tj _printf_loop\n");
 	
-	printf("_printf_loop:\n");
-	printf("\tlb $a0, 0($a2)\n");
-	printf("\tbeq $a0, 0, _printf_end\n");
-	printf("\taddu $a2, $a2, 1\n");
-	printf("\tbeq $a0, '%%', _printf_fmt\n");
-	printf("\tli $v0, 11\n");
-	printf("\tsyscall\n");
-	printf("\tj _printf_loop\n");
+	sprintf(buffer,"_printf_loop:\n");
+	pushLine();
+	sprintf(buffer,"\tlb $a0, 0($a2)\n");
+	pushLine();
+	sprintf(buffer,"\tbeq $a0, 0, _printf_end\n");
+	pushLine();
+	sprintf(buffer,"\taddu $a2, $a2, 1\n");
+	pushLine();
+	sprintf(buffer,"\tbeq $a0, '%%', _printf_fmt\n");
+	pushLine();
+	sprintf(buffer,"\tli $v0, 11\n");
+	pushLine();
+	sprintf(buffer,"\tsyscall\n");
+	pushLine();
+	sprintf(buffer,"\tj _printf_loop\n");
+	pushLine();
 	
-	printf("_printf_fmt:\n");
-	printf("\tlb $a0, 0($a2)\n");
-	printf("\taddu $a2, $a2, 1\n");
+	sprintf(buffer,"_printf_fmt:\n");
+	pushLine();
+	sprintf(buffer,"\tlb $a0, 0($a2)\n");
+	pushLine();
+	sprintf(buffer,"\taddu $a2, $a2, 1\n");
+	pushLine();
 	
 	a[0] = "\tbeq $a0, 'c', _printf_char\n";
 	a[1] = "\tbeq $a0, 'd', _printf_int\n";
@@ -875,94 +1123,158 @@ static void printPrintf(){
 				f[j] = t;
 			}
 	if (numOfFmt[f[0]]){
-		if (numOfFmt[f[1]] || numOfFmt[f[2]] || numOfFmt[3])
-			printf("%s",a[f[0]]);
-		else{
+		if (numOfFmt[f[1]] || numOfFmt[f[2]] || numOfFmt[3]){
+			sprintf(buffer,"%s",a[f[0]]);
+			pushLine();
+		}else{
 			//nop;
 		}
 	}
-	if (numOfFmt[f[1]])
-		printf("%s",a[f[1]]);
-	if (numOfFmt[f[2]])
-		printf("%s",a[f[2]]);
+	if (numOfFmt[f[1]]){
+		sprintf(buffer,"%s",a[f[1]]);
+		pushLine();
+	}
+	if (numOfFmt[f[2]]){
+		sprintf(buffer,"%s",a[f[2]]);
+		pushLine();
+	}
 	
 	if (numOfFmt[3]){
-		printf("_printf_width:\n");
-		printf("\taddu $a1, $a1, 4\n");
-		printf("\tlb $t0, 0($a2)\n");
-		printf("\tsubu $t0, $t0, '0'\n");
-		printf("\taddu $a2, $a2, 2\n");
-		printf("\tlw $t1, 0($a1)\n");
-		printf("\tli $t2, 1\n");
-		printf("\tblt $t0, 2, _printf_width_end\n");
-		printf("_label_width_1:\n");
-		printf("\tsubu $t0, $t0, 1\n");
-		printf("\tmul $t2, $t2, 10\n");
-		printf("\tbgt $t0, 1, _label_width_1\n");
-		printf("\tli $a0, 0\n");
-		printf("\tli $v0, 1\n");
-		printf("_label_width_2:\n");
-		printf("\tbge $t1, $t2, _printf_width_end\n");
-		printf("\tsyscall\n");
-		printf("\tdiv $t2, $t2, 10\n");
-		printf("\tj _label_width_2\n");
+		sprintf(buffer,"_printf_width:\n");
+		pushLine();
+		sprintf(buffer,"\taddu $a1, $a1, 4\n");
+		pushLine();
+		sprintf(buffer,"\tlb $t0, 0($a2)\n");
+		pushLine();
+		sprintf(buffer,"\tsubu $t0, $t0, '0'\n");
+		pushLine();
+		sprintf(buffer,"\taddu $a2, $a2, 2\n");
+		pushLine();
+		sprintf(buffer,"\tlw $t1, 0($a1)\n");
+		pushLine();
+		sprintf(buffer,"\tli $t2, 1\n");
+		pushLine();
+		sprintf(buffer,"\tblt $t0, 2, _printf_width_end\n");
+		pushLine();
+		sprintf(buffer,"_label_width_1:\n");
+		pushLine();
+		sprintf(buffer,"\tsubu $t0, $t0, 1\n");
+		pushLine();
+		sprintf(buffer,"\tmul $t2, $t2, 10\n");
+		pushLine();
+		sprintf(buffer,"\tbgt $t0, 1, _label_width_1\n");
+		pushLine();
+		sprintf(buffer,"\tli $a0, 0\n");
+		pushLine();
+		sprintf(buffer,"\tli $v0, 1\n");
+		pushLine();
+		sprintf(buffer,"_label_width_2:\n");
+		pushLine();
+		sprintf(buffer,"\tbge $t1, $t2, _printf_width_end\n");
+		pushLine();
+		sprintf(buffer,"\tsyscall\n");
+		pushLine();
+		sprintf(buffer,"\tdiv $t2, $t2, 10\n");
+		pushLine();
+		sprintf(buffer,"\tj _label_width_2\n");
+		pushLine();
 		
-		printf("_printf_width_end:\n");
-		printf("\tlw $a0, 0($a1)\n");
-		printf("\tli $v0, 1\n");
-		printf("\tsyscall\n");
-		printf("\tj _printf_loop\n");
+		sprintf(buffer,"_printf_width_end:\n");
+		pushLine();
+		sprintf(buffer,"\tlw $a0, 0($a1)\n");
+		pushLine();
+		sprintf(buffer,"\tli $v0, 1\n");
+		pushLine();
+		sprintf(buffer,"\tsyscall\n");
+		pushLine();
+		sprintf(buffer,"\tj _printf_loop\n");
+		pushLine();
 	}
 	if (numOfFmt[0]){
-		printf("_printf_char:\n");
-		printf("\taddu $a1, $a1, 4\n");
-		printf("\tlb $a0, 0($a1)\n");
-		printf("\tli $v0, 11\n");
-		printf("\tsyscall\n");
-		printf("\tj _printf_loop\n");
+		sprintf(buffer,"_printf_char:\n");
+		pushLine();
+		sprintf(buffer,"\taddu $a1, $a1, 4\n");
+		pushLine();
+		sprintf(buffer,"\tlb $a0, 0($a1)\n");
+		pushLine();
+		sprintf(buffer,"\tli $v0, 11\n");
+		pushLine();
+		sprintf(buffer,"\tsyscall\n");
+		pushLine();
+		sprintf(buffer,"\tj _printf_loop\n");
+		pushLine();
 	}
 	
 	if (numOfFmt[1]){
-		printf("_printf_int:\n");
-		printf("\taddu $a1, $a1, 4\n");
-		printf("\tlw $a0, 0($a1)\n");
-		printf("\tli $v0, 1\n");
-		printf("\tsyscall\n");
-		printf("\tj _printf_loop\n");
+		sprintf(buffer,"_printf_int:\n");
+		pushLine();
+		sprintf(buffer,"\taddu $a1, $a1, 4\n");
+		pushLine();
+		sprintf(buffer,"\tlw $a0, 0($a1)\n");
+		pushLine();
+		sprintf(buffer,"\tli $v0, 1\n");
+		pushLine();
+		sprintf(buffer,"\tsyscall\n");
+		pushLine();
+		sprintf(buffer,"\tj _printf_loop\n");
+		pushLine();
 	}
 	
 	if (numOfFmt[2]){
-		printf("_printf_str:\n");
-		printf("\taddu $a1, $a1, 4\n");
-		printf("\tlw $a0, 0($a1)\n");
-		printf("\tli $v0, 4\n");
-		printf("\tsyscall\n");
-		printf("\tj _printf_loop\n");
+		sprintf(buffer,"_printf_str:\n");
+		pushLine();
+		sprintf(buffer,"\taddu $a1, $a1, 4\n");
+		pushLine();
+		sprintf(buffer,"\tlw $a0, 0($a1)\n");
+		pushLine();
+		sprintf(buffer,"\tli $v0, 4\n");
+		pushLine();
+		sprintf(buffer,"\tsyscall\n");
+		pushLine();
+		sprintf(buffer,"\tj _printf_loop\n");
+		pushLine();
 	}
 	
-	printf("_printf_end:\n");
-	printf("\tj $ra\n");
+	sprintf(buffer,"_printf_end:\n");
+	pushLine();
+	sprintf(buffer,"\tj $ra\n");
+	pushLine();
 	
 	
 }
 static void printMalloc(){
-	printf("_malloc:\n");
-	printf("\tli $v0, 9\n");
-	printf("\tlw $a0, 4($sp)\n");
-	printf("\tsyscall\n");
-	printf("\tsw $v0, 0($sp)\n");
-	printf("\tj $ra\n");
+	sprintf(buffer,"_malloc:\n");
+	pushLine();
+	sprintf(buffer,"\tli $v0, 9\n");
+	pushLine();
+	sprintf(buffer,"\tlw $a0, 4($sp)\n");
+	pushLine();
+	sprintf(buffer,"\tsyscall\n");
+	pushLine();
+	sprintf(buffer,"\tsw $v0, 0($sp)\n");
+	pushLine();
+	sprintf(buffer,"\tj $ra\n");
+	pushLine();
 }
 static void printGetchar(){
-	printf("_getchar:\n");
-	printf("\tli $v0, 12\n");
-	printf("\tsyscall\n");
-	printf("\tsw $v0, 0($sp)\n");
-	printf("\tj $ra\n");
+	sprintf(buffer,"_getchar:\n");
+	pushLine();
+	sprintf(buffer,"\tli $v0, 12\n");
+	pushLine();
+	sprintf(buffer,"\tsyscall\n");
+	pushLine();
+	sprintf(buffer,"\tsw $v0, 0($sp)\n");
+	pushLine();
+	sprintf(buffer,"\tj $ra\n");
+	pushLine();
 }
+
+
 int main(void){
 	int i;
 	initArraBegin = 0;
+	numOfLines = 0;
+	ptrOfBuffer = 0;
 	ir();
 	printGlobal(funcList->e[0]);
 	for (i = 4;i < funcList->num;++i) printFunc(funcList->e[i]);
@@ -972,5 +1284,6 @@ int main(void){
 	freeFunctionList(funcList);
 	freeRegisterList(registers);
 	freeStringList(string);
+	printMips();
 	return 0;
 }
