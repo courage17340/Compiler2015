@@ -11,7 +11,8 @@ Chu Wei's compiler project
 ##Version details
 | Version | Date | Description |
 |:-------:|:----:|:-----------:|
-| 3.3a | 2015.5.31 | translate refined && spill2 passed (4/20) |
+| 3.4 | 2015.5.31 | spill2 passed (4/20) |
+| 3.3a | 2015.5.31 | translate refined |
 | 3.3 | 2015.5.30 | hanoi & tak passed (3/20) |
 | 3.1a | 2015.5.30 | small optimization (1/20) |
 | 3.1 | 2015.5.30 | hanoi2 passed (1/20) |

@@ -8,7 +8,7 @@ static char t[100],buffer[100],t0[100],t1[100]/*,t2[100]*/;
 
 
 static char mips[100010][100];
-static int senLen[100010];
+//static int senLen[100010];
 static int numOfLines,ptrOfBuffer;
 
 static void pushBuffer(void){
@@ -1269,6 +1269,33 @@ static void printGetchar(){
 	pushLine();
 }
 
+static void optimize1(){
+/*
+j label
+label:
+---
+label:
+*/
+	int i,j,n;
+	char s[100],t[100];
+	j = 0;
+	for (i = 1;i <= numOfLines;++i){
+		if (i < numOfLines && mips[i][0] == '\t' && mips[i][1] == 'j' && mips[i][2] == ' '){
+			sprintf(s,"%s",mips[i] + 3);
+			sprintf(t,"%s",mips[i + 1]);
+			n = strlen(t);
+			t[n - 2] = '\n';
+			t[n - 1] = 0;
+			if (strcmp(s,t) == 0){
+				++i;
+			}
+		}
+		++j;
+		sprintf(buffer,"%s",mips[i]);
+		sprintf(mips[j],"%s",buffer);
+	}
+	numOfLines = j;
+}
 
 int main(void){
 	int i;
@@ -1284,6 +1311,9 @@ int main(void){
 	freeFunctionList(funcList);
 	freeRegisterList(registers);
 	freeStringList(string);
+	
+	optimize1();
+	
 	printMips();
 	return 0;
 }
