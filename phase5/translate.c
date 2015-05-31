@@ -1049,6 +1049,14 @@ static void printFunc(struct Function *func){
 		pushLine();
 	}
 	if (strcmp(func->name,"main") == 0){
+		sprintf(buffer,"\tli $s0, -1\n");
+		pushLine();
+		sprintf(buffer,"\tli $s1, -2\n");
+		pushLine();
+		sprintf(buffer,"\tli $s2, -3\n");
+		pushLine();
+		sprintf(buffer,"\tli $s3, -4\n");
+		pushLine();
 		struct SentenceList *l = funcList->e[0]->body;
 		for (i = 0;i < l->num;++i) printSentence(l->e[i],&cur,func);
 	}
@@ -1297,6 +1305,45 @@ label:
 	numOfLines = j;
 }
 
+static void optimize2(void){
+/*
+bind -1 ~ -4 to $s0 ~ $s3 in order to make the most of the registers
+li $t0, -1 should be move $t0, $s0
+*/
+	int i,j,n,flag;
+	char s[100];
+	for (i = 1;i <= numOfLines;++i){
+		sprintf(s,"%s",mips[i]);
+		n = strlen(s);
+		flag = 0;
+		if (strcmp(mips[i],"\tli $s0, -1\n") == 0) continue;
+		if (strcmp(mips[i],"\tli $s1, -2\n") == 0) continue;
+		if (strcmp(mips[i],"\tli $s2, -3\n") == 0) continue;
+		if (strcmp(mips[i],"\tli $s3, -4\n") == 0) continue;
+		for (j = 0;j < n;++j){
+			if (s[j] == '-' && j < n && ('1' <= s[j + 1] && s[j + 1] <= '4') && (s[j + 2] == ' ' || s[j + 2] == '\n' || s[j + 2] == ',')){
+				++j;
+				sprintf(t,"$s%c",s[j] - 1);
+				pushBuffer();
+				flag = 1;
+			}else{
+				sprintf(t,"%c",s[j]);
+				pushBuffer();
+			}
+		}
+		sprintf(mips[i],"%s",buffer);
+		ptrOfBuffer = 0;
+		if (flag && mips[i][0] == '\t' && mips[i][1] == 'l' && mips[i][2] == 'i'){
+			sprintf(t,"\tmove");
+			pushBuffer();
+			sprintf(t,"%s",mips[i] + 3);
+			pushBuffer();
+			sprintf(mips[i],"%s",buffer);
+			ptrOfBuffer = 0;
+		}
+	}
+}
+
 int main(void){
 	int i;
 	initArraBegin = 0;
@@ -1313,6 +1360,7 @@ int main(void){
 	freeStringList(string);
 	
 	optimize1();
+	optimize2();
 	
 	printMips();
 	return 0;
